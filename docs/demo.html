@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDA 스캐너 데모</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f1923;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-title h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e8e8e8;
+    letter-spacing: -0.5px;
+  }
+  .page-title p {
+    font-size: 12px;
+    color: #556;
+    margin-top: 4px;
+  }
+
+  .demo-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+  }
+
+  /* ═══════ PDA DEVICE ═══════ */
+  .pda {
+    width: 300px;
+    height: 560px;
+    background: #1c1c1c;
+    border-radius: 24px;
+    padding: 10px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04),
+      0 25px 70px rgba(0,0,0,0.6),
+      0 2px 8px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .pda::before {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 120px;
+    width: 3px;
+    height: 50px;
+    background: #2a2a2a;
+    border-radius: 0 2px 2px 0;
+  }
+  .pda-screen {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 26px;
+    background: #1a2332;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 9.5px;
+    color: rgba(255,255,255,0.65);
+  }
+  .status-bar .time { font-weight: 600; font-size: 10px; color: rgba(255,255,255,0.85); }
+  .status-icons { display: flex; align-items: center; gap: 8px; }
+  .status-icons svg { opacity: 0.7; }
+  .battery-text { font-size: 9px; margin-left: 2px; }
+
+  .screen-area {
+    height: calc(100% - 26px);
+    position: relative;
+    background: #f5f6f8;
+  }
+
+  /* ═══════ MAIN SCREEN ═══════ */
+  .main-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #f5f6f8;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .main-screen.out {
+    opacity: 0;
+    transform: translateX(-30px);
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .app-bar {
+    background: #1a2332;
+    padding: 18px 16px 14px;
+  }
+  .app-bar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-bar h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .server-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+  }
+  .server-dot {
+    width: 5px;
+    height: 5px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .scan-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .scan-target {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scan-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: #c0c8d0;
+    border-style: solid;
+    border-width: 0;
+    transition: border-color 0.3s;
+  }
+  .scan-corner.tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
+  .scan-corner.tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
+  .scan-corner.bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
+  .scan-corner.br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
+
+  .scan-target.active .scan-corner { border-color: #e8734a; }
+
+  .scan-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: #e8734a;
+    opacity: 0;
+    top: 20px;
+  }
+  .scan-target.active .scan-line {
+    opacity: 1;
+    animation: scanMove 0.6s ease-in-out;
+  }
+  @keyframes scanMove {
+    0% { top: 15px; opacity: 0; }
+    20% { opacity: 1; }
+    100% { top: 100px; opacity: 0; }
+  }
+
+  .barcode-icon {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 40px;
+  }
+  .barcode-icon .bar {
+    width: 3px;
+    background: #aab;
+    border-radius: 1px;
+    transition: background 0.3s;
+  }
+  .scan-target.active .barcode-icon .bar { background: #e8734a; }
+
+  .scan-msg {
+    text-align: center;
+  }
+  .scan-msg strong {
+    display: block;
+    font-size: 14px;
+    color: #2a2a3a;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .scan-msg span {
+    font-size: 11px;
+    color: #8a8a9a;
+    line-height: 1.5;
+  }
+
+  .input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .input-row {
+    display: flex;
+    gap: 6px;
+  }
+  .input-row input {
+    flex: 1;
+    height: 38px;
+    border: 1.5px solid #dde;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 12px;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    color: #333;
+  }
+  .input-row input:focus {
+    border-color: #e8734a;
+    box-shadow: 0 0 0 3px rgba(232,115,74,0.1);
+  }
+  .input-row input::placeholder { color: #bbc; }
+  .btn-search {
+    height: 38px;
+    padding: 0 14px;
+    background: #1a2332;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-search:active { opacity: .85; }
+
+  .search-input {
+    width: 100%;
+    height: 38px;
+    border: 1.5px solid #dde;
+    border-radius: 10px;
+    padding: 0 12px 0 34px;
+    font-size: 12px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23aab' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='6' cy='6' r='4.5'/%3E%3Cline x1='9.5' y1='9.5' x2='12.5' y2='12.5'/%3E%3C/svg%3E") no-repeat 12px center;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    color: #333;
+  }
+  .search-input:focus {
+    border-color: #e8734a;
+    box-shadow: 0 0 0 3px rgba(232,115,74,0.1);
+  }
+  .search-input::placeholder { color: #bbc; }
+
+  .main-footer {
+    padding: 8px;
+    text-align: center;
+    font-size: 8.5px;
+    color: #aab;
+    background: #eef;
+    border-top: 1px solid #dde;
+  }
+
+  /* ═══════ DETAIL SCREEN ═══════ */
+  .detail-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #f5f6f8;
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .detail-screen.out {
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+  }
+
+  .detail-bar {
+    background: #1a2332;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-back {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.15); }
+  .detail-bar-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .detail-bar-barcode {
+    margin-left: auto;
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    font-family: monospace;
+  }
+
+  .detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .product-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a2332;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .info-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .info-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 11px;
+    border: 1px solid #eef;
+  }
+  .info-card .ic-label {
+    font-size: 8.5px;
+    color: #99a;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .info-card .ic-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a2332;
+  }
+  .info-card.full { grid-column: 1 / -1; }
+  .info-card .ic-value.status { color: #16a34a; font-size: 12px; }
+  .info-card .ic-value.status::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #16a34a;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .img-section { margin-top: 6px; }
+  .img-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #667;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .img-pair {
+    display: flex;
+    gap: 8px;
+  }
+  .img-frame {
+    flex: 1;
+    aspect-ratio: 1;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eef;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .img-tag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-size: 7.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    z-index: 1;
+  }
+  .img-tag.digital { background: #1a2332; color: #fff; }
+  .img-tag.real { background: #e8734a; color: #fff; }
+
+  /* Product image SVGs are inline */
+
+  .detail-footer {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #eafbef;
+    border-top: 1px solid #d0ecd8;
+  }
+  .detail-footer svg { flex-shrink: 0; }
+  .detail-footer span {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #16a34a;
+  }
+
+  /* ═══════ LOADING ═══════ */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(245,246,248,0.92);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+  .loading-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loader {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #eee;
+    border-top-color: #e8734a;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text {
+    font-size: 11px;
+    color: #889;
+    font-weight: 500;
+  }
+
+  /* ═══════ NOT FOUND ═══════ */
+  .notfound-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #f5f6f8;
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .notfound-screen.out {
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+  }
+  .notfound-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+  }
+  .notfound-icon {
+    width: 56px;
+    height: 56px;
+    background: #fdeaea;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #c44;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .notfound-body h3 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  .notfound-body p {
+    font-size: 10.5px;
+    color: #889;
+    line-height: 1.6;
+  }
+  .notfound-barcode {
+    margin-top: 12px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #99a;
+    background: #eef;
+    padding: 3px 10px;
+    border-radius: 5px;
+  }
+
+  /* ═══════ SIDE PANEL ═══════ */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 220px;
+  }
+
+  .demo-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .demo-card h3 {
+    font-size: 10px;
+    font-weight: 700;
+    color: #556;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .scan-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scan-btn {
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: transparent;
+    color: #aab;
+    border-radius: 10px;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .scan-btn:hover {
+    background: rgba(232,115,74,0.08);
+    border-color: rgba(232,115,74,0.25);
+    color: #e8734a;
+  }
+  .scan-btn:active { transform: scale(0.98); }
+  .scan-btn-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: block;
+  }
+  .scan-btn-bc {
+    font-family: monospace;
+    font-size: 9px;
+    color: #556;
+    display: block;
+    margin-top: 3px;
+  }
+  .scan-btn.nf {
+    border-style: dashed;
+    color: #667;
+  }
+  .scan-btn.nf:hover {
+    border-color: rgba(170,80,80,0.3);
+    color: #a55;
+    background: rgba(170,80,80,0.06);
+  }
+
+  .flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 10.5px;
+    color: #556;
+    transition: color 0.3s;
+  }
+  .flow-step.active { color: #e8734a; }
+  .flow-step .step-dot {
+    width: 6px;
+    height: 6px;
+    background: #334;
+    border-radius: 50%;
+    transition: background 0.3s, box-shadow 0.3s;
+    flex-shrink: 0;
+  }
+  .flow-step.active .step-dot {
+    background: #e8734a;
+    box-shadow: 0 0 8px rgba(232,115,74,0.4);
+  }
+
+  .side-note {
+    font-size: 9.5px;
+    color: #556;
+    line-height: 1.8;
+  }
+
+  @media (max-width: 700px) {
+    .demo-layout {
+      flex-direction: column;
+      align-items: center;
+    }
+    .side-panel { max-width: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>PDA 바코드 스캐너 -- 작동 데모</h1>
+  <p>Zebra TC60 실제 화면 비율 기준</p>
+</div>
+
+<div class="demo-layout">
+  <!-- PDA -->
+  <div class="pda">
+    <div class="pda-screen">
+      <div class="status-bar">
+        <span class="time" id="clock">14:32</span>
+        <div class="status-icons">
+          <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+            <path d="M7 9.5a1 1 0 100-2 1 1 0 000 2z" fill="#fff"/>
+            <path d="M4.5 7a3.5 3.5 0 015 0" stroke="#fff" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+            <path d="M2.5 5a6 6 0 019 0" stroke="#fff" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".6"/>
+            <path d="M0.5 3a9 9 0 0113 0" stroke="#fff" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".3"/>
+          </svg>
+          <svg width="18" height="10" viewBox="0 0 18 10" fill="none">
+            <rect x="0.5" y="1" width="14" height="8" rx="1.5" stroke="#fff" stroke-width="1" fill="none" opacity=".5"/>
+            <rect x="2" y="2.5" width="10" height="5" rx="0.5" fill="#4ade80"/>
+            <rect x="15" y="3" width="2" height="4" rx="0.5" fill="#fff" opacity=".3"/>
+          </svg>
+          <span class="battery-text" style="color:rgba(255,255,255,.5)">87%</span>
+        </div>
+      </div>
+
+      <div class="screen-area">
+        <div class="loading-overlay" id="loading">
+          <div class="loader"></div>
+          <div class="loader-text">상품 조회 중...</div>
+        </div>
+
+        <!-- Main -->
+        <div class="main-screen" id="mainScreen">
+          <div class="app-bar">
+            <div class="app-bar-top">
+              <h2>물류 스캐너</h2>
+              <div class="server-badge">
+                <div class="server-dot"></div>
+                192.168.0.10
+              </div>
+            </div>
+          </div>
+
+          <div class="scan-zone">
+            <div class="scan-target" id="scanTarget">
+              <div class="scan-corner tl"></div>
+              <div class="scan-corner tr"></div>
+              <div class="scan-corner bl"></div>
+              <div class="scan-corner br"></div>
+              <div class="scan-line"></div>
+              <div class="barcode-icon">
+                <div class="bar" style="height:30px"></div>
+                <div class="bar" style="height:38px"></div>
+                <div class="bar" style="height:25px"></div>
+                <div class="bar" style="height:38px"></div>
+                <div class="bar" style="height:20px"></div>
+                <div class="bar" style="height:35px"></div>
+                <div class="bar" style="height:28px"></div>
+                <div class="bar" style="height:38px"></div>
+                <div class="bar" style="height:22px"></div>
+              </div>
+            </div>
+            <div class="scan-msg">
+              <strong>스캔 대기 중</strong>
+              <span>PDA 측면 버튼을 눌러<br>바코드를 스캔하세요</span>
+            </div>
+            <div class="input-group">
+              <div class="input-row">
+                <input type="text" id="barcodeInput" placeholder="바코드 직접 입력">
+                <button class="btn-search" onclick="manualScan()">조회</button>
+              </div>
+              <input type="text" class="search-input" placeholder="상품명으로 검색">
+            </div>
+          </div>
+          <div class="main-footer">DB 11,821 SKU · FastAPI 서버 연결됨</div>
+        </div>
+
+        <!-- Detail -->
+        <div class="detail-screen out" id="detailScreen">
+          <div class="detail-bar">
+            <button class="btn-back" onclick="goBack()">&#8592;</button>
+            <span class="detail-bar-title">상품 상세</span>
+            <span class="detail-bar-barcode" id="detailBarcode"></span>
+          </div>
+          <div class="detail-body">
+            <div class="product-title" id="productName"></div>
+            <div class="info-cards">
+              <div class="info-card">
+                <div class="ic-label">SKU ID</div>
+                <div class="ic-value" id="skuId"></div>
+              </div>
+              <div class="info-card">
+                <div class="ic-label">바코드</div>
+                <div class="ic-value" id="barcodeVal" style="font-family:monospace;font-size:11px;"></div>
+              </div>
+              <div class="info-card">
+                <div class="ic-label">담당 BM</div>
+                <div class="ic-value" id="bmVal"></div>
+              </div>
+              <div class="info-card">
+                <div class="ic-label">발주담당자</div>
+                <div class="ic-value" id="managerVal"></div>
+              </div>
+              <div class="info-card full">
+                <div class="ic-label">발주가능상태</div>
+                <div class="ic-value status" id="statusVal">발주가능</div>
+              </div>
+            </div>
+            <div class="img-section">
+              <div class="img-section-title">상품 이미지</div>
+              <div class="img-pair">
+                <div class="img-frame">
+                  <div class="img-tag digital">쿠팡</div>
+                  <div id="imgDigital"></div>
+                </div>
+                <div class="img-frame">
+                  <div class="img-tag real">실사</div>
+                  <div id="imgReal"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-footer">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="#16a34a" stroke-width="1.5" fill="none"/>
+              <path d="M4 7l2 2 4-4" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="responseTime"></span>
+          </div>
+        </div>
+
+        <!-- Not Found -->
+        <div class="notfound-screen out" id="notfoundScreen">
+          <div class="detail-bar">
+            <button class="btn-back" onclick="goBack()">&#8592;</button>
+            <span class="detail-bar-title">조회 결과</span>
+          </div>
+          <div class="notfound-body">
+            <div class="notfound-icon">&#10005;</div>
+            <h3>미등록 바코드</h3>
+            <p>등록되지 않은 바코드입니다.<br>상품명으로 검색해 주세요.</p>
+            <div class="notfound-barcode" id="notfoundBarcode"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDE -->
+  <div class="side-panel">
+    <div class="demo-card">
+      <h3>바코드 스캔</h3>
+      <div class="scan-btns">
+        <button class="scan-btn" onclick="demoScan(0)">
+          <span class="scan-btn-name">스마트폰 케이싱 터치 고무 M</span>
+          <span class="scan-btn-bc">8809461170015</span>
+        </button>
+        <button class="scan-btn" onclick="demoScan(1)">
+          <span class="scan-btn-name">게이밍 컨트롤러 그립 케이스</span>
+          <span class="scan-btn-bc">8800307648255</span>
+        </button>
+        <button class="scan-btn" onclick="demoScan(2)">
+          <span class="scan-btn-name">액션캠 차량용 흡착 마운트</span>
+          <span class="scan-btn-bc">8800749336184</span>
+        </button>
+        <button class="scan-btn nf" onclick="demoNotFound()">
+          <span class="scan-btn-name">미등록 바코드 테스트</span>
+          <span class="scan-btn-bc">8801234567890</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h3>실행 흐름</h3>
+      <div class="flow-steps" id="flowSteps">
+        <div class="flow-step active" id="step0"><div class="step-dot"></div>스캔 대기</div>
+        <div class="flow-step" id="step1"><div class="step-dot"></div>바코드 인식</div>
+        <div class="flow-step" id="step2"><div class="step-dot"></div>API 요청</div>
+        <div class="flow-step" id="step3"><div class="step-dot"></div>DB 조회</div>
+        <div class="flow-step" id="step4"><div class="step-dot"></div>이미지 로드</div>
+        <div class="flow-step" id="step5"><div class="step-dot"></div>화면 표시</div>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h3>참고</h3>
+      <div class="side-note">
+        TC60 PDA 화면 비율 기준 목업입니다.<br>
+        실제 앱에서는 물리 버튼으로 스캔하며,<br>
+        NAS 이미지가 실시간으로 표시됩니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const products = [
+  {
+    name: '스페이스쉴드 스마트폰 케이싱 터치 고무 M',
+    sku: '1863996', barcode: '8809461170015',
+    bm: '장우식', manager: '장우식', status: '발주가능', time: 0.31,
+    dImg: '<svg viewBox="0 0 100 100" width="80%" height="80%"><rect x="25" y="8" width="50" height="84" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><rect x="30" y="14" width="40" height="68" rx="4" fill="#0d0d0d"/><rect x="32" y="16" width="36" height="64" rx="3" fill="#111"/><circle cx="50" cy="88" r="3" fill="#333"/><rect x="42" y="10" width="16" height="2" rx="1" fill="#333"/><rect x="28" y="20" width="4" height="8" rx="2" fill="#e8734a" opacity=".7"/><text x="50" y="52" text-anchor="middle" font-size="6" fill="#555" font-family="sans-serif">SpaceShield</text></svg>',
+    rImg: '<svg viewBox="0 0 100 100" width="80%" height="80%"><rect x="20" y="10" width="60" height="80" rx="6" fill="#e8e8e8" stroke="#ccc" stroke-width="1"/><rect x="25" y="16" width="50" height="62" rx="3" fill="#d8d8d8"/><rect x="28" y="20" width="44" height="54" rx="2" fill="#e0e0e0"/><rect x="23" y="22" width="3" height="6" rx="1.5" fill="#e8734a" opacity=".5"/><line x1="35" y1="82" x2="65" y2="82" stroke="#bbb" stroke-width="1"/><text x="50" y="50" text-anchor="middle" font-size="5" fill="#999" font-family="sans-serif">CASE M</text></svg>'
+  },
+  {
+    name: '게이밍 컨트롤러 스위치 호환 그립 케이스 화이트',
+    sku: '2007341', barcode: '8800307648255',
+    bm: '장우식', manager: '장우식', status: '발주가능', time: 0.28,
+    dImg: '<svg viewBox="0 0 120 80" width="85%" height="70%"><ellipse cx="28" cy="44" rx="22" ry="28" fill="#e0e0e0" stroke="#ccc" stroke-width="1"/><ellipse cx="92" cy="44" rx="22" ry="28" fill="#e0e0e0" stroke="#ccc" stroke-width="1"/><rect x="28" y="16" width="64" height="56" rx="4" fill="#eaeaea" stroke="#ccc" stroke-width="1"/><circle cx="38" cy="38" r="8" fill="none" stroke="#aaa" stroke-width="1.5"/><circle cx="38" cy="38" r="2" fill="#aaa"/><circle cx="85" cy="32" r="3.5" fill="#e8734a"/><circle cx="93" cy="38" r="3.5" fill="#4ade80"/><circle cx="85" cy="44" r="3.5" fill="#3b82f6"/><circle cx="77" cy="38" r="3.5" fill="#eab308"/><rect x="50" y="44" width="18" height="10" rx="2" fill="#d0d0d0" stroke="#bbb" stroke-width=".8"/><rect x="46" y="26" width="8" height="3" rx="1.5" fill="#bbb"/><rect x="46" y="31" width="8" height="3" rx="1.5" fill="#bbb"/></svg>',
+    rImg: '<svg viewBox="0 0 120 80" width="85%" height="70%"><ellipse cx="28" cy="44" rx="20" ry="26" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/><ellipse cx="92" cy="44" rx="20" ry="26" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/><rect x="30" y="18" width="60" height="52" rx="3" fill="#fafafa" stroke="#ddd" stroke-width="1"/><circle cx="40" cy="40" r="7" fill="none" stroke="#ccc" stroke-width="1.2"/><circle cx="82" cy="34" r="3" fill="#ddd"/><circle cx="88" cy="40" r="3" fill="#ddd"/><circle cx="82" cy="46" r="3" fill="#ddd"/><circle cx="76" cy="40" r="3" fill="#ddd"/><text x="60" y="64" text-anchor="middle" font-size="5" fill="#bbb" font-family="sans-serif">WHITE</text></svg>'
+  },
+  {
+    name: '고프로 소니 액션캠 차량용 흡착 마운트 석션컵',
+    sku: '2007345', barcode: '8800749336184',
+    bm: '황성택', manager: '황성택', status: '발주가능', time: 0.35,
+    dImg: '<svg viewBox="0 0 100 100" width="80%" height="80%"><ellipse cx="50" cy="78" rx="28" ry="12" fill="#222" stroke="#444" stroke-width="1"/><ellipse cx="50" cy="76" rx="24" ry="9" fill="#333"/><circle cx="50" cy="76" r="6" fill="#444" stroke="#555" stroke-width=".8"/><rect x="47" y="30" width="6" height="46" rx="2" fill="#3a3a3a" stroke="#555" stroke-width=".5"/><circle cx="50" cy="30" r="8" fill="#444" stroke="#555" stroke-width="1"/><rect x="42" y="26" width="16" height="8" rx="3" fill="#3a3a3a" stroke="#555" stroke-width=".8"/><circle cx="50" cy="30" r="3" fill="#222" stroke="#555" stroke-width=".5"/><rect x="44" y="54" width="12" height="4" rx="1" fill="#555"/></svg>',
+    rImg: '<svg viewBox="0 0 100 100" width="80%" height="80%"><ellipse cx="50" cy="80" rx="26" ry="10" fill="#ddd" stroke="#ccc" stroke-width="1"/><ellipse cx="50" cy="78" rx="22" ry="8" fill="#e8e8e8"/><circle cx="50" cy="78" r="5" fill="#d0d0d0" stroke="#bbb" stroke-width=".5"/><rect x="47" y="34" width="6" height="44" rx="2" fill="#d5d5d5" stroke="#c0c0c0" stroke-width=".5"/><circle cx="50" cy="34" r="7" fill="#e0e0e0" stroke="#ccc" stroke-width=".8"/><rect x="43" y="30" width="14" height="8" rx="3" fill="#ddd" stroke="#ccc" stroke-width=".5"/><circle cx="50" cy="34" r="2.5" fill="#ccc"/><rect x="45" y="56" width="10" height="3" rx="1" fill="#ccc"/></svg>'
+  }
+];
+
+let animating = false;
+
+function setStep(n) {
+  for (let i = 0; i <= 5; i++) {
+    document.getElementById('step' + i).classList.toggle('active', i <= n);
+  }
+}
+
+function showScreen(name) {
+  ['mainScreen', 'detailScreen', 'notfoundScreen'].forEach(id => {
+    document.getElementById(id).classList.toggle('out', id !== name);
+  });
+}
+
+function demoScan(idx) {
+  if (animating) return;
+  animating = true;
+
+  const p = products[idx];
+  const target = document.getElementById('scanTarget');
+  document.getElementById('barcodeInput').value = p.barcode;
+
+  target.classList.add('active');
+  setStep(1);
+
+  setTimeout(() => {
+    target.classList.remove('active');
+    setStep(2);
+    document.getElementById('loading').classList.add('show');
+
+    setTimeout(() => {
+      setStep(3);
+      setTimeout(() => setStep(4), 80);
+
+      setTimeout(() => {
+        document.getElementById('productName').textContent = p.name;
+        document.getElementById('skuId').textContent = p.sku;
+        document.getElementById('barcodeVal').textContent = p.barcode;
+        document.getElementById('detailBarcode').textContent = p.barcode;
+        document.getElementById('bmVal').textContent = p.bm;
+        document.getElementById('managerVal').textContent = p.manager;
+        document.getElementById('statusVal').textContent = p.status;
+        document.getElementById('imgDigital').innerHTML = p.dImg;
+        document.getElementById('imgReal').innerHTML = p.rImg;
+        document.getElementById('responseTime').textContent = '응답 시간 ' + p.time.toFixed(2) + '초';
+
+        setStep(5);
+        document.getElementById('loading').classList.remove('show');
+        showScreen('detailScreen');
+        animating = false;
+      }, 250);
+    }, 100);
+  }, 650);
+}
+
+function demoNotFound() {
+  if (animating) return;
+  animating = true;
+
+  const target = document.getElementById('scanTarget');
+  document.getElementById('barcodeInput').value = '8801234567890';
+  target.classList.add('active');
+  setStep(1);
+
+  setTimeout(() => {
+    target.classList.remove('active');
+    setStep(2);
+    document.getElementById('loading').classList.add('show');
+
+    setTimeout(() => {
+      setStep(3);
+      document.getElementById('notfoundBarcode').textContent = '8801234567890';
+      document.getElementById('loading').classList.remove('show');
+      showScreen('notfoundScreen');
+      setStep(5);
+      animating = false;
+    }, 300);
+  }, 650);
+}
+
+function manualScan() {
+  const val = document.getElementById('barcodeInput').value.trim();
+  if (!val) return;
+  const idx = products.findIndex(p => p.barcode === val);
+  if (idx >= 0) demoScan(idx);
+  else demoNotFound();
+}
+
+function goBack() {
+  showScreen('mainScreen');
+  setStep(0);
+  document.getElementById('barcodeInput').value = '';
+}
+
+document.getElementById('barcodeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') manualScan();
+});
+
+(function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  setTimeout(updateClock, 30000);
+})();
+</script>
+</body>
+</html>

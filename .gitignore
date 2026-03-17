@@ -1,0 +1,31 @@
+# Chat exports
+kakao_chat_extract/
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Data
+server/data/*.db
+*.xlsx
+
+# Env
+.env
