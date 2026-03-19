@@ -6,9 +6,9 @@
 
 import json
 import logging
+import time
 import zipfile
 from difflib import SequenceMatcher
-from pathlib import Path
 
 from lxml import etree
 
@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 NS = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
-# 필수 컬럼 — key: 내부 필드명, values: 매칭 후보 키워드들
 REQUIRED_COLUMNS = {
     "sku_id": ["sku id", "skuid", "sku_id", "상품id"],
     "product_name": ["상품명", "상품 명", "제품명", "품명", "product name"],
@@ -29,6 +28,8 @@ OPTIONAL_COLUMNS = {
     "moq": ["최소구매수량", "moq", "최소 구매수량"],
     "weight": ["중량", "무게", "weight"],
 }
+
+BATCH_SIZE = 500
 
 
 def _similarity(a: str, b: str) -> float:
@@ -88,6 +89,7 @@ def _parse_xlsx_with_lxml(file_path: str) -> tuple[list[str], list[list[str]]]:
 
 async def parse_sku_download(db, file_path: str) -> dict:
     """sku_download.xlsx를 파싱하여 PRODUCT + BARCODE 테이블에 적재."""
+    start = time.perf_counter()
     stats = {"added": 0, "updated": 0, "skipped": 0, "errors": 0, "error_details": []}
 
     headers, data_rows = _parse_xlsx_with_lxml(file_path)
@@ -98,7 +100,6 @@ async def parse_sku_download(db, file_path: str) -> dict:
     col_map = _match_columns(headers)
     logger.info("sku_download 헤더 매칭: %s", {k: headers[v] if v is not None else None for k, v in col_map.items()})
 
-    # 필수 컬럼 확인
     missing = [k for k in REQUIRED_COLUMNS if col_map.get(k) is None]
     if missing:
         msg = f"sku_download 헤더 인식 실패: {', '.join(missing)} 열을 찾지 못했습니다"
@@ -112,6 +113,10 @@ async def parse_sku_download(db, file_path: str) -> dict:
     barcode_idx = col_map["barcode"]
     category_idx = col_map.get("category")
     brand_idx = col_map.get("brand")
+
+    product_batch = []
+    barcode_batch = []
+    record_count = len(data_rows)
 
     for row_num, row in enumerate(data_rows, start=2):
         try:
@@ -131,7 +136,6 @@ async def parse_sku_download(db, file_path: str) -> dict:
             category = _get(category_idx)
             brand = _get(brand_idx)
 
-            # 옵션 필드를 extra JSON으로 저장
             extra = {}
             for field in OPTIONAL_COLUMNS:
                 if field not in ("category", "brand"):
@@ -139,32 +143,20 @@ async def parse_sku_download(db, file_path: str) -> dict:
                     if val:
                         extra[field] = val
 
-            # PRODUCT upsert
-            cursor = await db.execute("SELECT sku_id FROM product WHERE sku_id = ?", (sku_id,))
-            existing = await cursor.fetchone()
+            product_batch.append((
+                sku_id, product_name, category, brand,
+                json.dumps(extra, ensure_ascii=False),
+            ))
 
-            if existing:
-                await db.execute(
-                    "UPDATE product SET product_name = ?, category = ?, brand = ?, "
-                    "extra = ?, updated_at = datetime('now') WHERE sku_id = ?",
-                    (product_name, category, brand, json.dumps(extra, ensure_ascii=False), sku_id),
-                )
-                stats["updated"] += 1
-            else:
-                await db.execute(
-                    "INSERT INTO product (sku_id, product_name, category, brand, extra) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (sku_id, product_name, category, brand, json.dumps(extra, ensure_ascii=False)),
-                )
-                stats["added"] += 1
-
-            # BARCODE upsert (바코드가 있는 경우)
             if barcode and barcode.lower() != "none":
-                await db.execute(
-                    "INSERT INTO barcode (barcode, sku_id) VALUES (?, ?) "
-                    "ON CONFLICT(barcode, sku_id) DO UPDATE SET updated_at = datetime('now')",
-                    (barcode, sku_id),
-                )
+                barcode_batch.append((barcode, sku_id))
+
+            if len(product_batch) >= BATCH_SIZE:
+                a, u = await _flush_product_batch(db, product_batch, barcode_batch)
+                stats["added"] += a
+                stats["updated"] += u
+                product_batch.clear()
+                barcode_batch.clear()
 
         except Exception as e:
             stats["errors"] += 1
@@ -172,26 +164,81 @@ async def parse_sku_download(db, file_path: str) -> dict:
             if stats["errors"] <= 10:
                 logger.warning("sku_download row %d 파싱 실패: %s", row_num, e)
 
+    if product_batch:
+        a, u = await _flush_product_batch(db, product_batch, barcode_batch)
+        stats["added"] += a
+        stats["updated"] += u
+
+    await _link_orphan_barcodes(db)
     await db.commit()
 
-    # parse_log 기록
+    duration_ms = int((time.perf_counter() - start) * 1000)
+
     await db.execute(
-        "INSERT INTO parse_log (file_name, file_type, added_count, updated_count, "
-        "skipped_count, error_count, errors) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO parse_log (file_name, file_type, record_count, added_count, "
+        "updated_count, skipped_count, error_count, errors, duration_ms) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             str(file_path),
             "sku_download",
+            record_count,
             stats["added"],
             stats["updated"],
             stats["skipped"],
             stats["errors"],
             json.dumps(stats["error_details"][:50], ensure_ascii=False),
+            duration_ms,
         ),
     )
     await db.commit()
 
     logger.info(
-        "sku_download 파싱 완료: 추가=%d, 갱신=%d, 스킵=%d, 에러=%d",
-        stats["added"], stats["updated"], stats["skipped"], stats["errors"],
+        "sku_download 파싱 완료: 추가=%d, 갱신=%d, 스킵=%d, 에러=%d (%dms)",
+        stats["added"], stats["updated"], stats["skipped"], stats["errors"], duration_ms,
     )
     return stats
+
+
+async def _flush_product_batch(
+    db, product_batch: list[tuple], barcode_batch: list[tuple]
+) -> tuple[int, int]:
+    added = 0
+    updated = 0
+
+    for sku_id, product_name, category, brand, extra_json in product_batch:
+        cursor = await db.execute(
+            "SELECT sku_id FROM product WHERE sku_id = ?", (sku_id,)
+        )
+        existing = await cursor.fetchone()
+        if existing:
+            updated += 1
+        else:
+            added += 1
+
+    await db.executemany(
+        "INSERT INTO product (sku_id, product_name, category, brand, extra) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(sku_id) DO UPDATE SET "
+        "product_name = excluded.product_name, category = excluded.category, "
+        "brand = excluded.brand, extra = excluded.extra, updated_at = datetime('now')",
+        product_batch,
+    )
+
+    if barcode_batch:
+        await db.executemany(
+            "INSERT INTO barcode (barcode, sku_id) VALUES (?, ?) "
+            "ON CONFLICT(barcode) DO UPDATE SET "
+            "sku_id = excluded.sku_id, updated_at = datetime('now')",
+            barcode_batch,
+        )
+
+    return added, updated
+
+
+async def _link_orphan_barcodes(db) -> None:
+    """barcode UNIQUE 제약으로 upsert 시 sku_id가 자동 갱신되지만,
+    FTS 인덱스 동기화를 위해 기존 product_fts에 누락된 데이터를 채움."""
+    cursor = await db.execute("SELECT COUNT(*) FROM barcode WHERE sku_id IS NULL")
+    row = await cursor.fetchone()
+    if row and row[0] > 0:
+        logger.info("고아 바코드 %d건 (sku_download 미매칭)", row[0])

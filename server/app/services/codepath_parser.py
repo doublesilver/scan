@@ -8,14 +8,16 @@ r"""codepath.xlsx 파서 — 바코드 → 이미지 경로 매핑.
 import json
 import logging
 import re
+import time
 from pathlib import PurePosixPath, PureWindowsPath
 
 import openpyxl
 
 logger = logging.getLogger(__name__)
 
-# Z:\물류부\scan\ 이후의 상대경로만 추출
 _PATH_PREFIX_RE = re.compile(r"^.*?\\scan\\", re.IGNORECASE)
+
+BATCH_SIZE = 500
 
 
 def _to_relative_path(windows_path: str) -> str:
@@ -26,10 +28,15 @@ def _to_relative_path(windows_path: str) -> str:
 
 async def parse_codepath(db, file_path: str) -> dict:
     """codepath.xlsx를 파싱하여 BARCODE + IMAGE 테이블에 적재."""
+    start = time.perf_counter()
     stats = {"added": 0, "updated": 0, "skipped": 0, "errors": 0, "error_details": []}
 
     wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
     ws = wb.active
+
+    barcode_batch = []
+    image_batch = []
+    record_count = 0
 
     for row_idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
         try:
@@ -40,40 +47,20 @@ async def parse_codepath(db, file_path: str) -> dict:
                 stats["skipped"] += 1
                 continue
 
-            # PRODUCT가 없으면 placeholder 생성 (sku_download에서 나중에 갱신)
-            sku_id = barcode  # codepath에는 SKU ID가 없으므로 바코드를 임시 키로 사용
-            await db.execute(
-                "INSERT INTO product (sku_id, product_name) VALUES (?, ?) "
-                "ON CONFLICT(sku_id) DO NOTHING",
-                (sku_id, ""),
-            )
+            record_count += 1
+            barcode_batch.append((barcode,))
 
-            # BARCODE upsert
-            cursor = await db.execute(
-                "SELECT id FROM barcode WHERE barcode = ? AND sku_id = ?",
-                (barcode, sku_id),
-            )
-            existing = await cursor.fetchone()
-            if existing:
-                stats["updated"] += 1
-            else:
-                await db.execute(
-                    "INSERT INTO barcode (barcode, sku_id) VALUES (?, ?) "
-                    "ON CONFLICT(barcode, sku_id) DO UPDATE SET updated_at = datetime('now')",
-                    (barcode, sku_id),
-                )
-                stats["added"] += 1
-
-            # IMAGE upsert (경로가 있는 경우만)
             if raw_path and raw_path.lower() != "none":
                 relative_path = _to_relative_path(raw_path)
                 image_type = "real" if "real_image" in relative_path else "thumbnail"
-                await db.execute(
-                    "INSERT INTO image (sku_id, file_path, image_type) VALUES (?, ?, ?) "
-                    "ON CONFLICT(sku_id, file_path) DO UPDATE SET "
-                    "image_type = excluded.image_type, updated_at = datetime('now')",
-                    (sku_id, relative_path, image_type),
-                )
+                image_batch.append((barcode, relative_path, image_type))
+
+            if len(barcode_batch) >= BATCH_SIZE:
+                added, updated = await _flush_batch(db, barcode_batch, image_batch)
+                stats["added"] += added
+                stats["updated"] += updated
+                barcode_batch.clear()
+                image_batch.clear()
 
         except Exception as e:
             stats["errors"] += 1
@@ -81,27 +68,69 @@ async def parse_codepath(db, file_path: str) -> dict:
             if stats["errors"] <= 10:
                 logger.warning("codepath row %d 파싱 실패: %s", row_idx, e)
 
+    if barcode_batch:
+        added, updated = await _flush_batch(db, barcode_batch, image_batch)
+        stats["added"] += added
+        stats["updated"] += updated
+
     wb.close()
     await db.commit()
 
-    # parse_log 기록
+    duration_ms = int((time.perf_counter() - start) * 1000)
+
     await db.execute(
-        "INSERT INTO parse_log (file_name, file_type, added_count, updated_count, "
-        "skipped_count, error_count, errors) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO parse_log (file_name, file_type, record_count, added_count, "
+        "updated_count, skipped_count, error_count, errors, duration_ms) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             str(file_path),
             "codepath",
+            record_count,
             stats["added"],
             stats["updated"],
             stats["skipped"],
             stats["errors"],
             json.dumps(stats["error_details"][:50], ensure_ascii=False),
+            duration_ms,
         ),
     )
     await db.commit()
 
     logger.info(
-        "codepath 파싱 완료: 추가=%d, 갱신=%d, 스킵=%d, 에러=%d",
-        stats["added"], stats["updated"], stats["skipped"], stats["errors"],
+        "codepath 파싱 완료: 추가=%d, 갱신=%d, 스킵=%d, 에러=%d (%dms)",
+        stats["added"], stats["updated"], stats["skipped"], stats["errors"], duration_ms,
     )
     return stats
+
+
+async def _flush_batch(
+    db, barcode_batch: list[tuple], image_batch: list[tuple]
+) -> tuple[int, int]:
+    added = 0
+    updated = 0
+
+    for (barcode,) in barcode_batch:
+        cursor = await db.execute(
+            "SELECT id FROM barcode WHERE barcode = ?", (barcode,)
+        )
+        existing = await cursor.fetchone()
+        if existing:
+            updated += 1
+        else:
+            added += 1
+
+    await db.executemany(
+        "INSERT INTO barcode (barcode) VALUES (?) "
+        "ON CONFLICT(barcode) DO UPDATE SET updated_at = datetime('now')",
+        barcode_batch,
+    )
+
+    if image_batch:
+        await db.executemany(
+            "INSERT INTO image (barcode, file_path, image_type) VALUES (?, ?, ?) "
+            "ON CONFLICT(barcode, file_path) DO UPDATE SET "
+            "image_type = excluded.image_type, updated_at = datetime('now')",
+            image_batch,
+        )
+
+    return added, updated

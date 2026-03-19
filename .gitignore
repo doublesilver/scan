@@ -25,6 +25,8 @@ android/local.properties
 
 # Data
 server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
 *.xlsx
 
 # Env
