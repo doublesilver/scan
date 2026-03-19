@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바코드 스캐너 시스템 — 이은석</title>
+<meta property="og:title" content="바코드 스캐너 시스템 구축 제안서 — 이은석">
+<meta property="og:description" content="TC60 PDA 기반 물류 현장 상품 식별 시스템. 바코드 스캔 후 0.3초 내 이미지 표시, 10일 구축.">
+<meta property="og:type" content="website">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a2332;
+  --navy-mid: #243044;
+  --navy-light: #2e3d55;
+  --orange: #e8734a;
+  --orange-dim: rgba(232,115,74,0.12);
+  --orange-pale: #fdf6f3;
+  --white: #ffffff;
+  --off-white: #f5f5f3;
+  --text: #1c1c1e;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --border: #e5e7eb;
+  --border-dark: #d1d5db;
+  --sidebar-w: 240px;
+  --content-max: 860px;
+  --section-gap: 80px;
+  --font-sans: 'DM Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-mono: 'DM Mono', 'Consolas', monospace;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--off-white);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-brand-line {
+  width: 28px;
+  height: 2px;
+  background: var(--orange);
+  margin-bottom: 16px;
+}
+
+.sidebar-brand h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.sidebar-brand p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 4px;
+}
+
+.sidebar-nav {
+  padding: 20px 0;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 24px;
+  text-decoration: none;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.nav-item.active {
+  background: rgba(232,115,74,0.1);
+}
+
+.nav-num {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--orange);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  min-width: 20px;
+}
+
+.nav-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  font-weight: 400;
+  transition: color 0.15s;
+}
+
+.nav-item.active .nav-label,
+.nav-item:hover .nav-label {
+  color: rgba(255,255,255,0.9);
+}
+
+.sidebar-footer {
+  padding: 20px 24px 28px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-footer a {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  text-decoration: none;
+  transition: color 0.15s;
+  margin-bottom: 5px;
+}
+
+.sidebar-footer a:hover {
+  color: var(--orange);
+}
+
+/* ─── Mobile header ─── */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  background: var(--navy);
+  z-index: 200;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.mobile-header-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: rgba(255,255,255,0.65);
+  border-radius: 1px;
+  transition: all 0.2s;
+}
+
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 54px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--navy);
+  z-index: 190;
+  overflow-y: auto;
+  padding: 8px 0 32px;
+}
+
+.mobile-drawer.open { display: block; }
+
+/* ─── Main ─── */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+/* ─── Hero ─── */
+.hero {
+  background: var(--navy);
+  padding: 96px 80px 88px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--orange);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(ellipse at top right, rgba(232,115,74,0.05) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-line {
+  width: 36px;
+  height: 2px;
+  background: var(--orange);
+  margin-bottom: 32px;
+}
+
+.hero h1 {
+  font-size: clamp(36px, 5vw, 62px);
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-sub {
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.01em;
+  margin-bottom: 36px;
+  max-width: 460px;
+  line-height: 1.65;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-contact {
+  font-size: 12px;
+  color: rgba(255,255,255,0.22);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-demo {
+  margin-top: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-demo a {
+  display: inline-block;
+  padding: 9px 20px;
+  border: 1px solid rgba(232,115,74,0.35);
+  color: var(--orange);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hero-demo a:hover {
+  background: rgba(232,115,74,0.07);
+  border-color: rgba(232,115,74,0.6);
+}
+
+/* ─── Content ─── */
+.content {
+  padding: 0 6vw;
+  max-width: none;
+}
+
+section {
+  padding: var(--section-gap) 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+section:last-of-type {
+  border-bottom: none;
+}
+
+/* ─── Section header ─── */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 36px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--navy);
+}
+
+.section-num {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--orange);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+}
+
+/* ─── Desc ─── */
+.desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  line-height: 1.75;
+}
+
+/* ─── Subheadings ─── */
+h3 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 32px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+h3::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 13px;
+  background: var(--orange);
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+/* ─── Tables ─── */
+.table-wrap {
+  overflow-x: auto;
+  margin: 12px 0 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+thead th {
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 600;
+  padding: 12px 18px;
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+td {
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.7;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:nth-child(even) td {
+  background: #f9fafb;
+}
+
+tbody tr {
+  transition: background 0.12s;
+}
+
+tbody tr:hover td {
+  background: #eef2f7;
+}
+
+.td-label {
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+  font-size: 13px;
+  border-left: 3px solid rgba(232,115,74,0.4);
+  padding-left: 10px;
+}
+}
+
+tr.total td {
+  font-weight: 700;
+  background: #f0f3f8;
+  border-top: 2px solid var(--navy);
+}
+
+/* Mobile table scroll hint */
+.table-wrap {
+  position: relative;
+}
+.table-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245,245,243,0.8));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.table-wrap.scrollable::after {
+  opacity: 1;
+}
+
+/* ─── Callouts ─── */
+.callout {
+  border-left: 3px solid var(--orange);
+  background: var(--orange-pale);
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.callout strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.callout-blue {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.callout-gray {
+  border-left-color: #9ca3af;
+  background: #f9fafb;
+}
+
+/* ─── VS comparison ─── */
+.vs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.vs-col {
+  padding: 18px 20px;
+  font-size: 13.5px;
+}
+
+.vs-col ul {
+  margin: 8px 0 0 16px;
+}
+
+.vs-col li {
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
+.vs-before {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.vs-before h4 {
+  color: #991b1b;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.vs-after {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.vs-after h4 {
+  color: #166534;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.vs-neutral {
+  background: #f0f0ff;
+  border: 1px solid #c7c7e5;
+}
+
+.vs-neutral h4 {
+  color: #3333aa;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* ─── Architecture ─── */
+.arch {
+  display: flex;
+  align-items: stretch;
+  margin: 24px 0;
+}
+
+.arch-node {
+  flex: 1;
+  text-align: center;
+  padding: 24px 12px;
+  border: 1px solid var(--border);
+  background: var(--white);
+}
+
+.arch-node .icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.arch-node .label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.arch-node .sub {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.arch-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Mermaid ─── */
+.mermaid {
+  margin: 20px 0;
+  text-align: center;
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 28px 20px;
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.2s;
+}
+.mermaid:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.mermaid::after {
+  content: '클릭하여 크게 보기';
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.mermaid:hover::after {
+  opacity: 1;
+}
+
+/* ─── Lightbox hint for arch / vs / gantt ─── */
+.arch, .vs, .gantt {
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.2s;
+}
+.arch:hover, .vs:hover, .gantt:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.arch::after, .vs::after, .gantt::after {
+  content: '클릭하여 크게 보기';
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--text-faint);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.arch:hover::after, .vs:hover::after, .gantt:hover::after {
+  opacity: 1;
+}
+
+/* ─── Lightbox ─── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.85);
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  cursor: pointer;
+}
+.lightbox.open {
+  display: flex;
+}
+.lightbox-content {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 40px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  cursor: default;
+  position: relative;
+  animation: lbIn 0.2s ease;
+}
+@keyframes lbIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.lightbox-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: var(--navy);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-close:hover { background: var(--orange); }
+
+/* ─── Gantt ─── */
+.gantt {
+  margin: 20px 0;
+}
+
+.gantt-header {
+  display: flex;
+  margin-bottom: 4px;
+  margin-left: 190px;
+}
+
+.gantt-header-days {
+  display: flex;
+  flex: 1;
+}
+
+.gantt-header-days span {
+  flex: 1;
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  border-left: 1px solid var(--border);
+  padding: 2px 0;
+}
+
+.gantt-row {
+  display: flex;
+  align-items: center;
+  margin: 3px 0;
+}
+
+.gantt-label {
+  width: 190px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.gantt-track {
+  flex: 1;
+  height: 24px;
+  position: relative;
+  background: #f1f3f5;
+  border-radius: 2px;
+}
+
+.gantt-bar {
+  position: absolute;
+  top: 3px;
+  height: 18px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.g-srv { background: var(--navy); }
+.g-app { background: var(--orange); }
+.g-int { background: #3b82f6; }
+
+.gantt-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  margin-left: 190px;
+}
+
+.gantt-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ─── Tag ─── */
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.tag-y { background: #dcfce7; color: #166534; }
+.tag-c { background: #fff7ed; color: #9a3412; }
+
+/* ─── Code ─── */
+code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: #f1f3f5;
+  color: var(--navy);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ─── Lists ─── */
+ul, ol { margin: 8px 0 8px 20px; }
+li { margin: 5px 0; line-height: 1.65; font-size: 13.5px; }
+p { margin: 8px 0; font-size: 13.5px; }
+
+/* ─── Scroll progress bar ─── */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--orange);
+  z-index: 9999;
+  transition: width 0.1s linear;
+}
+
+/* ─── Back-to-top button ─── */
+#back-to-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 40px;
+  height: 40px;
+  background: var(--navy);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 500;
+}
+
+#back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#back-to-top:hover {
+  transform: translateY(-2px);
+}
+
+#back-to-top svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ─── Hero stats strip ─── */
+.hero-stats {
+  display: flex;
+  gap: 0;
+  margin-bottom: 36px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-stat {
+  padding: 16px 28px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.hero-stat:last-child {
+  border-right: none;
+}
+
+.hero-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  display: block;
+}
+
+.hero-stat-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ─── Hero PDF link ─── */
+.hero-pdf {
+  display: inline-block;
+  margin-left: 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.28);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+}
+
+.hero-pdf:hover {
+  color: rgba(255,255,255,0.55);
+}
+
+/* ─── Section hover border ─── */
+section {
+  border-left: 3px solid transparent;
+  padding-left: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.2s;
+}
+
+section:hover {
+  border-left-color: rgba(232,115,74,0.35);
+}
+
+/* ─── Table row hover ─── */
+tbody tr {
+  transition: background 0.15s;
+}
+
+tbody tr:hover td {
+  background: #f0f4f8 !important;
+}
+
+/* ─── Footer ─── */
+.site-footer {
+  background: var(--navy);
+  padding: 48px 80px 32px;
+}
+
+.site-footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.site-footer p {
+  color: rgba(255,255,255,0.28);
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.site-footer a {
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.site-footer a:hover { color: var(--orange); }
+
+.footer-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.footer-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 4px;
+}
+
+.footer-tagline {
+  font-size: 12px;
+  color: rgba(255,255,255,0.28);
+}
+
+.footer-right {
+  text-align: right;
+}
+
+.footer-right a {
+  display: block;
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+}
+
+.footer-right a:hover { color: var(--orange); }
+
+.footer-note {
+  font-size: 12px;
+  color: rgba(255,255,255,0.18);
+  text-align: center;
+}
+
+/* ─── Mobile ─── */
+/* 이관 대상 카드 (모바일 전용) */
+.migration-cards { display: none; }
+
+.migration-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.migration-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  border-left: 3px solid var(--orange);
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+.migration-card-row {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 6px;
+}
+.migration-card-row span {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+@media (max-width: 900px) {
+  .migration-table { display: none; }
+  .migration-cards { display: block; }
+
+  /* 3컬럼 이상 테이블 → 모바일 카드형 전환 */
+  table { border: none; }
+  table thead { display: none; }
+  table tbody tr {
+    display: block;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  table tbody tr:nth-child(even) td { background: none; }
+  table tbody tr.total {
+    border-top: none;
+    background: #f4f6f9;
+  }
+  table tbody td {
+    display: block;
+    padding: 3px 0;
+    border-bottom: none;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 1px;
+  }
+  table tbody td.td-label {
+    font-size: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+    padding-left: 0;
+    border-left: 3px solid rgba(232,115,74,0.4);
+    padding-left: 10px;
+  }
+  table tbody td.td-label::before { display: none; }
+  /* 2컬럼 단순 테이블은 유지 */
+  .table-wrap table { border: none; }
+  .sidebar { display: none; }
+  .mobile-header { display: flex; }
+
+  .main {
+    margin-left: 0;
+    padding-top: 54px;
+  }
+
+  .site-footer {
+    margin-left: 0;
+    padding: 36px 28px 28px;
+  }
+
+  .footer-body {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .footer-right {
+    text-align: left;
+  }
+
+  .hero {
+    padding: 56px 28px 52px;
+  }
+
+  .hero-stats {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .hero-stat {
+    flex: 1;
+    min-width: 90px;
+    padding: 12px 16px;
+  }
+
+  .content {
+    padding: 0 28px;
+  }
+
+  section {
+    padding: 52px 0;
+    border-left: none !important;
+  }
+
+  .section-num { font-size: 28px; }
+  .section-title { font-size: 18px; }
+
+  .vs { grid-template-columns: 1fr; }
+
+  .arch {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .arch-node { min-width: 120px; }
+  .arch-arrow { display: none; }
+
+  .gantt-label { width: 120px; font-size: 11px; }
+  .gantt-header { margin-left: 120px; }
+  .gantt-legend { margin-left: 120px; }
+  .gantt-bar { font-size: 10px; padding: 0 4px; }
+
+  #back-to-top {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="scroll-progress"></div>
+
+<button id="back-to-top" aria-label="맨 위로">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+</button>
+
+<!-- ─── Sidebar ─── -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-line"></div>
+    <h2>바코드 스캐너<br>시스템</h2>
+    <p>구축 제안서</p>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="#s01"><span class="nav-num">01</span><span class="nav-label">현장 이해</span></a>
+    <a class="nav-item" href="#s02"><span class="nav-num">02</span><span class="nav-label">시스템 구성</span></a>
+    <a class="nav-item" href="#s03"><span class="nav-num">03</span><span class="nav-label">구현 범위</span></a>
+    <a class="nav-item" href="#s04"><span class="nav-num">04</span><span class="nav-label">데이터 이관</span></a>
+    <a class="nav-item" href="#s05"><span class="nav-num">05</span><span class="nav-label">신규 데이터 반영</span></a>
+    <a class="nav-item" href="#s06"><span class="nav-num">06</span><span class="nav-label">이미지 연동</span></a>
+    <a class="nav-item" href="#s07"><span class="nav-num">07</span><span class="nav-label">성능 설계</span></a>
+    <a class="nav-item" href="#s08"><span class="nav-num">08</span><span class="nav-label">운영 안정성</span></a>
+    <a class="nav-item" href="#s09"><span class="nav-num">09</span><span class="nav-label">개발 일정</span></a>
+    <a class="nav-item" href="#s10"><span class="nav-num">10</span><span class="nav-label">비용</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="demo.html">데모 페이지 보기 →</a>
+    <a href="mailto:korea5410@gmail.com">korea5410@gmail.com</a>
+    <a href="tel:01077694682">010-7769-4682</a>
+  </div>
+</nav>
+
+<!-- ─── Mobile header ─── -->
+<div class="mobile-header">
+  <span class="mobile-header-title">바코드 스캐너 시스템 제안서</span>
+  <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="nav-item" href="#s01" onclick="closeDrawer()"><span class="nav-num">01</span><span class="nav-label">현장 이해</span></a>
+  <a class="nav-item" href="#s02" onclick="closeDrawer()"><span class="nav-num">02</span><span class="nav-label">시스템 구성</span></a>
+  <a class="nav-item" href="#s03" onclick="closeDrawer()"><span class="nav-num">03</span><span class="nav-label">구현 범위</span></a>
+  <a class="nav-item" href="#s04" onclick="closeDrawer()"><span class="nav-num">04</span><span class="nav-label">데이터 이관</span></a>
+  <a class="nav-item" href="#s05" onclick="closeDrawer()"><span class="nav-num">05</span><span class="nav-label">신규 데이터 반영</span></a>
+  <a class="nav-item" href="#s06" onclick="closeDrawer()"><span class="nav-num">06</span><span class="nav-label">이미지 연동</span></a>
+  <a class="nav-item" href="#s07" onclick="closeDrawer()"><span class="nav-num">07</span><span class="nav-label">성능 설계</span></a>
+  <a class="nav-item" href="#s08" onclick="closeDrawer()"><span class="nav-num">08</span><span class="nav-label">운영 안정성</span></a>
+  <a class="nav-item" href="#s09" onclick="closeDrawer()"><span class="nav-num">09</span><span class="nav-label">개발 일정</span></a>
+  <a class="nav-item" href="#s10" onclick="closeDrawer()"><span class="nav-num">10</span><span class="nav-label">비용</span></a>
+  <div style="padding:20px 24px;border-top:1px solid rgba(255,255,255,0.07);margin-top:8px;">
+    <a href="demo.html" style="display:block;font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none;margin-bottom:6px;">데모 페이지 보기 →</a>
+    <a href="mailto:korea5410@gmail.com" style="display:block;font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none;margin-bottom:4px;">korea5410@gmail.com</a>
+    <a href="tel:01077694682" style="display:block;font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none;">010-7769-4682</a>
+  </div>
+</div>
+
+<!-- ─── Main ─── -->
+<div class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-line"></div>
+    <h1>바코드 스캐너<br>시스템</h1>
+    <div class="hero-sub">PDA 기반 물류 현장 상품 식별 시스템 구축 제안서</div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat">
+        <span class="hero-stat-num" data-target="11821" data-format="comma">0</span>
+        <span class="hero-stat-label">SKU 등록</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num" data-static="0.3초">0.3초</span>
+        <span class="hero-stat-label">응답 시간</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num" data-target="10" data-suffix="일">0</span>
+        <span class="hero-stat-label">구축 기간</span>
+      </div>
+    </div>
+    <div class="hero-contact">이은석 &nbsp;&middot;&nbsp; korea5410@gmail.com &nbsp;&middot;&nbsp; 010-7769-4682</div>
+    <div class="hero-demo">
+      <a href="demo.html">데모 페이지 보기 &rarr;</a>
+      <a class="hero-pdf" href="proposal.html" target="_blank">PDF 저장</a>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- 01 -->
+    <section id="s01">
+      <div class="section-head">
+        <div class="section-num">01</div>
+        <div class="section-title">현장 이해</div>
+      </div>
+
+      <p class="desc">전달해 주신 자료와 대화 내용을 바탕으로 파악한 현장 환경입니다.</p>
+
+      <h3>현장 환경</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">창고 규모</td><td>5층 501호·502호, 약 70~100평</td></tr>
+            <tr><td class="td-label">취급 상품</td><td>소형 소품류, 디테일(색상·사이즈·모델) 차이가 미세한 제품 다수</td></tr>
+            <tr><td class="td-label">SKU</td><td>11,821건 (계속 증가 중)</td></tr>
+            <tr><td class="td-label">판매 채널</td><td>쿠팡 로켓배송 위주, 네이버 이커머스 병행</td></tr>
+            <tr><td class="td-label">바코드 현황</td><td>일부 제품은 바코드 미부착 상태. 입고 시 부착 예정</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>왜 스캔이 필요한가</h3>
+      <div class="callout">
+        <strong>핵심 문제:</strong> 상품 식별에 숙련 기간이 필요합니다.<br><br>
+        소품류 수천 종의 디테일 차이를 눈으로 구분하려면 최소 2~3개월의 근무 경험이 필요합니다.
+        신규 직원이 들어올 때마다 이 학습 비용이 반복됩니다.<br><br>
+        <strong>해결:</strong> 바코드를 스캔하면 쿠팡 상품 이미지와 실사 사진이 즉시 표시됩니다.<br>
+        첫날 출근한 직원도 상품을 정확히 식별할 수 있습니다.
+      </div>
+
+      <h3>사용 장면</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>장면</th><th>동작</th><th>효과</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">포장·검수</td>
+              <td>포장 전 바코드 스캔 → 이미지로 상품 확인</td>
+              <td>오배송 방지, 검수 속도 향상</td>
+            </tr>
+            <tr>
+              <td class="td-label">피킹</td>
+              <td>선반에서 상품 꺼낸 후 스캔 → 맞는 제품인지 확인</td>
+              <td>오피킹 방지, 동선 내 즉시 확인</td>
+            </tr>
+            <tr>
+              <td class="td-label">신입 교육</td>
+              <td>모르는 상품 → 스캔으로 즉시 식별</td>
+              <td>숙련 기간 단축, 교육 비용 절감</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>전환 비교</h3>
+      <div class="vs">
+        <div class="vs-col vs-before">
+          <h4>현행</h4>
+          <ul>
+            <li>PC 앞까지 이동하여 조회</li>
+            <li>로그 상자 클릭 후 USB 스캐너로 스캔</li>
+            <li>xlsx 헤더 불일치 시 인식 실패</li>
+            <li>포장 위치와 PC 위치가 떨어져 있음</li>
+          </ul>
+        </div>
+        <div class="vs-col vs-after">
+          <h4>구축 후</h4>
+          <ul>
+            <li>PDA 휴대, 현장 어디서든 즉시 조회</li>
+            <li>물리 버튼 한 번으로 완료</li>
+            <li>헤더 자동 인식, 쿠팡 형식 변경에 유연 대응</li>
+            <li>피킹 동선 내에서 바로 확인</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="s02">
+      <div class="section-head">
+        <div class="section-num">02</div>
+        <div class="section-title">시스템 구성</div>
+      </div>
+
+      <p class="desc">장비 3개, 연결 2개. 단순하지만 확장에 제약이 없는 구조입니다.</p>
+
+      <div class="arch">
+        <div class="arch-node">
+          <div class="label">TC60 PDA</div>
+          <div class="sub">Android 앱<br>내장 바코드 스캐너</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="label">Mini PC</div>
+          <div class="sub">API 서버 (FastAPI)<br>SQLite DB</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="label">시놀로지 NAS</div>
+          <div class="sub">상품 이미지<br>xlsx 원본</div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue">
+        PDA가 NAS에 직접 접근하지 않습니다. 모든 요청은 Mini PC(API 서버)를 거칩니다.<br>
+        NAS 경로가 변경되더라도 서버 설정만 수정하면 됩니다. PDA 앱은 수정할 필요가 없습니다.<br><br>
+        <strong>모듈화 설계:</strong> 각 기능(조회, 파싱, 이미지 처리)이 독립된 모듈로 구성됩니다. 이후 기능을 추가하거나 기존 사내 프로그램과 연동할 때 기존 구조를 변경하지 않고 모듈 단위로 붙일 수 있는 구조입니다.
+      </div>
+
+      <h3>데이터 흐름</h3>
+      <div class="mermaid">
+sequenceDiagram
+    participant P as PDA (TC60)
+    participant S as Mini PC (API)
+    participant D as SQLite
+    participant N as NAS
+
+    P->>P: 물리버튼으로 바코드 스캔
+    P->>S: GET /api/product/{barcode}
+    S->>D: 바코드 인덱스 조회
+    D-->>S: 상품명, SKU ID, 이미지 경로
+    S->>N: 이미지 파일 읽기
+    N-->>S: 이미지 데이터
+    S-->>P: 상품 정보 + 이미지
+    Note over P: 화면 표시 완료 (0.3~0.5초)
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section id="s03">
+      <div class="section-head">
+        <div class="section-num">03</div>
+        <div class="section-title">구현 범위</div>
+      </div>
+
+      <h3>구축 기능</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>기능</th><th>상세 내용</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">바코드 스캔 연동</td><td>TC60 내장 스캐너 (Zebra DataWedge Intent 방식). 물리 버튼 한 번으로 조회가 시작됩니다.</td></tr>
+            <tr><td class="td-label">상품 정보 표시</td><td>상품명, SKU ID, 담당 BM, 발주담당자. 스캔 후 0.5초 이내에 화면에 표시됩니다.</td></tr>
+            <tr><td class="td-label">이미지 동시 표시</td><td>쿠팡 썸네일(디지털 이미지)과 실사 이미지를 한 화면에 동시에 표시합니다.</td></tr>
+            <tr><td class="td-label">상품명 검색</td><td>바코드가 미부착되었거나 훼손된 제품도 상품명으로 직접 검색하여 조회할 수 있습니다.</td></tr>
+            <tr><td class="td-label">API 서버</td><td>Mini PC에 설치. 전원이 켜지면 자동으로 시작됩니다. 별도 조작 불필요.</td></tr>
+            <tr><td class="td-label">데이터 이관</td><td>기존 xlsx 2종(sku_download, codepath)을 파싱하여 DB에 적재합니다.</td></tr>
+            <tr><td class="td-label">xlsx 자동 갱신</td><td>쿠팡 서플라이어 허브에서 새로 받은 xlsx를 NAS에 저장하면 서버가 감지하여 자동 반영합니다.</td></tr>
+            <tr><td class="td-label">서버 환경 구성</td><td>Mini PC에 원격 접속하여 설치를 완료합니다. 운영 가이드를 함께 제공합니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>PDA 앱 화면</h3>
+      <p>화면 2개. 복잡하게 구성하지 않습니다.</p>
+
+      <div class="arch" style="margin-top:16px;">
+        <div class="arch-node">
+          <div class="label">메인 화면</div>
+          <div class="sub" style="margin-top:8px;">스캔 대기 상태<br>상품명 검색 입력<br>바코드 수동 입력 가능</div>
+        </div>
+        <div class="arch-arrow">스캔 &rarr;</div>
+        <div class="arch-node">
+          <div class="label">상품 상세 화면</div>
+          <div class="sub" style="margin-top:8px;">상품명 · SKU ID<br>쿠팡 이미지 + 실사 이미지<br>담당 BM · 발주담당자</div>
+        </div>
+      </div>
+
+      <div class="callout callout-gray">
+        앱을 실행하면 바로 스캔 대기 상태입니다. 로그인이 없습니다. 별도 설정이 없습니다.<br>
+        서버 IP는 최초 1회만 입력하면 됩니다. 이후에는 PDA 전원만 켜면 바로 사용할 수 있습니다.
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="s04">
+      <div class="section-head">
+        <div class="section-num">04</div>
+        <div class="section-title">데이터 이관</div>
+      </div>
+
+      <p class="desc">현재 보유하고 계신 데이터를 시스템 DB로 옮기는 작업에 대해 안내드립니다.</p>
+
+      <h3>이관 대상</h3>
+      <!-- 데스크탑: 테이블 -->
+      <div class="table-wrap migration-table">
+        <table>
+          <thead><tr><th>파일</th><th>컬럼 구조</th><th>처리 방식</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">coupangmd00_sku_download</td>
+              <td>SKU ID, 상품명, 바코드, 발주가능상태, 담당BM, 발주담당자, 치수, MOQ, 중량 등 17개 컬럼</td>
+              <td>파서가 헤더를 자동 탐색하여 DB에 적재</td>
+            </tr>
+            <tr>
+              <td class="td-label">codepath.xlsx</td>
+              <td>바코드(A열), 이미지 경로(B열). 헤더 없음</td>
+              <td>매핑 정보를 DB에 저장</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- 모바일: 카드형 -->
+      <div class="migration-cards">
+        <div class="migration-card">
+          <div class="migration-card-title">coupangmd00_sku_download</div>
+          <div class="migration-card-row"><span>컬럼 구조</span> SKU ID, 상품명, 바코드, 발주가능상태, 담당BM, 발주담당자, 치수, MOQ, 중량 등 17개 컬럼</div>
+          <div class="migration-card-row"><span>처리 방식</span> 파서가 헤더를 자동 탐색하여 DB에 적재</div>
+        </div>
+        <div class="migration-card">
+          <div class="migration-card-title">codepath.xlsx</div>
+          <div class="migration-card-row"><span>컬럼 구조</span> 바코드(A열), 이미지 경로(B열). 헤더 없음</div>
+          <div class="migration-card-row"><span>처리 방식</span> 매핑 정보를 DB에 저장</div>
+        </div>
+      </div>
+
+      <h3>헤더 불일치 문제</h3>
+      <p>현행 시스템 로그에 <code>sku_download 헤더 인식 실패</code> 에러가 반복 발생하고 있었습니다.<br>
+      쿠팡 서플라이어 허브의 내보내기 형식이 변경될 경우 즉시 장애로 이어지는 구조였습니다.</p>
+
+      <p>해결 방식은 두 가지 방향이 있습니다. 대표님 판단에 따라 선택해 주시면 됩니다.</p>
+
+      <div class="vs">
+        <div class="vs-col vs-after">
+          <h4>방안 A — 자동 매칭</h4>
+          <ul>
+            <li>유사한 컬럼명을 자동으로 인식<br>
+              <span style="font-size:12px;color:#555;">예: "SKU ID" / "skuId" / "SKU_ID" → 동일 컬럼</span></li>
+            <li>형식이 바뀌어도 중단 없이 처리</li>
+            <li>매칭 실패 시 로그에 기록</li>
+          </ul>
+        </div>
+        <div class="vs-col vs-neutral">
+          <h4>방안 B — 수동 지정</h4>
+          <ul>
+            <li>매칭 실패한 컬럼을 로그에 기록</li>
+            <li>운영자가 직접 컬럼 매핑을 확인하고 수정</li>
+            <li>의도하지 않은 자동 매칭 오류 방지</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>대응 가능 파일 형식</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>형식</th><th>지원</th></tr></thead>
+          <tbody>
+            <tr><td>.xlsx / .xls</td><td>지원</td></tr>
+            <tr><td>.csv / .tsv</td><td>지원 (인코딩 자동 감지, 구분자 자동 판별)</td></tr>
+            <tr><td>Google Sheets</td><td>공유 링크로 직접 연동 가능 (API 키 불필요, 공유 설정된 시트 기준)</td></tr>
+            <tr><td>.ods (LibreOffice)</td><td>지원</td></tr>
+            <tr><td>.json</td><td>지원 (배열 형태의 상품 데이터)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <strong>데이터 이관 범위 안내:</strong><br><br>
+        기존에 보유하고 계신 SKU, 바코드, 상품명, 이미지 데이터를 이번 시스템 DB로 정리 및 이관하는 작업이 개발 범위에 포함되어 있습니다. 데이터 형식이 일정하지 않은 경우의 정제 작업 역시 개발 범위에 포함됩니다. 별도로 사전 정리하실 필요가 없습니다.
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section id="s05">
+      <div class="section-head">
+        <div class="section-num">05</div>
+        <div class="section-title">신규 데이터 반영</div>
+      </div>
+
+      <p class="desc">SKU가 계속 증가하는 상황을 전제로 설계합니다.</p>
+
+      <h3>운영 프로세스</h3>
+      <div class="callout">
+        <strong>1.</strong> 쿠팡 서플라이어 허브에서 최신 xlsx를 다운로드합니다.<br>
+        <strong>2.</strong> NAS의 기존 경로(<code>Z:\물류부\scan\</code>)에 저장합니다.<br>
+        <strong>3.</strong> 서버가 자동으로 감지하여 DB에 반영합니다.<br><br>
+        현재 하고 계신 방식과 동일합니다. 추가로 익혀야 할 절차가 없습니다.
+      </div>
+
+      <h3>갱신 규칙</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>상황</th><th>처리 방식</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">신규 바코드</td><td>DB에 추가</td></tr>
+            <tr><td class="td-label">기존 바코드, 정보 변경</td><td>최신 데이터로 갱신</td></tr>
+            <tr><td class="td-label">기존 바코드, xlsx에서 누락</td><td>DB에서 삭제하지 않음 (데이터 보호)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>모든 갱신 작업은 로그에 기록됩니다. 몇 건이 추가되었고 몇 건이 수정되었는지 확인하실 수 있습니다.</p>
+
+      <h3>신규 상품 이미지 연결</h3>
+      <div class="callout">
+        <strong>자동 매핑:</strong><br><br>
+        신규 상품의 이미지 연결은 반자동으로 이루어집니다. NAS의 <code>img/</code> 또는 <code>real_image/</code> 폴더에 이미지를 저장하면, 서버가 파일명 규칙(바코드 또는 SKU ID 기반)으로 자동 매칭합니다. 수동으로 <code>codepath.xlsx</code>를 편집할 필요가 없습니다.
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section id="s06">
+      <div class="section-head">
+        <div class="section-num">06</div>
+        <div class="section-title">이미지 연동</div>
+      </div>
+
+      <h3>이미지 종류</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>종류</th><th>저장 위치</th><th>설명</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">쿠팡 이미지 (디지털)</td><td>NAS img/ 폴더</td><td>쿠팡에서 판매 중인 상품 대표 이미지. 000XXX_해시.jpg 형식</td></tr>
+            <tr><td class="td-label">실사 이미지</td><td>NAS real_image/ 폴더</td><td>현장에서 직접 촬영한 실물 사진. 포장 상태 확인용</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>이미지 탐색 순서</h3>
+      <div class="mermaid">
+graph TD
+    A["바코드 스캔"] --> B{"codepath에<br>경로 존재?"}
+    B -- 있음 --> C["해당 이미지 표시"]
+    B -- 없음 --> D{"파일명 규칙으로<br>자동 탐색"}
+    D -- 찾음 --> C
+    D -- 못 찾음 --> E["이미지 없음 표시"]
+      </div>
+
+      <p>codepath.xlsx에 등록된 경로를 우선 참조하며, 등록되지 않은 경우 파일명 규칙 기반으로 자동 탐색합니다.<br>
+      이미지가 없는 경우에도 앱이 중단되지 않으며, 상품 정보는 정상적으로 표시됩니다.</p>
+
+      <h3>신규 상품 이미지 등록</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>작업</th><th>방식</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">실사 사진 등록</td>
+              <td>촬영 후 NAS real_image/ 폴더에 저장 (기존 방식 동일)</td>
+            </tr>
+            <tr>
+              <td class="td-label">바코드-이미지 매핑</td>
+              <td>DB 기반 자동 매핑. codepath.xlsx 수동 편집 불필요</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section id="s07">
+      <div class="section-head">
+        <div class="section-num">07</div>
+        <div class="section-title">성능 설계</div>
+      </div>
+
+      <p class="desc">스캔부터 화면 표시까지 0.3~0.5초. 각 구간의 소요 시간과 설계 방식입니다.</p>
+
+      <h3>구간별 응답 시간</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>구간</th><th>소요 시간</th><th>설계 방식</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">바코드 스캔 → 앱 수신</td><td>~50ms</td><td>DataWedge 하드웨어 레벨 처리</td></tr>
+            <tr><td class="td-label">API 요청 → DB 조회</td><td>~30ms</td><td>바코드 컬럼 B-tree 인덱스</td></tr>
+            <tr><td class="td-label">이미지 전송</td><td>~200ms</td><td>PDA 해상도 기준 리사이즈 캐싱</td></tr>
+            <tr><td class="td-label">화면 렌더링</td><td>~50ms</td><td>메모리 캐시 적용</td></tr>
+            <tr class="total">
+              <td>합계</td><td>0.3 ~ 0.5초</td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>볼륨 대응</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>현재 규모</th><th>대응 한계</th><th>설계</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">SKU</td><td>11,821건</td><td>100,000건</td><td>SQLite 인덱스, 해시 조회</td></tr>
+            <tr><td class="td-label">바코드</td><td>11,821건</td><td>200,000건</td><td>바코드 → SKU 별도 매핑 테이블</td></tr>
+            <tr><td class="td-label">이미지</td><td>수천 장</td><td>제한 없음</td><td>PDA LRU 캐시 + 서버 리사이즈 캐시</td></tr>
+            <tr><td class="td-label">동시 PDA</td><td>—</td><td>10대 이상</td><td>FastAPI 비동기 처리</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        현재 데이터 기준 약 8배 이상의 성장 여력이 있습니다.<br>
+        매출 규모가 확대되어 SKU가 증가하더라도 아키텍처 변경 없이 수용 가능합니다.
+      </div>
+
+      <h3>캐시 구조</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>계층</th><th>위치</th><th>역할</th><th>효과</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">서버 캐시</td>
+              <td>Mini PC</td>
+              <td>NAS에서 읽은 이미지를 PDA 해상도에 맞게 리사이즈 후 저장. 동일 상품 재조회 시 NAS 접근 없이 즉시 응답</td>
+              <td>이미지 응답 200ms → 20ms</td>
+            </tr>
+            <tr>
+              <td class="td-label">PDA 캐시</td>
+              <td>PDA 앱 내부</td>
+              <td>최근 조회한 상품 이미지를 앱 메모리에 보관 (LRU 방식, 최대 500건)</td>
+              <td>반복 조회 시 네트워크 요청 없이 즉시 표시</td>
+            </tr>
+            <tr>
+              <td class="td-label">DB 캐시</td>
+              <td>SQLite</td>
+              <td>바코드 인덱스가 메모리에 상주. 디스크 I/O 없이 조회</td>
+              <td>DB 조회 30ms → 5ms (재조회)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-blue">
+        <strong>NAS를 직접 조회하지 않습니다.</strong><br><br>
+        모든 이미지는 Mini PC 서버를 경유하며, 한 번 조회된 이미지는 서버에 캐싱되어 이후 요청에서는 NAS에 접근하지 않습니다.
+      </div>
+
+      <h3>성능 측정 기준</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>기준</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">네트워크</td><td>내부 WiFi (2.4GHz/5GHz), PDA ↔ Mini PC 동일 서브넷</td></tr>
+            <tr><td class="td-label">응답 범위</td><td>상품 정보 + 이미지 1장 포함 기준</td></tr>
+            <tr><td class="td-label">0.3초</td><td>서버 캐시 적중 시 (재조회)</td></tr>
+            <tr><td class="td-label">0.5초</td><td>캐시 미적중, NAS에서 이미지 최초 로드 시</td></tr>
+            <tr><td class="td-label">동시 접속</td><td>PDA 1대 기준. 10대 동시 사용 시에도 0.5초 이내 유지</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>DB 구조</h3>
+      <div class="mermaid">
+erDiagram
+    PRODUCT {
+        int id PK
+        string sku_id UK
+        string name
+        string bm
+        string manager
+    }
+    BARCODE {
+        int id PK
+        string code UK
+        int product_id FK
+    }
+    IMAGE {
+        int id PK
+        int product_id FK
+        string type "thumbnail | real"
+        string path
+    }
+    PRODUCT ||--o{ BARCODE : "1 : N"
+    PRODUCT ||--o{ IMAGE : "1 : N"
+      </div>
+      <p>상품 1건에 바코드 여러 개, 이미지 여러 개. 현재 운영하고 계신 데이터 구조를 그대로 반영한 설계입니다.</p>
+    </section>
+
+    <!-- 08 -->
+    <section id="s08">
+      <div class="section-head">
+        <div class="section-num">08</div>
+        <div class="section-title">운영 안정성</div>
+      </div>
+
+      <p class="desc">시스템이 정상 작동하지 않을 때 어떤 일이 발생하는지, 그리고 어떻게 복구되는지에 대한 설계입니다.</p>
+
+      <h3>장애 상황별 대응</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>상황</th><th>증상</th><th>대응</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">Mini PC 꺼짐</td>
+              <td>PDA에서 조회 불가</td>
+              <td>PDA 화면에 "서버 연결 안 됨" 안내 표시. Mini PC 전원 켜면 서버 자동 시작</td>
+            </tr>
+            <tr>
+              <td class="td-label">NAS 접근 불가</td>
+              <td>이미지 미표시</td>
+              <td>상품 정보(상품명, SKU 등)는 정상 표시. 이미지 영역에 "이미지 로드 실패" 표시</td>
+            </tr>
+            <tr>
+              <td class="td-label">WiFi 끊김</td>
+              <td>PDA 조회 불가</td>
+              <td>재연결 시 자동 복구. 별도 앱 재시작 불필요</td>
+            </tr>
+            <tr>
+              <td class="td-label">xlsx 형식 오류</td>
+              <td>DB 갱신 실패</td>
+              <td>기존 데이터 유지 (덮어쓰지 않음). 실패 원인을 로그에 기록</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <strong>설계 원칙:</strong> 어느 한 부분이 실패해도 전체 시스템이 중단되지 않습니다.<br>
+        NAS가 꺼져도 상품 정보는 조회되고, xlsx 파싱이 실패해도 기존 데이터는 보존됩니다.
+      </div>
+
+      <h3>데이터 백업</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>방식</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">DB 자동 백업</td><td>매일 1회, 최근 7일분 보관. Mini PC 내 별도 폴더에 저장</td></tr>
+            <tr><td class="td-label">xlsx 원본 보존</td><td>파싱 완료된 xlsx는 삭제하지 않음. NAS에 원본 유지</td></tr>
+            <tr><td class="td-label">복구</td><td>백업 파일로 즉시 복원 가능. 명령어 1줄로 완료</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>보안</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">네트워크</td><td>내부 WiFi 전용. 외부 인터넷에서 접근 불가</td></tr>
+            <tr><td class="td-label">데이터 전송</td><td>PDA ↔ 서버 간 내부망 통신. 외부 서버로 데이터 전송 없음</td></tr>
+            <tr><td class="td-label">접근 제어</td><td>API 서버는 등록된 내부 IP 대역에서만 응답</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>앱 업데이트</h3>
+      <p>기능 수정이나 버그 수정 시 새 APK 파일을 제공합니다.<br>
+      NAS에 APK를 올려두면 PDA에서 다운로드하여 설치할 수 있습니다. 또는 원격으로 직접 설치해 드립니다.</p>
+    </section>
+
+    <!-- 09 -->
+    <section id="s09">
+      <div class="section-head">
+        <div class="section-num">09</div>
+        <div class="section-title">개발 일정</div>
+      </div>
+
+      <p class="desc">착수일 기준 10 영업일. 서버와 앱 개발을 병렬로 진행합니다.</p>
+
+      <div class="gantt">
+        <div class="gantt-header">
+          <div class="gantt-header-days">
+            <span>D+1</span><span>D+2</span><span>D+3</span><span>D+4</span><span>D+5</span>
+            <span>D+6</span><span>D+7</span><span>D+8</span><span>D+9</span><span>D+10</span>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">DB 설계 + xlsx 파서</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:0%;width:30%;">3일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">API 개발</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:30%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">NAS 연동 + 캐싱</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:50%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">앱 UI + 프로젝트 구성</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:0%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">스캐너 연동</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:20%;width:10%;">1일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">API 연동 + 이미지</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:30%;width:30%;">3일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">통합 테스트</div>
+          <div class="gantt-track"><div class="gantt-bar g-int" style="left:70%;width:10%;">1일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">현장 설치 + 인수</div>
+          <div class="gantt-track"><div class="gantt-bar g-int" style="left:80%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-legend">
+          <span><span class="legend-dot" style="background:var(--navy);"></span>서버</span>
+          <span><span class="legend-dot" style="background:var(--orange);"></span>앱</span>
+          <span><span class="legend-dot" style="background:#3b82f6;"></span>통합</span>
+        </div>
+      </div>
+
+      <h3>착수 전 준비사항</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th><th>담당</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">Mini PC 원격 접속</td><td>AnyDesk 또는 TeamViewer 설치</td><td><span class="tag tag-c">운영</span></td></tr>
+            <tr><td class="td-label">PDA 실기기</td><td>택배 발송 또는 현장 방문 일정 조율</td><td><span class="tag tag-c">운영</span></td></tr>
+            <tr><td class="td-label">NAS 접근 정보</td><td>접속 계정 및 경로 공유</td><td><span class="tag tag-c">운영</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="s10">
+      <div class="section-head">
+        <div class="section-num">10</div>
+        <div class="section-title">비용</div>
+      </div>
+
+      <p class="desc">구축에 필요한 비용을 안내드립니다. 각 항목의 범위와 산출 근거를 함께 기재하였습니다.</p>
+
+      <h3>개발 비용</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>범위</th><th style="text-align:right;">금액 (원)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-label">Android PDA 앱</td>
+              <td>UI 설계, DataWedge 연동, API 통신, 이미지 표시, 검색 기능</td>
+              <td style="text-align:right;font-family:var(--font-mono);">1,500,000</td>
+            </tr>
+            <tr>
+              <td class="td-label">API 서버</td>
+              <td>REST API 설계, xlsx 파서, DB 관리, 이미지 프록시, 자동 갱신</td>
+              <td style="text-align:right;font-family:var(--font-mono);">1,000,000</td>
+            </tr>
+            <tr>
+              <td class="td-label">데이터 이관 + 설치</td>
+              <td>초기 데이터 적재, NAS 연동, 서버 환경 구성, 원격 설치</td>
+              <td style="text-align:right;font-family:var(--font-mono);">500,000</td>
+            </tr>
+            <tr class="total">
+              <td>합계</td>
+              <td></td>
+              <td style="text-align:right;font-family:var(--font-mono);font-size:15px;">3,000,000원 (VAT 별도)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>결제 조건</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>시점</th><th>비율</th><th>조건</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">계약 시</td><td>50%</td><td>착수금</td></tr>
+            <tr><td class="td-label">인수 완료</td><td>50%</td><td>PDA 실기기 테스트 통과 확인 후</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:8px;">결제 일정은 협의를 통해 조정 가능합니다.</p>
+
+      <h3>납품 산출물</h3>
+      <ul>
+        <li>Android APK 파일 (TC60 설치용)</li>
+        <li>서버 프로그램 일체 (Mini PC 설치 완료 상태)</li>
+        <li>소스코드 전체</li>
+        <li>운영 가이드 (xlsx 업로드 절차, 서버 재시작 방법)</li>
+      </ul>
+
+      <h3>하자 보수</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">기간</td><td>인수 완료 후 3개월</td></tr>
+            <tr><td class="td-label">범위</td><td>본 제안서에 명시된 기능의 오류 수정</td></tr>
+            <tr><td class="td-label">제외</td><td>운영 환경 변경(NAS 교체, 네트워크 구조 변경 등)에 따른 수정</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:8px;">하자 보수 기간 중 발생하는 수정 작업에 대해 별도 비용은 청구하지 않습니다.</p>
+    </section>
+
+  </div><!-- /content -->
+
+
+</div><!-- /main -->
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    fontSize: 13,
+    flowchart: { curve: 'basis' }
+  });
+
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const drawer = document.getElementById('mobileDrawer');
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = drawer.classList.toggle('open');
+    hamburger.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    hamburger.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Active nav on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar .nav-item');
+
+  const activeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => activeObserver.observe(s));
+
+  // Fade-in on scroll
+  const fadeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        fadeObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05 });
+
+  sections.forEach(s => fadeObserver.observe(s));
+
+  // Scroll progress bar
+  const progressBar = document.getElementById('scroll-progress');
+  function updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  // Back-to-top button
+  const backToTop = document.getElementById('back-to-top');
+  const heroEl = document.querySelector('.hero');
+  const heroObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      backToTop.classList.toggle('visible', !entry.isIntersecting);
+    });
+  }, { threshold: 0 });
+  heroObserver.observe(heroEl);
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Hero stats counter animation
+  function animateCounter(el) {
+    if (el.dataset.static) return; // static value, no animation
+    const target = parseInt(el.dataset.target, 10);
+    const suffix = el.dataset.suffix || '';
+    const format = el.dataset.format;
+    const duration = 900;
+    const startTime = performance.now();
+
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(target * eased);
+      let display = current.toString();
+      if (format === 'comma') {
+        display = current.toLocaleString('ko-KR');
+      }
+      el.textContent = display + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  const statsEls = document.querySelectorAll('.hero-stat-num[data-target]');
+  let statsAnimated = false;
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !statsAnimated) {
+        statsAnimated = true;
+        statsEls.forEach(el => animateCounter(el));
+        statsObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+  statsObserver.observe(document.getElementById('heroStats'));
+
+  // Lightbox for mermaid diagrams
+  const lightbox = document.createElement('div');
+  lightbox.className = 'lightbox';
+  lightbox.innerHTML = '<div class="lightbox-content"><button class="lightbox-close">&times;</button><div class="lightbox-body"></div></div>';
+  document.body.appendChild(lightbox);
+
+  const lbBody = lightbox.querySelector('.lightbox-body');
+  const lbClose = lightbox.querySelector('.lightbox-close');
+
+  function openLightbox(el, opts) {
+    lbBody.innerHTML = el.outerHTML;
+    // strip the ::after pseudo and cursor from cloned element so it doesn't show hint inside lightbox
+    const cloned = lbBody.firstElementChild;
+    if (cloned) {
+      cloned.style.cursor = 'default';
+      cloned.style.margin = '0';
+    }
+    lbBody.style.textAlign = opts.textAlign || '';
+    lbBody.style.minWidth = opts.minWidth || '';
+    lbBody.style.width = opts.width || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.querySelectorAll('.mermaid').forEach(el => {
+    el.addEventListener('click', () => {
+      lbBody.innerHTML = el.innerHTML;
+      lbBody.style.textAlign = 'center';
+      lbBody.style.minWidth = '60vw';
+      lbBody.style.width = '';
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  document.querySelectorAll('.arch').forEach(el => {
+    el.addEventListener('click', () => openLightbox(el, { width: 'min(90vw, 860px)' }));
+  });
+
+  document.querySelectorAll('.vs').forEach(el => {
+    el.addEventListener('click', () => openLightbox(el, { width: 'min(90vw, 680px)' }));
+  });
+
+  document.querySelectorAll('.gantt').forEach(el => {
+    el.addEventListener('click', () => openLightbox(el, { width: 'min(90vw, 780px)' }));
+  });
+
+  lbClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Table scroll hint for mobile
+  document.querySelectorAll('.table-wrap').forEach(wrap => {
+    const checkScroll = () => {
+      wrap.classList.toggle('scrollable', wrap.scrollWidth > wrap.clientWidth + 2);
+    };
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    wrap.addEventListener('scroll', () => {
+      const atEnd = wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 2;
+      wrap.classList.toggle('scrollable', !atEnd && wrap.scrollWidth > wrap.clientWidth + 2);
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바코드 스캐너 시스템 제안서</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  @page { size: landscape; margin: 0; }
+
+  @media print {
+    .slide {
+      height: 100vh;
+      overflow: hidden;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+    .slide-right {
+      overflow: visible;
+      padding: 28px 4vw 28px 3vw;
+    }
+    .slide-left {
+      padding: 32px 28px;
+    }
+    .slide-full {
+      overflow: visible;
+      padding: 32px 5vw;
+    }
+    /* 전체 폰트/간격 축소 */
+    .section-num { font-size: 60px; margin-bottom: 12px; }
+    .section-title { font-size: 18px; }
+    .section-desc { font-size: 11px; margin-top: 12px; }
+    h3 { font-size: 12px; margin: 10px 0 5px; }
+    table { font-size: 10px; margin: 4px 0 8px; }
+    thead th { padding: 5px 8px; font-size: 9px; }
+    td { padding: 4px 8px; }
+    .callout { padding: 7px 10px; margin: 6px 0; font-size: 10px; }
+    .vs-col { padding: 8px 10px; font-size: 10px; }
+    .vs-col li { margin: 2px 0; }
+    p { font-size: 10px; margin: 3px 0; }
+    .desc, .section-desc { font-size: 10px; }
+    ul, ol { font-size: 10px; margin: 3px 0 3px 14px; }
+    li { margin: 2px 0; }
+    .gantt-label { font-size: 9px; width: 160px; }
+    .gantt-bar { font-size: 8px; }
+    .gantt-days span { font-size: 8px; }
+    .slide-left { width: 22vw; min-width: 200px; }
+  }
+
+  :root {
+    --navy: #1a2332;
+    --navy-light: #243045;
+    --navy-mid: #2d3d55;
+    --orange: #e8734a;
+    --orange-dim: rgba(232,115,74,0.12);
+    --orange-border: rgba(232,115,74,0.3);
+    --white: #ffffff;
+    --white-80: rgba(255,255,255,0.80);
+    --white-50: rgba(255,255,255,0.50);
+    --white-25: rgba(255,255,255,0.25);
+    --white-10: rgba(255,255,255,0.10);
+    --white-06: rgba(255,255,255,0.06);
+    --slide-count: 13;
+    --transition: 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *, *::before, *::after {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
+
+  html, body {
+    overflow: visible; height: auto; width: auto;
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  #slider {
+    overflow: visible; width: auto; height: auto;
+  }
+
+  #track {
+    display: block; width: auto; height: auto; transition: none;
+  }
+
+  .slide {
+    width: 100vw; height: 100vh; flex-shrink: unset;
+    display: flex; page-break-after: always; overflow: hidden;
+    position: relative;
+    background: var(--navy);
+    page-break-inside: avoid;
+  }
+
+  /* ── COVER SLIDE ── */
+  .slide-cover {
+    background: var(--navy);
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 10vw;
+  }
+
+  .cover-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cover-bg::before {
+    content: '';
+    position: absolute;
+    right: -5vw;
+    top: -10vh;
+    width: 55vw;
+    height: 120vh;
+    background: linear-gradient(135deg, transparent 30%, rgba(232,115,74,0.04) 60%, rgba(232,115,74,0.08) 100%);
+    transform: skewX(-8deg);
+  }
+
+  .cover-bg::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--orange);
+  }
+
+  .cover-grid-line {
+    position: absolute;
+    top: 0; right: 18vw;
+    width: 1px;
+    height: 100%;
+    background: var(--white-06);
+  }
+
+  .cover-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-accent {
+    width: 48px;
+    height: 3px;
+    background: var(--orange);
+    margin-bottom: 40px;
+  }
+
+  .cover-title {
+    font-size: clamp(48px, 5.5vw, 80px);
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: -2px;
+    line-height: 1.15;
+    margin-bottom: 28px;
+  }
+
+  .cover-subtitle {
+    font-size: clamp(14px, 1.4vw, 20px);
+    font-weight: 300;
+    color: var(--white-50);
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+    margin-bottom: 72px;
+  }
+
+  .cover-contact {
+    font-size: clamp(12px, 1vw, 15px);
+    color: var(--white-25);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── CONTENT SLIDE LAYOUT ── */
+  .slide-content {
+    flex-direction: row;
+  }
+
+  .slide-left {
+    width: 22vw;
+    min-width: 220px;
+    background: var(--navy-light);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 36px 32px;
+    position: relative;
+    flex-shrink: 0;
+    border-right: 1px solid var(--white-06);
+  }
+
+  .slide-left::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--orange);
+  }
+
+  .section-num {
+    font-size: clamp(72px, 7vw, 110px);
+    font-weight: 900;
+    color: var(--orange);
+    line-height: 1;
+    letter-spacing: -4px;
+    margin-bottom: 20px;
+    opacity: 0.9;
+  }
+
+  .section-title {
+    font-size: clamp(18px, 1.8vw, 26px);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.4;
+    letter-spacing: -0.5px;
+  }
+
+  .section-desc {
+    margin-top: 20px;
+    font-size: clamp(11px, 0.85vw, 14px);
+    color: var(--white-50);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .slide-right {
+    flex: 1;
+    overflow: visible;
+    padding: 28px 3vw 28px 2.5vw;
+  }
+
+  /* ── FULL-WIDTH SLIDE ── */
+  .slide-full {
+    flex-direction: column;
+    padding: 36px 5vw;
+    overflow: visible;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h3 {
+    font-size: clamp(12px, 1vw, 15px);
+    font-weight: 700;
+    color: var(--white-80);
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--white-10);
+    letter-spacing: -0.3px;
+  }
+
+  h3:first-child { margin-top: 0; }
+
+  h3::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--orange);
+    margin-right: 10px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  p, .desc-text {
+    font-size: clamp(12px, 0.9vw, 14px);
+    color: var(--white-50);
+    line-height: 1.75;
+    margin: 6px 0;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.88em;
+    background: var(--white-06);
+    color: var(--orange);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: clamp(11px, 0.88vw, 14px);
+  }
+
+  thead th {
+    background: var(--navy-mid);
+    color: var(--white-80);
+    font-weight: 600;
+    padding: 12px 18px;
+    text-align: left;
+    font-size: clamp(10px, 0.82vw, 13px);
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--orange);
+  }
+
+  td {
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--white-06);
+    vertical-align: top;
+    color: var(--white-80);
+    line-height: 1.6;
+  }
+
+  tr:hover td { background: var(--white-06); }
+
+  .td-label {
+    font-weight: 600;
+    color: var(--white);
+    white-space: nowrap;
+    font-size: clamp(11px, 0.82vw, 13px);
+  }
+
+  tr.total-row td {
+    font-weight: 700;
+    color: var(--white);
+    background: var(--navy-mid);
+    border-top: 1px solid var(--white-25);
+  }
+
+  td[style*="text-align:right"] {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--orange);
+    background: var(--orange-dim);
+    padding: 16px 20px;
+    margin: 14px 0;
+    font-size: clamp(11px, 0.88vw, 14px);
+    line-height: 1.75;
+    color: var(--white-80);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .callout strong { color: var(--white); }
+
+  .callout-blue {
+    border-left-color: #3b82f6;
+    background: rgba(59,130,246,0.1);
+  }
+
+  .callout-gray {
+    border-left-color: rgba(255,255,255,0.2);
+    background: var(--white-06);
+  }
+
+  /* ── VS COLUMNS ── */
+  .vs {
+    display: flex;
+    gap: 16px;
+    margin: 14px 0;
+  }
+
+  .vs-col {
+    flex: 1;
+    padding: 20px 22px;
+    border-radius: 6px;
+    font-size: clamp(11px, 0.85vw, 13px);
+  }
+
+  .vs-col h4 {
+    font-size: clamp(12px, 0.9vw, 14px);
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .vs-col ul { margin: 0 0 0 16px; }
+  .vs-col li { margin: 5px 0; color: var(--white-80); line-height: 1.6; }
+
+  .vs-before {
+    background: rgba(180,60,60,0.12);
+    border: 1px solid rgba(200,80,80,0.2);
+  }
+
+  .vs-before h4 { color: #f87171; }
+
+  .vs-after {
+    background: rgba(40,160,100,0.1);
+    border: 1px solid rgba(40,160,100,0.2);
+  }
+
+  .vs-after h4 { color: #4ade80; }
+
+  .vs-col-blue {
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+
+  .vs-col-blue h4 { color: #60a5fa; }
+
+  /* ── ARCH NODES ── */
+  .arch {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+  }
+
+  .arch-node {
+    flex: 1;
+    text-align: center;
+    padding: 28px 16px;
+    background: var(--navy-mid);
+    border: 1px solid var(--white-10);
+    border-radius: 8px;
+  }
+
+  .arch-node .label {
+    font-weight: 700;
+    font-size: clamp(13px, 1vw, 16px);
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .arch-node .sub {
+    color: var(--white-50);
+    font-size: clamp(10px, 0.75vw, 12px);
+    line-height: 1.6;
+  }
+
+  .arch-arrow {
+    padding: 0 16px;
+    color: var(--white-25);
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .arch-node-box {
+    flex: 1;
+    text-align: center;
+    padding: 24px 16px;
+    background: var(--navy-mid);
+    border: 1px solid var(--white-10);
+    border-radius: 8px;
+  }
+
+  .arch-node-box .label {
+    font-weight: 700;
+    font-size: clamp(13px, 1vw, 16px);
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .arch-node-box .sub {
+    color: var(--white-50);
+    font-size: clamp(10px, 0.75vw, 12px);
+    line-height: 1.6;
+  }
+
+  /* ── MERMAID ── */
+  .mermaid {
+    margin: 20px auto;
+    text-align: center;
+    background: var(--navy-light);
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid var(--white-06);
+  }
+
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ── GANTT ── */
+  .gantt { margin: 16px 0; }
+
+  .gantt-row {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+  }
+
+  .gantt-label {
+    width: 200px;
+    text-align: right;
+    padding-right: 16px;
+    font-size: clamp(10px, 0.82vw, 13px);
+    color: var(--white-50);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .gantt-track {
+    flex: 1;
+    height: 28px;
+    position: relative;
+    background: var(--white-06);
+    border-radius: 3px;
+  }
+
+  .gantt-bar {
+    position: absolute;
+    top: 3px;
+    height: 22px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: var(--white);
+    font-size: clamp(9px, 0.75vw, 11px);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .g-srv { background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.15); }
+  .g-app { background: var(--orange); opacity: 0.9; }
+  .g-int { background: #3b82f6; opacity: 0.9; }
+
+  .gantt-days {
+    display: flex;
+    flex: 1;
+    font-size: clamp(9px, 0.72vw, 11px);
+    color: var(--white-25);
+    margin-bottom: 2px;
+  }
+
+  .gantt-days span {
+    flex: 1;
+    text-align: center;
+    border-left: 1px solid var(--white-06);
+    padding: 3px 0;
+  }
+
+  .gantt-legend {
+    display: flex;
+    gap: 20px;
+    font-size: clamp(10px, 0.78vw, 12px);
+    color: var(--white-50);
+    margin-top: 12px;
+  }
+
+  .gantt-legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── TAG ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: clamp(9px, 0.72vw, 11px);
+    font-weight: 600;
+  }
+
+  .tag-y { background: rgba(40,160,100,0.18); color: #4ade80; }
+  .tag-c { background: var(--orange-dim); color: var(--orange); }
+
+  /* ── MODULE GRID ── */
+  .module-grid {
+    display: flex;
+    gap: 14px;
+    margin: 16px 0;
+  }
+
+  .module-box {
+    flex: 1;
+    border: 1px solid var(--white-10);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    background: var(--navy-mid);
+  }
+
+  .module-box.active {
+    border-color: var(--orange-border);
+    background: var(--orange-dim);
+  }
+
+  .module-box .m-title {
+    font-weight: 700;
+    font-size: clamp(12px, 0.9vw, 14px);
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .module-box.active .m-title { color: var(--orange); }
+
+  .module-box .m-desc {
+    font-size: clamp(10px, 0.75vw, 12px);
+    color: var(--white-50);
+    line-height: 1.5;
+  }
+
+  .m-badge {
+    position: absolute;
+    top: -9px;
+    right: 12px;
+    font-size: clamp(8px, 0.68vw, 10px);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .m-now { background: var(--orange); color: #fff; }
+  .m-next { background: var(--white-10); color: var(--white-50); }
+
+  /* ── PRICE HIGHLIGHT ── */
+  .price-total {
+    font-size: clamp(22px, 2.2vw, 32px);
+    font-weight: 900;
+    color: var(--orange);
+    letter-spacing: -1px;
+  }
+
+  .price-note {
+    font-size: clamp(11px, 0.82vw, 13px);
+    color: var(--white-50);
+    margin-left: 8px;
+  }
+
+  /* ── FOOTER SLIDE ── */
+  .foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--white-10);
+    font-size: clamp(11px, 0.85vw, 14px);
+    color: var(--white-50);
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  /* ── PRINT: hide navigation ── */
+  #nav-dots, #slide-counter, #nav-hint, #nav-prev, #nav-next { display: none; }
+
+  /* ── NAVIGATION UI ── */
+  #nav-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--white-25);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+  }
+
+  .dot.active {
+    background: var(--orange);
+    transform: scale(1.4);
+  }
+
+  .dot:hover:not(.active) {
+    background: var(--white-50);
+  }
+
+  #slide-counter {
+    position: fixed;
+    bottom: 28px;
+    right: 36px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--white-25);
+    letter-spacing: 2px;
+    z-index: 100;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #nav-hint {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--white-25);
+    letter-spacing: 1px;
+    z-index: 100;
+    transition: opacity 0.5s;
+  }
+
+  /* Click zones */
+  #nav-prev, #nav-next {
+    position: fixed;
+    top: 0;
+    width: 8vw;
+    height: 100vh;
+    z-index: 50;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+  }
+
+  #nav-prev { left: 0; }
+  #nav-next { right: 0; }
+
+  /* ── SLIDE-IN ANIMATIONS (disabled for print) ── */
+  .slide-left-panel, .slide-right, .cover-content {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  /* ── SLIDE LABEL (sub-slide indicator) ── */
+  .slide-sub-label {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 10px;
+    color: var(--white-25);
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  /* ── UTILITY ── */
+  ul, ol { margin: 6px 0 6px 18px; }
+  li { margin: 4px 0; font-size: clamp(11px, 0.88vw, 14px); color: var(--white-80); line-height: 1.65; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 4px;
+  }
+
+  .highlight-box {
+    background: var(--navy-mid);
+    border: 1px solid var(--white-10);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 12px 0;
+  }
+
+  .highlight-box .num {
+    font-size: clamp(28px, 2.8vw, 42px);
+    font-weight: 900;
+    color: var(--orange);
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  .highlight-box .label {
+    font-size: clamp(11px, 0.85vw, 13px);
+    color: var(--white-50);
+    margin-top: 4px;
+  }
+
+  .metric-row {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    flex-wrap: nowrap;
+  }
+
+  .metric-box {
+    flex: 1;
+    background: var(--navy-mid);
+    border: 1px solid var(--white-10);
+    border-radius: 6px;
+    padding: 10px 8px;
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .metric-box .val {
+    font-size: clamp(14px, 1.4vw, 20px);
+    font-weight: 900;
+    color: var(--orange);
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+
+  .metric-box .lbl {
+    font-size: clamp(8px, 0.7vw, 11px);
+    color: var(--white-50);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── COLS LAYOUT ── */
+  .cols {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+  }
+
+  .col-6 {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── UPDATE FLOW ── */
+  .update-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 12px 0 16px;
+  }
+
+  .flow-step {
+    background: var(--navy-mid);
+    border: 1px solid var(--white-10);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: clamp(10px, 0.78vw, 12px);
+    color: var(--white-80);
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    padding: 0 6px;
+    color: var(--orange);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Mermaid dark theme overrides */
+  .mermaid .label { color: #e2e8f0 !important; }
+</style>
+</head>
+<body>
+
+<div id="slider">
+<div id="track">
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 0 — COVER
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-cover" data-index="0">
+    <div class="cover-bg"></div>
+    <div class="cover-grid-line"></div>
+    <div class="cover-content">
+      <div class="cover-accent"></div>
+      <h1 class="cover-title">바코드 스캐너<br>시스템</h1>
+      <div class="cover-subtitle">PDA 기반 물류 현장 상품 식별 시스템 구축 제안서</div>
+      <div class="cover-contact">이은석 &nbsp;·&nbsp; korea5410@gmail.com</div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 1 — 01 현장 이해 (단일 슬라이드)
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="1">
+    <div class="slide-sub-label">01</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">01</div>
+      <div class="section-title">현장 이해</div>
+      <div class="section-desc">전달해 주신 자료와 대화 내용을 바탕으로 파악한 현장 환경입니다.</div>
+    </div>
+    <div class="slide-right">
+      <div class="cols">
+        <div class="col-6">
+          <h3>현장 환경</h3>
+          <table style="font-size: clamp(10px, 0.8vw, 12px);">
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tr><td class="td-label">창고 규모</td><td>5층 501호·502호, 약 70~100평</td></tr>
+            <tr><td class="td-label">취급 상품</td><td>소형 소품류, 디테일 차이가 미세한 제품 다수</td></tr>
+            <tr><td class="td-label">SKU</td><td>11,821건 (계속 증가 중)</td></tr>
+            <tr><td class="td-label">판매 채널</td><td>쿠팡 로켓배송 위주, 네이버 이커머스 병행</td></tr>
+            <tr><td class="td-label">바코드 현황</td><td>일부 미부착. 입고 시 부착 예정</td></tr>
+          </table>
+
+          <h3>사용 장면</h3>
+          <table style="font-size: clamp(10px, 0.8vw, 12px);">
+            <thead><tr><th>장면</th><th>동작</th><th>효과</th></tr></thead>
+            <tr>
+              <td class="td-label">포장·검수</td>
+              <td>바코드 스캔 → 이미지로 확인</td>
+              <td>오배송 방지</td>
+            </tr>
+            <tr>
+              <td class="td-label">피킹</td>
+              <td>선반에서 꺼낸 후 스캔 → 확인</td>
+              <td>오피킹 방지</td>
+            </tr>
+            <tr>
+              <td class="td-label">신입 교육</td>
+              <td>모르는 상품 → 스캔으로 즉시 식별</td>
+              <td>숙련 기간 단축</td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <h3>왜 스캔이 필요한가</h3>
+          <div class="callout">
+            <strong>핵심 문제:</strong> 상품 식별에 숙련 기간이 필요합니다.<br><br>
+            소품류 수천 종의 디테일 차이를 눈으로 구분하려면 최소 2~3개월의 근무 경험이 필요합니다.
+            신규 직원이 들어올 때마다 이 학습 비용이 반복됩니다.<br><br>
+            <strong>해결:</strong> 바코드를 스캔하면 쿠팡 상품 이미지와 실사 사진이 즉시 표시됩니다. 첫날 출근한 직원도 상품을 정확히 식별할 수 있습니다.
+          </div>
+
+          <h3>전환 비교</h3>
+          <div class="vs">
+            <div class="vs-col vs-before">
+              <h4>현행</h4>
+              <ul>
+                <li>PC 앞까지 이동하여 조회</li>
+                <li>로그 상자 클릭 후 USB 스캐너로 스캔</li>
+                <li>xlsx 헤더 불일치 시 인식 실패</li>
+                <li>포장 위치와 PC 위치가 떨어져 있음</li>
+              </ul>
+            </div>
+            <div class="vs-col vs-after">
+              <h4>구축 후</h4>
+              <ul>
+                <li>PDA 휴대, 현장 어디서든 즉시 조회</li>
+                <li>물리 버튼 한 번으로 완료</li>
+                <li>헤더 자동 인식, 쿠팡 형식 변경에 유연 대응</li>
+                <li>피킹 동선 내에서 바로 확인</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 2 — 02 시스템 구성
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="2">
+    <div class="slide-sub-label">02</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">02</div>
+      <div class="section-title">시스템 구성</div>
+      <div class="section-desc">장비 3개, 연결 2개. 단순하지만 확장에 제약이 없는 구조입니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>아키텍처</h3>
+      <div class="arch">
+        <div class="arch-node">
+          <div class="label">TC60 PDA</div>
+          <div class="sub">Android 앱<br>내장 바코드 스캐너</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="label">Mini PC</div>
+          <div class="sub">API 서버 (FastAPI)<br>SQLite DB</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node">
+          <div class="label">시놀로지 NAS</div>
+          <div class="sub">상품 이미지<br>xlsx 원본</div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue">
+        PDA가 NAS에 직접 접근하지 않습니다. 모든 요청은 Mini PC(API 서버)를 거칩니다.<br>
+        NAS 경로가 변경되더라도 서버 설정만 수정하면 됩니다. PDA 앱은 수정할 필요가 없습니다.
+      </div>
+
+      <h3>데이터 흐름</h3>
+      <div class="mermaid">
+sequenceDiagram
+    participant P as PDA (TC60)
+    participant S as Mini PC (API)
+    participant D as SQLite
+    participant N as NAS
+
+    P->>P: 물리버튼으로 바코드 스캔
+    P->>S: GET /api/product/{barcode}
+    S->>D: 바코드 인덱스 조회
+    D-->>S: 상품명, SKU ID, 이미지 경로
+    S->>N: 이미지 파일 읽기
+    N-->>S: 이미지 데이터
+    S-->>P: 상품 정보 + 이미지
+    Note over P: 화면 표시 완료 (0.3~0.5초)
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 3 — 03 구현 범위 (단일 슬라이드)
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="3">
+    <div class="slide-sub-label">03</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">03</div>
+      <div class="section-title">구현 범위</div>
+      <div class="section-desc">Phase 1 MVP 기준. 바코드 스캔 → 조회 → 이미지 표시.</div>
+    </div>
+    <div class="slide-right">
+      <div class="cols">
+        <div class="col-6">
+          <h3>구축 기능</h3>
+          <table style="font-size: clamp(10px, 0.78vw, 12px);">
+            <thead><tr><th>기능</th><th>상세 내용</th></tr></thead>
+            <tr><td class="td-label">바코드 스캔 연동</td><td>TC60 내장 스캐너 (Zebra DataWedge Intent 방식). 물리 버튼 한 번으로 조회가 시작됩니다.</td></tr>
+            <tr><td class="td-label">상품 정보 표시</td><td>상품명, SKU ID, 담당 BM, 발주담당자. 스캔 후 0.5초 이내에 화면에 표시됩니다.</td></tr>
+            <tr><td class="td-label">이미지 동시 표시</td><td>쿠팡 썸네일(디지털 이미지)과 실사 이미지를 한 화면에 동시에 표시합니다.</td></tr>
+            <tr><td class="td-label">상품명 검색</td><td>바코드가 미부착되었거나 훼손된 제품도 상품명으로 직접 검색하여 조회할 수 있습니다.</td></tr>
+            <tr><td class="td-label">API 서버</td><td>Mini PC에 설치. 전원이 켜지면 자동으로 시작됩니다. 별도 조작 불필요.</td></tr>
+            <tr><td class="td-label">데이터 이관</td><td>기존 xlsx 2종(sku_download, codepath)을 파싱하여 DB에 적재합니다.</td></tr>
+            <tr><td class="td-label">xlsx 자동 갱신</td><td>NAS에 새 xlsx를 저장하면 서버가 감지하여 자동 반영합니다.</td></tr>
+            <tr><td class="td-label">서버 환경 구성</td><td>Mini PC에 원격 접속하여 설치를 완료합니다. 운영 가이드를 함께 제공합니다.</td></tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <h3>PDA 앱 화면</h3>
+          <p style="color: var(--white-50); margin-bottom: 16px;">화면 2개. 복잡하게 구성하지 않습니다.</p>
+
+          <div class="arch" style="flex-direction: column; gap: 12px; align-items: stretch; margin: 0 0 16px;">
+            <div class="arch-node-box">
+              <div class="label">메인 화면</div>
+              <div class="sub" style="margin-top: 10px;">스캔 대기 상태<br>상품명 검색 입력<br>바코드 수동 입력 가능</div>
+            </div>
+            <div style="text-align: center; font-size: 22px; color: var(--orange);">↓</div>
+            <div class="arch-node-box" style="border-color: var(--orange-border); background: var(--orange-dim);">
+              <div class="label" style="color: var(--orange);">상품 상세 화면</div>
+              <div class="sub" style="margin-top: 10px;">상품명 · SKU ID<br>쿠팡 이미지 + 실사 이미지<br>담당 BM · 발주담당자</div>
+            </div>
+          </div>
+
+          <div class="callout callout-gray">
+            앱을 실행하면 바로 스캔 대기 상태입니다. 로그인이 없습니다. 별도 설정이 없습니다.<br>
+            서버 IP는 최초 1회만 입력하면 됩니다. 이후에는 PDA 전원만 켜면 바로 사용할 수 있습니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 4 — 04 데이터 이관
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="4">
+    <div class="slide-sub-label">04</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">04</div>
+      <div class="section-title">데이터 이관</div>
+      <div class="section-desc">현재 보유하고 계신 데이터를 시스템 DB로 옮기는 작업에 대해 안내드립니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>이관 대상</h3>
+      <table>
+        <thead><tr><th>파일</th><th>컬럼 구조</th><th>처리 방식</th></tr></thead>
+        <tr>
+          <td class="td-label">coupangmd00_sku_download</td>
+          <td>SKU ID, 상품명, 바코드, 발주가능상태, 담당BM, 발주담당자, 치수, MOQ, 중량 등 17개 컬럼</td>
+          <td>파서가 헤더를 자동 탐색하여 DB에 적재</td>
+        </tr>
+        <tr>
+          <td class="td-label">codepath.xlsx</td>
+          <td>바코드(A열), 이미지 경로(B열). 헤더 없음</td>
+          <td>매핑 정보를 DB에 저장</td>
+        </tr>
+      </table>
+
+      <h3>헤더 불일치 문제 — 대응 방안</h3>
+      <div class="vs">
+        <div class="vs-col vs-after">
+          <h4>방안 A — 자동 매칭</h4>
+          <ul>
+            <li>유사한 컬럼명을 자동으로 인식<br>
+              <span style="font-size:0.88em;color:var(--white-50);">예: "SKU ID" / "skuId" / "SKU_ID" → 동일 컬럼</span></li>
+            <li>형식이 바뀌어도 중단 없이 처리</li>
+            <li>매칭 실패 시 로그에 기록</li>
+          </ul>
+        </div>
+        <div class="vs-col vs-col-blue">
+          <h4>방안 B — 수동 지정</h4>
+          <ul>
+            <li>매칭 실패한 컬럼을 로그에 기록</li>
+            <li>운영자가 직접 컬럼 매핑을 확인하고 수정</li>
+            <li>의도하지 않은 자동 매칭 오류 방지</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>대응 가능 파일 형식</h3>
+      <table>
+        <thead><tr><th>형식</th><th>지원 여부</th></tr></thead>
+        <tr><td>.xlsx / .xls</td><td>지원</td></tr>
+        <tr><td>.csv / .tsv</td><td>지원 (인코딩 자동 감지, 구분자 자동 판별)</td></tr>
+        <tr><td>Google Sheets</td><td>공유 링크로 직접 연동 가능 (API 키 불필요, 공개 시트 기준)</td></tr>
+        <tr><td>.ods (LibreOffice)</td><td>지원</td></tr>
+        <tr><td>.json</td><td>지원 (배열 형태의 상품 데이터)</td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 5 — 05 신규 데이터 반영
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="5">
+    <div class="slide-sub-label">05</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">05</div>
+      <div class="section-title">신규 데이터 반영</div>
+      <div class="section-desc">SKU가 계속 증가하는 상황을 전제로 설계합니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>운영 프로세스</h3>
+      <div class="callout">
+        <strong>1.</strong> 쿠팡 서플라이어 허브에서 최신 xlsx를 다운로드합니다.<br>
+        <strong>2.</strong> NAS의 기존 경로(<code>Z:\물류부\scan\</code>)에 저장합니다.<br>
+        <strong>3.</strong> 서버가 자동으로 감지하여 DB에 반영합니다.<br><br>
+        현재 하고 계신 방식과 동일합니다. 추가로 익혀야 할 절차가 없습니다.
+      </div>
+
+      <h3>갱신 규칙</h3>
+      <table>
+        <thead><tr><th>상황</th><th>처리 방식</th></tr></thead>
+        <tr><td class="td-label">신규 바코드</td><td>DB에 추가</td></tr>
+        <tr><td class="td-label">기존 바코드, 정보 변경</td><td>최신 데이터로 갱신</td></tr>
+        <tr><td class="td-label">기존 바코드, xlsx에서 누락</td><td>DB에서 삭제하지 않음 (데이터 보호)</td></tr>
+      </table>
+
+      <h3>갱신 흐름</h3>
+      <div class="update-flow">
+        <div class="flow-step">xlsx 저장</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">서버 감지<br><span style="font-size:0.85em;color:var(--white-50);">파일 변경 감시</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">헤더 파싱</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">기존 DB 비교</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">신규/변경분 반영</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">로그 기록</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-color: var(--orange-border); background: var(--orange-dim); color: var(--white);">완료</div>
+      </div>
+
+      <h3>운영 시 참고사항</h3>
+      <div class="callout callout-gray">
+        파일명이 달라도 내용 구조가 동일하면 정상 처리됩니다. 여러 파일을 동시에 저장해도 순차적으로 처리되며, 처리 결과는 서버 로그에서 확인하실 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 6 — 06 이미지 연동
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="6">
+    <div class="slide-sub-label">06</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">06</div>
+      <div class="section-title">이미지 연동</div>
+      <div class="section-desc">NAS의 두 가지 이미지를 PDA에 표시하는 방식입니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>이미지 종류</h3>
+      <table>
+        <thead><tr><th>종류</th><th>저장 위치</th><th>설명</th></tr></thead>
+        <tr><td class="td-label">쿠팡 이미지 (디지털)</td><td><code>NAS img/</code> 폴더</td><td>쿠팡에서 판매 중인 상품 대표 이미지. 000XXX_해시.jpg 형식</td></tr>
+        <tr><td class="td-label">실사 이미지</td><td><code>NAS real_image/</code> 폴더</td><td>현장에서 직접 촬영한 실물 사진. 포장 상태 확인용</td></tr>
+      </table>
+
+      <h3>이미지 탐색 순서</h3>
+      <div class="mermaid">
+graph LR
+    A["바코드 스캔"] --> B{"codepath에<br>경로 존재?"}
+    B -- 있음 --> C["해당 이미지 표시"]
+    B -- 없음 --> D{"파일명 규칙으로<br>자동 탐색"}
+    D -- 찾음 --> C
+    D -- 못 찾음 --> E["이미지 없음 표시"]
+      </div>
+
+      <p>codepath.xlsx 경로 우선 참조 → 미등록 시 파일명 규칙으로 자동 탐색. 이미지가 없어도 상품 정보는 정상 표시됩니다.</p>
+
+      <h3>신규 상품 이미지 등록</h3>
+      <table>
+        <thead><tr><th>작업</th><th>방식</th></tr></thead>
+        <tr>
+          <td class="td-label">실사 사진 등록</td>
+          <td>촬영 후 NAS <code>real_image/</code> 폴더에 저장 (기존 방식 동일)</td>
+        </tr>
+        <tr>
+          <td class="td-label">바코드-이미지 매핑</td>
+          <td>DB 기반 자동 매핑. codepath.xlsx 수동 편집 불필요</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 7 — 07 성능 설계 (응답 시간 + 볼륨)
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="7">
+    <div class="slide-sub-label">07</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">07</div>
+      <div class="section-title">성능 설계</div>
+      <div class="section-desc">스캔부터 화면 표시까지 0.3~0.5초. 각 구간의 소요 시간과 설계 방식입니다.</div>
+    </div>
+    <div class="slide-right">
+      <div class="cols">
+        <div class="col-6">
+          <h3>구간별 응답 시간</h3>
+          <div class="metric-row">
+            <div class="metric-box">
+              <div class="val">~50ms</div>
+              <div class="lbl">스캔→수신</div>
+            </div>
+            <div class="metric-box">
+              <div class="val">~30ms</div>
+              <div class="lbl">API→DB</div>
+            </div>
+            <div class="metric-box">
+              <div class="val">~200ms</div>
+              <div class="lbl">이미지</div>
+            </div>
+            <div class="metric-box">
+              <div class="val">~50ms</div>
+              <div class="lbl">렌더링</div>
+            </div>
+            <div class="metric-box" style="border-color: var(--orange-border); background: var(--orange-dim);">
+              <div class="val">0.3~0.5s</div>
+              <div class="lbl" style="color: var(--white-80);">합계</div>
+            </div>
+          </div>
+
+          <table style="margin-top: 8px;">
+            <thead><tr><th>구간</th><th>소요</th><th>설계 방식</th></tr></thead>
+            <tr><td class="td-label">스캔 → 앱 수신</td><td>~50ms</td><td>DataWedge 하드웨어 레벨 처리</td></tr>
+            <tr><td class="td-label">API → DB 조회</td><td>~30ms</td><td>바코드 컬럼 B-tree 인덱스</td></tr>
+            <tr><td class="td-label">이미지 전송</td><td>~200ms</td><td>PDA 해상도 기준 리사이즈 캐싱</td></tr>
+            <tr><td class="td-label">화면 렌더링</td><td>~50ms</td><td>메모리 캐시 적용</td></tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <h3>볼륨 대응</h3>
+          <table>
+            <thead><tr><th>항목</th><th>현재</th><th>대응 한계</th><th>설계</th></tr></thead>
+            <tr><td class="td-label">SKU</td><td>11,821건</td><td>100,000건</td><td>SQLite 인덱스, 해시 조회</td></tr>
+            <tr><td class="td-label">바코드</td><td>11,821건</td><td>200,000건</td><td>바코드 → SKU 별도 매핑 테이블</td></tr>
+            <tr><td class="td-label">이미지</td><td>수천 장</td><td>제한 없음</td><td>PDA LRU 캐시 + 서버 리사이즈 캐시</td></tr>
+            <tr><td class="td-label">동시 PDA</td><td>—</td><td>10대 이상</td><td>FastAPI 비동기 처리</td></tr>
+          </table>
+
+          <div class="callout">
+            현재 데이터 기준 약 <strong>8배 이상</strong>의 성장 여력이 있습니다. 매출 규모가 확대되어 SKU가 증가하더라도 아키텍처 변경 없이 수용 가능합니다.
+          </div>
+        </div>
+      </div>
+
+      <h3>DB 구조</h3>
+      <div class="cols">
+        <div class="col-6">
+          <table>
+            <thead><tr><th>테이블</th><th>역할</th></tr></thead>
+            <tr><td class="td-label">PRODUCT</td><td>상품 마스터. SKU ID 기준 유니크</td></tr>
+            <tr><td class="td-label">BARCODE</td><td>바코드 매핑. 상품 1건에 N개 대응</td></tr>
+            <tr><td class="td-label">IMAGE</td><td>이미지 경로. 썸네일/실사 구분 저장</td></tr>
+          </table>
+        </div>
+        <div class="col-6">
+          <div class="mermaid">
+erDiagram
+    PRODUCT {
+        int id PK
+        string sku_id UK
+        string name
+        string bm
+        string manager
+    }
+    BARCODE {
+        int id PK
+        string code UK
+        int product_id FK
+    }
+    IMAGE {
+        int id PK
+        int product_id FK
+        string type
+        string path
+    }
+    PRODUCT ||--o{ BARCODE : "1 : N"
+    PRODUCT ||--o{ IMAGE : "1 : N"
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 9 — 08 운영 안정성
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="9">
+    <div class="slide-sub-label">08</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">08</div>
+      <div class="section-title">운영 안정성</div>
+      <div class="section-desc">어느 한 부분이 실패해도 전체 시스템이 중단되지 않습니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>장애 상황별 대응</h3>
+      <table>
+        <thead><tr><th>상황</th><th>증상</th><th>대응</th></tr></thead>
+        <tr>
+          <td class="td-label">Mini PC 꺼짐</td>
+          <td>PDA에서 조회 불가</td>
+          <td>PDA 화면에 "서버 연결 안 됨" 안내 표시. Mini PC 전원 켜면 서버 자동 시작</td>
+        </tr>
+        <tr>
+          <td class="td-label">NAS 접근 불가</td>
+          <td>이미지 미표시</td>
+          <td>상품 정보(상품명, SKU 등)는 정상 표시. 이미지 영역에 "이미지 로드 실패" 표시</td>
+        </tr>
+        <tr>
+          <td class="td-label">WiFi 끊김</td>
+          <td>PDA 조회 불가</td>
+          <td>재연결 시 자동 복구. 별도 앱 재시작 불필요</td>
+        </tr>
+        <tr>
+          <td class="td-label">xlsx 형식 오류</td>
+          <td>DB 갱신 실패</td>
+          <td>기존 데이터 유지 (덮어쓰지 않음). 실패 원인을 로그에 기록</td>
+        </tr>
+      </table>
+
+      <div class="two-col">
+        <div>
+          <h3>데이터 백업</h3>
+          <table>
+            <thead><tr><th>항목</th><th>방식</th></tr></thead>
+            <tr><td class="td-label">DB 자동 백업</td><td>매일 1회, 최근 7일분 보관</td></tr>
+            <tr><td class="td-label">xlsx 원본 보존</td><td>파싱 완료된 xlsx 삭제하지 않음</td></tr>
+            <tr><td class="td-label">복구</td><td>명령어 1줄로 즉시 복원 가능</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3>보안</h3>
+          <table>
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tr><td class="td-label">네트워크</td><td>내부 WiFi 전용. 외부 접근 불가</td></tr>
+            <tr><td class="td-label">데이터 전송</td><td>외부 서버로 데이터 전송 없음</td></tr>
+            <tr><td class="td-label">접근 제어</td><td>등록된 내부 IP 대역에서만 응답</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 10 — 09 개발 일정
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="10">
+    <div class="slide-sub-label">09</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">09</div>
+      <div class="section-title">개발 일정</div>
+      <div class="section-desc">착수일 기준 10 영업일. 서버와 앱 개발을 병렬로 진행합니다.</div>
+    </div>
+    <div class="slide-right">
+      <h3>일정 계획</h3>
+      <div class="gantt">
+        <div class="gantt-row">
+          <div class="gantt-label"></div>
+          <div class="gantt-days">
+            <span>D+1</span><span>D+2</span><span>D+3</span><span>D+4</span><span>D+5</span><span>D+6</span><span>D+7</span><span>D+8</span><span>D+9</span><span>D+10</span>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">DB 설계 + xlsx 파서</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:0%;width:30%;">3일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">API 개발</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:30%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">NAS 연동 + 캐싱</div>
+          <div class="gantt-track"><div class="gantt-bar g-srv" style="left:50%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">앱 UI + 프로젝트 구성</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:0%;width:20%;">2일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">스캐너 연동</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:20%;width:10%;">1일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">API 연동 + 이미지</div>
+          <div class="gantt-track"><div class="gantt-bar g-app" style="left:30%;width:30%;">3일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">통합 테스트</div>
+          <div class="gantt-track"><div class="gantt-bar g-int" style="left:70%;width:10%;">1일</div></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">현장 설치 + 인수</div>
+          <div class="gantt-track"><div class="gantt-bar g-int" style="left:80%;width:20%;">2일</div></div>
+        </div>
+      </div>
+
+      <div class="gantt-legend">
+        <span><span class="legend-dot" style="background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.2);"></span>서버</span>
+        <span><span class="legend-dot" style="background: var(--orange);"></span>앱</span>
+        <span><span class="legend-dot" style="background: #3b82f6;"></span>통합</span>
+      </div>
+
+      <h3>착수 전 준비사항</h3>
+      <table>
+        <thead><tr><th>항목</th><th>내용</th><th>담당</th></tr></thead>
+        <tr><td class="td-label">Mini PC 원격 접속</td><td>AnyDesk 또는 TeamViewer 설치</td><td><span class="tag tag-c">운영</span></td></tr>
+        <tr><td class="td-label">PDA 실기기</td><td>택배 발송 또는 현장 방문 일정 조율</td><td><span class="tag tag-c">운영</span></td></tr>
+        <tr><td class="td-label">NAS 접근 정보</td><td>접속 계정 및 경로 공유</td><td><span class="tag tag-c">운영</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SLIDE 11 — 10 비용
+  ════════════════════════════════════════════ -->
+  <div class="slide slide-content" data-index="11">
+    <div class="slide-sub-label">10</div>
+    <div class="slide-left slide-left-panel">
+      <div class="section-num">10</div>
+      <div class="section-title">비용</div>
+      <div class="section-desc">개발 비용 및 결제 조건입니다.</div>
+    </div>
+    <div class="slide-right">
+      <p style="margin-bottom: 16px;">구축에 필요한 비용을 안내드립니다. 각 항목의 범위와 산출 근거를 함께 기재하였습니다.</p>
+
+      <h3>개발 비용</h3>
+      <table>
+        <thead><tr><th>항목</th><th>범위</th><th style="text-align:right;">금액 (원)</th></tr></thead>
+        <tr>
+          <td class="td-label">Android PDA 앱</td>
+          <td>UI 설계, DataWedge 연동, API 통신, 이미지 표시, 검색 기능</td>
+          <td style="text-align:right;">1,500,000</td>
+        </tr>
+        <tr>
+          <td class="td-label">API 서버</td>
+          <td>REST API 설계, xlsx 파서, DB 관리, 이미지 프록시, 자동 갱신</td>
+          <td style="text-align:right;">1,000,000</td>
+        </tr>
+        <tr>
+          <td class="td-label">데이터 이관 + 설치</td>
+          <td>초기 데이터 적재, NAS 연동, 서버 환경 구성, 원격 설치</td>
+          <td style="text-align:right;">500,000</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2">합계</td>
+          <td style="text-align:right;"><span class="price-total">3,000,000</span><span class="price-note">원 (VAT 별도)</span></td>
+        </tr>
+      </table>
+
+      <div class="two-col">
+        <div>
+          <h3>결제 조건</h3>
+          <table>
+            <thead><tr><th>시점</th><th>비율</th><th>조건</th></tr></thead>
+            <tr><td class="td-label">계약 시</td><td>50%</td><td>착수금</td></tr>
+            <tr><td class="td-label">인수 완료</td><td>50%</td><td>PDA 실기기 테스트 통과 확인 후</td></tr>
+          </table>
+          <p style="margin-top: 8px; color: var(--white-50);">결제 일정은 협의를 통해 조정 가능합니다.</p>
+
+          <h3>하자 보수</h3>
+          <table>
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tr><td class="td-label">기간</td><td>인수 완료 후 3개월</td></tr>
+            <tr><td class="td-label">범위</td><td>본 제안서에 명시된 기능의 오류 수정</td></tr>
+            <tr><td class="td-label">제외</td><td>운영 환경 변경에 따른 수정</td></tr>
+          </table>
+          <p style="margin-top: 8px; color: var(--white-50);">하자 보수 기간 중 발생하는 수정 작업에 대해 별도 비용은 청구하지 않습니다.</p>
+        </div>
+        <div>
+          <h3>납품 산출물</h3>
+          <ul style="margin-top: 8px;">
+            <li>Android APK 파일 (TC60 설치용)</li>
+            <li>서버 프로그램 일체 (Mini PC 설치 완료 상태)</li>
+            <li>소스코드 전체</li>
+            <li>운영 가이드 (xlsx 업로드 절차, 서버 재시작 방법)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #track -->
+</div><!-- #slider -->
+
+
+
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#243045',
+      primaryColor: '#2d3d55',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: 'rgba(255,255,255,0.15)',
+      lineColor: 'rgba(255,255,255,0.3)',
+      secondaryColor: '#1a2332',
+      tertiaryColor: '#2d3d55',
+      edgeLabelBackground: '#1a2332',
+      noteBkgColor: '#2d3d55',
+      noteTextColor: '#e2e8f0',
+      actorBkg: '#2d3d55',
+      actorBorder: 'rgba(255,255,255,0.2)',
+      actorTextColor: '#e2e8f0',
+      actorLineColor: 'rgba(255,255,255,0.2)',
+      activationBkgColor: '#e8734a',
+      activationBorderColor: '#e8734a',
+      sequenceNumberColor: '#1a2332',
+      signalColor: '#e8734a',
+      signalTextColor: '#e2e8f0',
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'linear'
+    },
+    fontSize: 14
+  });
+</script>
+
+<!-- ===== EDITOR MODE ===== -->
+<style data-editor>
+  @media print {
+    [data-editor] { display: none !important; }
+  }
+
+  #editor-toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 99999;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  #editor-toggle {
+    background: #1a2a4a;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    transition: background 0.2s;
+  }
+  #editor-toggle:hover { background: #243560; }
+
+  #editor-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e53e3e;
+    display: none;
+    flex-shrink: 0;
+  }
+
+  #editor-save {
+    background: #1a2a4a;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    display: none;
+    transition: background 0.2s;
+  }
+  #editor-save:hover { background: #243560; }
+
+  .editor-selectable {
+    cursor: pointer;
+    position: relative;
+  }
+  .editor-selectable:hover {
+    outline: 1px dashed rgba(66, 153, 225, 0.5);
+  }
+
+  .editor-selected {
+    outline: 2px solid #4299e1 !important;
+    outline-offset: 2px;
+    overflow: visible;
+    background-clip: padding-box;
+  }
+
+  .editor-dragging {
+    position: fixed !important;
+    z-index: 50000 !important;
+    opacity: 0.85;
+    pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .editor-drop-target .slide-right {
+    outline: 2px dashed rgba(66,153,225,0.4);
+    outline-offset: -4px;
+  }
+
+  .editor-resize-handle {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background: #4299e1;
+    border: 1px solid #fff;
+    border-radius: 2px;
+    cursor: se-resize;
+    z-index: 10000;
+  }
+
+  .editor-tooltip {
+    position: fixed;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 100000;
+    white-space: nowrap;
+    display: none;
+  }
+</style>
+
+<div id="editor-toolbar" data-editor>
+  <button id="editor-save">HTML 저장</button>
+  <button id="editor-toggle"><span id="editor-dot"></span>편집 모드</button>
+</div>
+<div id="editor-tooltip" class="editor-tooltip" data-editor></div>
+
+<script data-editor>
+(function () {
+  'use strict';
+
+  var editMode = false;
+  var selectedEl = null;
+  var resizeHandle = null;
+  var tooltip = document.getElementById('editor-tooltip');
+  var toggleBtn = document.getElementById('editor-toggle');
+  var dot = document.getElementById('editor-dot');
+  var saveBtn = document.getElementById('editor-save');
+
+  // History stack for undo
+  var history = []; // [{el, transform, width, height, html, parentNode, nextSibling}]
+
+  var SELECTABLE = [
+    '.slide-right h3',
+    '.slide-right p',
+    '.slide-right .callout',
+    '.slide-right table',
+    '.slide-right .mermaid',
+    '.slide-right .arch',
+    '.slide-right .vs',
+    '.slide-right .update-flow',
+    '.slide-right .slide-left',
+    '.slide-right ul',
+  ].join(',');
+
+  // ---- Toggle ----
+  toggleBtn.addEventListener('click', function () {
+    editMode = !editMode;
+    if (editMode) {
+      enableEditMode();
+    } else {
+      disableEditMode();
+    }
+  });
+
+  function enableEditMode() {
+    dot.style.display = 'block';
+    toggleBtn.childNodes[1].nodeValue = '인쇄 모드';
+    saveBtn.style.display = '';
+    document.querySelectorAll(SELECTABLE).forEach(function (el) {
+      el.classList.add('editor-selectable');
+    });
+  }
+
+  function disableEditMode() {
+    dot.style.display = 'none';
+    toggleBtn.childNodes[1].nodeValue = '편집 모드';
+    saveBtn.style.display = 'none';
+    deselectAll();
+    document.querySelectorAll('.editor-selectable').forEach(function (el) {
+      el.classList.remove('editor-selectable');
+    });
+  }
+
+  // ---- Selection ----
+  function deselectAll() {
+    if (selectedEl) {
+      selectedEl.classList.remove('editor-selected');
+      var handle = selectedEl.querySelector('.editor-resize-handle');
+      if (handle) handle.remove();
+      selectedEl = null;
+      resizeHandle = null;
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!editMode) return;
+    var target = e.target;
+
+    // Ignore toolbar and handle clicks
+    if (target.closest('[data-editor]')) return;
+
+    // Find closest selectable ancestor
+    var sel = target.closest(SELECTABLE);
+    if (!sel) {
+      deselectAll();
+      return;
+    }
+
+    if (selectedEl === sel) return; // already selected
+
+    deselectAll();
+    sel.classList.add('editor-selected');
+    selectedEl = sel;
+
+    // Ensure element is positioned
+    ensurePositioned(sel);
+
+    // Add resize handle
+    resizeHandle = document.createElement('div');
+    resizeHandle.className = 'editor-resize-handle';
+    resizeHandle.setAttribute('data-editor', '');
+    sel.style.position = 'relative';
+    sel.appendChild(resizeHandle);
+
+    bindResize(resizeHandle, sel);
+
+    e.stopPropagation();
+  });
+
+  function ensurePositioned(el) {
+    if (!el.style.transform) {
+      el.style.transform = 'translate(0px, 0px)';
+    }
+  }
+
+  // ---- Drag (cross-slide) ----
+  var isDragging = false;
+  var dragStartX, dragStartY, dragEl, dragOrigParent, dragOrigNext;
+  var dragRect;
+
+  document.addEventListener('mousedown', function (e) {
+    if (!editMode || !selectedEl) return;
+    if (e.target.closest('[data-editor]')) return;
+    if (e.target.closest(SELECTABLE) !== selectedEl) return;
+    if (e.button !== 0) return;
+    if (e.detail === 2) return;
+
+    isDragging = false;
+    dragEl = selectedEl;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragOrigParent = dragEl.parentNode;
+    dragOrigNext = dragEl.nextSibling;
+    dragRect = dragEl.getBoundingClientRect();
+
+    e.preventDefault();
+
+    function onMove(ev) {
+      var dx = ev.clientX - dragStartX;
+      var dy = ev.clientY - dragStartY;
+      if (!isDragging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        isDragging = true;
+        saveHistory(dragEl);
+        // Switch to fixed position for cross-slide drag
+        dragEl.classList.add('editor-dragging');
+        dragEl.style.left = dragRect.left + 'px';
+        dragEl.style.top = dragRect.top + 'px';
+        dragEl.style.width = dragRect.width + 'px';
+        dragEl.style.transform = 'none';
+        document.body.appendChild(dragEl);
+      }
+      if (!isDragging) return;
+
+      dragEl.style.left = (dragRect.left + dx) + 'px';
+      dragEl.style.top = (dragRect.top + dy) + 'px';
+
+      // Highlight drop target slide
+      document.querySelectorAll('.editor-drop-target').forEach(function(s) {
+        s.classList.remove('editor-drop-target');
+      });
+      var dropSlide = getSlideAtPoint(ev.clientX, ev.clientY);
+      if (dropSlide) dropSlide.classList.add('editor-drop-target');
+
+      showTooltip(ev.clientX, ev.clientY, 'drop: 대상 슬라이드로 이동');
+    }
+
+    function onUp(ev) {
+      tooltip.style.display = 'none';
+      document.querySelectorAll('.editor-drop-target').forEach(function(s) {
+        s.classList.remove('editor-drop-target');
+      });
+
+      if (isDragging) {
+        dragEl.classList.remove('editor-dragging');
+        dragEl.style.position = '';
+        dragEl.style.left = '';
+        dragEl.style.top = '';
+        dragEl.style.width = '';
+        dragEl.style.zIndex = '';
+        dragEl.style.transform = '';
+
+        // Find target slide
+        var dropSlide = getSlideAtPoint(ev.clientX, ev.clientY);
+        var targetRight = dropSlide ? dropSlide.querySelector('.slide-right') : null;
+
+        if (targetRight) {
+          targetRight.appendChild(dragEl);
+        } else {
+          // Return to original position
+          if (dragOrigNext) {
+            dragOrigParent.insertBefore(dragEl, dragOrigNext);
+          } else {
+            dragOrigParent.appendChild(dragEl);
+          }
+        }
+
+        // Re-select
+        deselectAll();
+        dragEl.classList.add('editor-selected');
+        selectedEl = dragEl;
+        resizeHandle = document.createElement('div');
+        resizeHandle.className = 'editor-resize-handle';
+        resizeHandle.setAttribute('data-editor', '');
+        dragEl.style.position = 'relative';
+        dragEl.appendChild(resizeHandle);
+        bindResize(resizeHandle, dragEl);
+      }
+
+      isDragging = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  function getSlideAtPoint(x, y) {
+    var slides = document.querySelectorAll('.slide');
+    for (var i = 0; i < slides.length; i++) {
+      var r = slides[i].getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return slides[i];
+      }
+    }
+    return null;
+  }
+
+  // ---- Resize ----
+  function bindResize(handle, el) {
+    handle.addEventListener('mousedown', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+
+      var startX = e.clientX;
+      var startY = e.clientY;
+      var startW = el.offsetWidth;
+      var startH = el.offsetHeight;
+      var saved = false;
+
+      // Capture computed background so it persists through resize
+      var computedBg = window.getComputedStyle(el).backgroundColor;
+      if (computedBg && computedBg !== 'rgba(0, 0, 0, 0)') {
+        el.style.backgroundColor = computedBg;
+      }
+
+      function onMove(ev) {
+        if (!saved) { saveHistory(el); saved = true; }
+        var nw = Math.max(40, startW + ev.clientX - startX);
+        var nh = Math.max(20, startH + ev.clientY - startY);
+        el.style.width = nw + 'px';
+        el.style.height = nh + 'px';
+        el.style.overflow = 'hidden';
+        showTooltip(ev.clientX, ev.clientY, nw + ' × ' + nh);
+      }
+
+      function onUp() {
+        tooltip.style.display = 'none';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  // ---- Double-click to edit text ----
+  document.addEventListener('dblclick', function (e) {
+    if (!editMode || !selectedEl) return;
+    if (e.target.closest('[data-editor]')) return;
+    var target = selectedEl;
+    if (target.isContentEditable) return;
+    saveHistory(target);
+    target.contentEditable = 'true';
+    target.focus();
+    // Remove contenteditable on blur
+    target.addEventListener('blur', function onBlur() {
+      target.contentEditable = 'false';
+      target.removeEventListener('blur', onBlur);
+    }, { once: true });
+  });
+
+  // ---- Keyboard ----
+  document.addEventListener('keydown', function (e) {
+    if (!editMode) return;
+
+    // Delete selected element
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEl) {
+      // Don't delete while editing text
+      if (selectedEl.isContentEditable || selectedEl.contentEditable === 'true') return;
+      saveHistory(selectedEl, true);
+      selectedEl.style.display = 'none';
+      deselectAll();
+      return;
+    }
+
+    // Undo Ctrl+Z
+    if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      undoLast();
+    }
+  });
+
+  // ---- History ----
+  function saveHistory(el, isDelete) {
+    var tx = getTranslate(el);
+    history.push({
+      el: el,
+      transform: el.style.transform,
+      width: el.style.width,
+      height: el.style.height,
+      html: el.innerHTML,
+      display: el.style.display,
+      isDelete: !!isDelete,
+    });
+    if (history.length > 50) history.shift();
+  }
+
+  function undoLast() {
+    if (!history.length) return;
+    var entry = history.pop();
+    var el = entry.el;
+    el.style.transform = entry.transform;
+    el.style.width = entry.width;
+    el.style.height = entry.height;
+    el.innerHTML = entry.html;
+    el.style.display = entry.display;
+
+    // Re-attach handle if this element is still selected
+    if (selectedEl === el) {
+      var oldHandle = el.querySelector('.editor-resize-handle');
+      if (!oldHandle) {
+        resizeHandle = document.createElement('div');
+        resizeHandle.className = 'editor-resize-handle';
+        resizeHandle.setAttribute('data-editor', '');
+        el.appendChild(resizeHandle);
+        bindResize(resizeHandle, el);
+      }
+    }
+  }
+
+  // ---- Helpers ----
+  function getTranslate(el) {
+    var transform = el.style.transform || '';
+    var match = transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    if (match) return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+    return { x: 0, y: 0 };
+  }
+
+  function showTooltip(x, y, text) {
+    tooltip.textContent = text;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (x + 12) + 'px';
+    tooltip.style.top = (y - 24) + 'px';
+  }
+
+  // ---- Save HTML ----
+  saveBtn.addEventListener('click', function () {
+    // Clone the document
+    var clone = document.documentElement.cloneNode(true);
+
+    // Remove all [data-editor] elements from clone
+    clone.querySelectorAll('[data-editor]').forEach(function (el) { el.remove(); });
+
+    var html = '<!DOCTYPE html>\n' + clone.outerHTML;
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'proposal-print-edited.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+}());
+</script>
+<!-- ===== /EDITOR MODE ===== -->
+</body>
+</html>
