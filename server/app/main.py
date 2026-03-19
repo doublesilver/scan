@@ -1,0 +1,54 @@
+import logging
+from contextlib import asynccontextmanager
+
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import settings
+from app.db.database import close_db, get_db
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("서버 시작 — DB 초기화")
+    await get_db()
+    logger.info("DB 준비 완료: %s", settings.db_path)
+    yield
+    logger.info("서버 종료 — DB 연결 해제")
+    await close_db()
+
+
+app = FastAPI(
+    title="물류창고 스캐너 API",
+    description="PDA 바코드 스캔 → 상품 정보 + 이미지 조회",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=True,
+    )

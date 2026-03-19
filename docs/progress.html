@@ -250,7 +250,7 @@ tr:nth-child(even) td { background: #f9fafb; }
     <div class="hero-sub">바코드 스캐너 시스템 Phase 1 (MVP) 개발 진행 상황을 안내드립니다.</div>
     <div class="progress-overview">
       <div class="progress-card">
-        <div class="progress-card-num">0/8</div>
+        <div class="progress-card-num">2/8</div>
         <div class="progress-card-label">마일스톤 완료</div>
       </div>
       <div class="progress-card">
@@ -258,7 +258,7 @@ tr:nth-child(even) td { background: #f9fafb; }
         <div class="progress-card-label">개발 경과일</div>
       </div>
       <div class="progress-card">
-        <div class="progress-card-num">0%</div>
+        <div class="progress-card-num">25%</div>
         <div class="progress-card-label">전체 진행률</div>
       </div>
       <div class="progress-card">
@@ -283,9 +283,9 @@ tr:nth-child(even) td { background: #f9fafb; }
         <table>
           <thead><tr><th>마일스톤</th><th>내용</th><th>상태</th></tr></thead>
           <tbody>
-            <tr><td class="td-label">M1</td><td>서버 프로젝트 셋업 + DB</td><td><span class="badge badge-progress">진행 중</span></td></tr>
-            <tr><td class="td-label">M2</td><td>데이터 이관 (xlsx 파서)</td><td><span class="badge badge-todo">대기</span></td></tr>
-            <tr><td class="td-label">M3</td><td>REST API 개발</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M1</td><td>서버 프로젝트 셋업 + DB</td><td><span class="badge badge-done">완료</span></td></tr>
+            <tr><td class="td-label">M2</td><td>데이터 이관 (xlsx 파서)</td><td><span class="badge badge-done">완료</span></td></tr>
+            <tr><td class="td-label">M3</td><td>REST API 개발</td><td><span class="badge badge-progress">진행 중</span></td></tr>
             <tr><td class="td-label">M4</td><td>NAS 이미지 프록시 + 캐싱</td><td><span class="badge badge-todo">대기</span></td></tr>
             <tr><td class="td-label">M5</td><td>xlsx 자동 갱신</td><td><span class="badge badge-todo">대기</span></td></tr>
             <tr><td class="td-label">M6</td><td>Android 앱 — UI + API 연동</td><td><span class="badge badge-todo">대기</span></td></tr>
@@ -306,35 +306,35 @@ tr:nth-child(even) td { background: #f9fafb; }
       <div class="milestone">
         <div class="milestone-header">
           <span class="milestone-title">M1. 서버 프로젝트 셋업 + DB</span>
-          <span class="badge badge-progress">진행 중</span>
+          <span class="badge badge-done">완료</span>
         </div>
-        <div class="milestone-bar"><div class="milestone-bar-fill progress" style="width:0%"></div></div>
+        <div class="milestone-bar"><div class="milestone-bar-fill done" style="width:100%"></div></div>
         <ul class="checklist">
-          <li>requirements.txt 존재, pip install 성공</li>
-          <li>uvicorn 에러 없이 기동 (localhost:8000)</li>
-          <li>Swagger UI 200 응답</li>
-          <li>PRODUCT, BARCODE, IMAGE 테이블 생성</li>
+          <li class="checked">requirements.txt 존재, pip install 성공</li>
+          <li class="checked">uvicorn 에러 없이 기동 (localhost:8000)</li>
+          <li class="checked">Swagger UI 200 응답</li>
+          <li class="checked">PRODUCT, BARCODE, IMAGE 테이블 생성</li>
         </ul>
       </div>
 
       <div class="milestone">
         <div class="milestone-header">
           <span class="milestone-title">M2. 데이터 이관 (xlsx 파서)</span>
-          <span class="badge badge-todo">대기</span>
+          <span class="badge badge-done">완료</span>
         </div>
-        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <div class="milestone-bar"><div class="milestone-bar-fill done" style="width:100%"></div></div>
         <ul class="checklist">
-          <li>codepath.xlsx 11,821건 바코드 DB 적재</li>
-          <li>sku_download.xlsx SKU 데이터 적재</li>
-          <li>이미지 경로 상대경로 변환</li>
-          <li>중복 실행 시 upsert 동작</li>
+          <li class="checked">codepath.xlsx 11,821건 바코드 DB 적재 (23,642건)</li>
+          <li class="checked">sku_download.xlsx SKU 데이터 적재 (11,821건, 헤더 자동 매칭)</li>
+          <li class="checked">이미지 경로 상대경로 변환 (img/xxx.jpg)</li>
+          <li class="checked">중복 실행 시 upsert 동작 (추가=0, 갱신=11,821)</li>
         </ul>
       </div>
 
       <div class="milestone">
         <div class="milestone-header">
           <span class="milestone-title">M3. REST API 개발</span>
-          <span class="badge badge-todo">대기</span>
+          <span class="badge badge-progress">진행 중</span>
         </div>
         <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
         <ul class="checklist">
@@ -432,10 +432,13 @@ tr:nth-child(even) td { background: #f9fafb; }
           <ul>
             <li>프로젝트 착수 — 착수금 입금 확인</li>
             <li>기존 프로그램(scan13.exe) 분석: PySide6 + PyArmor 난독화, 소스 복원 불가 확인</li>
-            <li>클라이언트 데이터 분석: codepath.xlsx (11,821건), sku_download.xlsx 구조 파악</li>
+            <li>클라이언트 데이터 분석: codepath.xlsx (11,821건), sku_download.xlsx 17컬럼 확인 (inlineStr 타입)</li>
             <li>NAS 폴더 구조 확인: img/ (썸네일), real_image/ (실사), WebDAV 마운트</li>
             <li>TC60 PDA 조사: DataWedge Intent API 방식 확정, 외부 SDK 불필요</li>
             <li>개발 문서 체계 구성: CLAUDE.md + ROADMAP.md + DEV_NOTES.md</li>
+            <li><strong>[M1 완료]</strong> FastAPI 서버 셋업, SQLite DB 스키마 (product/barcode/image/parse_log), uvicorn 기동 확인</li>
+            <li><strong>[M2 완료]</strong> codepath.xlsx 파서 (11,821건 바코드→이미지 매핑), sku_download.xlsx 파서 (lxml 직접 파싱, 헤더 자동 매칭), upsert 동작 검증</li>
+            <li>설계 문서 작성: ARCHITECTURE.md, DATABASE.md, PARSER_SPEC.md, API_SPEC.md</li>
           </ul>
         </div>
       </div>
@@ -449,9 +452,9 @@ tr:nth-child(even) td { background: #f9fafb; }
       </div>
 
       <div class="callout">
-        <strong>M1. 서버 프로젝트 셋업 + DB</strong><br><br>
-        FastAPI 서버 프로젝트 구조 생성, SQLite DB 스키마 설계 (PRODUCT, BARCODE, IMAGE 테이블),
-        uvicorn 기동 확인까지 완료 예정입니다.
+        <strong>M3. REST API 개발</strong><br><br>
+        바코드 스캔 조회 API (/api/scan), 상품 검색 API (/api/search),
+        이미지 프록시 API (/api/image) 구현 예정입니다.
       </div>
     </section>
 

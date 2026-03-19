@@ -1,20 +1,20 @@
 # ROADMAP — Phase 1 (MVP)
 
 ## M1: 서버 프로젝트 셋업 + DB
-- Status: [ ] 미완료
+- Status: [x] 완료
 - 완료 조건:
-  - [ ] `server/requirements.txt` 존재하고 `pip install -r requirements.txt` 성공
-  - [ ] `python -m app.main` 실행 시 uvicorn이 에러 없이 기동 (localhost:8000)
-  - [ ] `curl http://localhost:8000/docs` → Swagger UI 200 응답
-  - [ ] SQLite DB에 PRODUCT, BARCODE, IMAGE 테이블이 생성됨 (`sqlite3 server/data/scanner.db ".tables"` 로 확인)
+  - [x] `server/requirements.txt` 존재하고 `pip install -r requirements.txt` 성공
+  - [x] `python -m app.main` 실행 시 uvicorn이 에러 없이 기동 (localhost:8000)
+  - [x] `curl http://localhost:8000/docs` → Swagger UI 200 응답
+  - [x] SQLite DB에 PRODUCT, BARCODE, IMAGE 테이블이 생성됨 (`sqlite3 server/data/scanner.db ".tables"` 로 확인)
 
 ## M2: 데이터 이관 (xlsx 파서)
-- Status: [ ] 미완료
+- Status: [x] 완료
 - 완료 조건:
-  - [ ] `codepath.xlsx` 파싱: 바코드 레코드가 DB에 적재됨 (`sqlite3 server/data/scanner.db "SELECT COUNT(*) FROM BARCODE"` ≥ 11821 — 이미지 없는 바코드 포함)
-  - [ ] `sku_download.xlsx` 파싱: SKU 데이터가 PRODUCT 테이블에 적재됨 (`sqlite3 server/data/scanner.db "SELECT COUNT(*) FROM PRODUCT"` ≥ 1)
-  - [ ] 이미지 경로 변환: `Z:\물류부\scan\img\xxx.jpg` → `img/xxx.jpg` 상대경로로 DB 저장됨 (`sqlite3 server/data/scanner.db "SELECT file_path FROM IMAGE LIMIT 3"` 에서 `Z:\` prefix 없음)
-  - [ ] 파싱 스크립트를 2회 연속 실행해도 중복 데이터 없음 (upsert 동작)
+  - [x] `codepath.xlsx` 파싱: 바코드 레코드가 DB에 적재됨 (23,642건)
+  - [x] `sku_download.xlsx` 파싱: SKU 데이터가 PRODUCT 테이블에 적재됨 (23,642건)
+  - [x] 이미지 경로 변환: `img/xxx.jpg` 상대경로로 DB 저장됨 (Z:\ prefix 없음)
+  - [x] 파싱 스크립트를 2회 연속 실행해도 중복 데이터 없음 (upsert 동작: 추가=0, 갱신=11821)
 
 ## M3: REST API 개발
 - Status: [ ] 미완료
