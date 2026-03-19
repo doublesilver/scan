@@ -1084,23 +1084,32 @@
           </div>
 
           <h3>요청 흐름</h3>
-          <div class="mermaid">
-            sequenceDiagram participant PDA as PDA (TC60) participant API as
-            Mini PC (서버) participant DB as SQLite DB participant NAS as NAS
-            (이미지) PDA->>API: 바코드 스캔 전송 API->>DB: SKU/상품 정보 조회
-            DB-->>API: 상품명, 바코드, 이미지 경로 API->>NAS: 이미지 요청
-            NAS-->>API: 이미지 반환 API-->>PDA: 상품 정보 + 이미지 Note over
-            PDA,NAS: 전체 응답 0.3 ~ 0.5초 목표
-          </div>
+          <pre class="mermaid">
+sequenceDiagram
+    participant PDA as PDA (TC60)
+    participant API as Mini PC (서버)
+    participant DB as SQLite DB
+    participant NAS as NAS (이미지)
+    PDA->>API: 바코드 스캔 전송
+    API->>DB: SKU/상품 정보 조회
+    DB-->>API: 상품명, 바코드, 이미지 경로
+    API->>NAS: 이미지 요청
+    NAS-->>API: 이미지 반환
+    API-->>PDA: 상품 정보 + 이미지
+    Note over PDA,NAS: 전체 응답 0.3 ~ 0.5초 목표
+          </pre>
 
           <h3>이미지 탐색 순서</h3>
-          <div class="mermaid">
-            flowchart LR A["바코드 수신"] --> B{"codepath.xlsx\n경로 존재?"} B
-            -- 있음 --> C["해당 이미지 반환"] B -- 없음 --> D{"img/ 폴더\n파일
-            존재?"} D -- 있음 --> E["썸네일 반환"] D -- 없음 -->
-            F{"real_image/\n파일 존재?"} F -- 있음 --> G["실사 반환"] F -- 없음
-            --> H["기본 이미지"]
-          </div>
+          <pre class="mermaid">
+flowchart LR
+    A["바코드 수신"] --> B{"codepath.xlsx\n경로 존재?"}
+    B -- 있음 --> C["해당 이미지 반환"]
+    B -- 없음 --> D{"img/ 폴더\n파일 존재?"}
+    D -- 있음 --> E["썸네일 반환"]
+    D -- 없음 --> F{"real_image/\n파일 존재?"}
+    F -- 있음 --> G["실사 반환"]
+    F -- 없음 --> H["기본 이미지"]
+          </pre>
         </section>
 
         <!-- 06 Database -->
@@ -1114,13 +1123,31 @@
             향후 기능 추가 시 기존 구조를 변경하지 않도록 설계하였습니다.
           </p>
 
-          <div class="mermaid">
-            erDiagram PRODUCT { text sku_id PK text product_name text category
-            text brand text extra } BARCODE { int id PK text barcode UK text
-            sku_id FK text barcode_type } IMAGE { int id PK text barcode FK text
-            file_path text image_type int sort_order } PRODUCT ||--o{ BARCODE :
-            "1 : N" BARCODE ||--o{ IMAGE : "1 : N"
-          </div>
+          <pre class="mermaid">
+erDiagram
+    PRODUCT {
+        text sku_id PK
+        text product_name
+        text category
+        text brand
+        text extra
+    }
+    BARCODE {
+        int id PK
+        text barcode UK
+        text sku_id FK
+        text barcode_type
+    }
+    IMAGE {
+        int id PK
+        text barcode FK
+        text file_path
+        text image_type
+        int sort_order
+    }
+    PRODUCT ||--o{ BARCODE : "1 : N"
+    BARCODE ||--o{ IMAGE : "1 : N"
+          </pre>
 
           <div class="table-wrap">
             <table>
