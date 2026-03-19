@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 실사 이미지 (전체 너비) -->
+        <ImageView
+            android:id="@+id/ivDetailImage"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:background="#f0f0f0"
+            android:contentDescription="상품 실사 이미지"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_placeholder" />
+
+        <TextView
+            android:id="@+id/tvImageCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/navy"
+            android:gravity="center"
+            android:padding="4dp"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <!-- 상품 정보 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvDetailProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/navy"
+                android:layout_marginBottom="16dp" />
+
+            <!-- 정보 테이블 -->
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stretchColumns="1">
+
+                <TableRow android:layout_marginBottom="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SKU ID"
+                        android:textStyle="bold"
+                        android:textColor="@color/navy"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvDetailSkuId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#333333" />
+                </TableRow>
+
+                <TableRow android:layout_marginBottom="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="카테고리"
+                        android:textStyle="bold"
+                        android:textColor="@color/navy"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvDetailCategory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#333333" />
+                </TableRow>
+
+                <TableRow android:layout_marginBottom="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="브랜드"
+                        android:textStyle="bold"
+                        android:textColor="@color/navy"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvDetailBrand"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#333333" />
+                </TableRow>
+
+                <TableRow>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="바코드"
+                        android:textStyle="bold"
+                        android:textColor="@color/navy"
+                        android:paddingEnd="16dp"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvDetailBarcodes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#333333"
+                        android:fontFamily="monospace" />
+                </TableRow>
+
+            </TableLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

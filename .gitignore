@@ -29,3 +29,16 @@ server/data/*.db
 
 # Env
 .env
+
+# Server cache
+server/data/cache/
+
+# APK
+*.apk
+
+# OMC state
+.omc/state/
+.omc/prd.json
+
+# Vercel
+docs/.vercel/

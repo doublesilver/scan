@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ActionBar 포함 테마 (Activity에서 setSupportActionBar 없이 기본 ActionBar 사용) -->
+    <style name="Theme.WarehouseScanner" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/navy</item>
+        <item name="colorPrimaryVariant">@color/navy</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/orange</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="actionBarStyle">@style/WarehouseActionBar</item>
+    </style>
+
+    <style name="WarehouseActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="background">@color/navy</item>
+        <item name="titleTextStyle">@style/WarehouseActionBarTitle</item>
+    </style>
+
+    <style name="WarehouseActionBarTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+</resources>

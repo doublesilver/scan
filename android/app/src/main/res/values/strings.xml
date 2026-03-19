@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">물류 스캐너</string>
+    <string name="search_hint">상품명 또는 바코드 검색</string>
+    <string name="settings_title">서버 설정</string>
+    <string name="detail_title">상품 상세</string>
+</resources>

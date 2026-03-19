@@ -5,8 +5,10 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import router
 from app.config import settings
 from app.db.database import close_db, get_db
+from app.services.file_watcher import start_watcher, stop_watcher
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,7 +22,9 @@ async def lifespan(app: FastAPI):
     logger.info("서버 시작 — DB 초기화")
     await get_db()
     logger.info("DB 준비 완료: %s", settings.db_path)
+    start_watcher()
     yield
+    stop_watcher()
     logger.info("서버 종료 — DB 연결 해제")
     await close_db()
 
@@ -38,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(router)
 
 
 @app.get("/health")
