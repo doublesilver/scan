@@ -38,7 +38,6 @@ server/data/cache/
 
 # Internal docs (client-facing 아님)
 INTERNAL_STATUS.md
-PROMPT_D1.md
 
 # OMC state
 .omc/state/
