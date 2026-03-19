@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개발 진행 현황 — 바코드 스캐너 시스템</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #1a2332;
+  --navy-mid: #243044;
+  --navy-light: #2e3d55;
+  --orange: #e8734a;
+  --orange-dim: rgba(232,115,74,0.12);
+  --orange-pale: #fdf6f3;
+  --green: #22c55e;
+  --green-pale: #f0fdf4;
+  --green-dim: rgba(34,197,94,0.12);
+  --yellow: #eab308;
+  --yellow-pale: #fefce8;
+  --white: #ffffff;
+  --off-white: #f5f5f3;
+  --text: #1c1c1e;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --border: #e5e7eb;
+  --sidebar-w: 240px;
+  --section-gap: 60px;
+  --font-sans: 'DM Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-mono: 'DM Mono', 'Consolas', monospace;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--off-white);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  z-index: 100; overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-brand-line { width: 28px; height: 2px; background: var(--orange); margin-bottom: 16px; }
+.sidebar-brand h2 { font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.4; }
+.sidebar-brand p { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+.sidebar-nav { padding: 20px 0; flex: 1; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 24px; text-decoration: none;
+  transition: background 0.15s; cursor: pointer;
+}
+.nav-item:hover { background: rgba(255,255,255,0.05); }
+.nav-item.active { background: rgba(232,115,74,0.1); }
+
+.nav-num { font-size: 10px; font-weight: 500; color: var(--orange); font-family: var(--font-mono); min-width: 20px; }
+.nav-label { font-size: 12px; color: rgba(255,255,255,0.45); font-weight: 400; transition: color 0.15s; }
+.nav-item.active .nav-label, .nav-item:hover .nav-label { color: rgba(255,255,255,0.9); }
+
+.sidebar-footer {
+  padding: 20px 24px 28px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sidebar-footer a {
+  display: block; font-size: 11px; color: rgba(255,255,255,0.25);
+  text-decoration: none; transition: color 0.15s; margin-bottom: 5px;
+}
+.sidebar-footer a:hover { color: var(--orange); }
+
+/* ─── Mobile ─── */
+.mobile-header {
+  display: none; position: fixed; top: 0; left: 0; right: 0;
+  height: 54px; background: var(--navy); z-index: 200;
+  align-items: center; padding: 0 20px; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.mobile-header-title { font-size: 13px; font-weight: 600; color: var(--white); }
+.hamburger { background: none; border: none; cursor: pointer; padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+.hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,0.65); border-radius: 1px; transition: all 0.2s; }
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.mobile-drawer { display: none; position: fixed; top: 54px; left: 0; right: 0; bottom: 0; background: var(--navy); z-index: 190; overflow-y: auto; padding: 8px 0 32px; }
+.mobile-drawer.open { display: block; }
+
+/* ─── Main ─── */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+/* ─── Hero ─── */
+.hero {
+  background: var(--navy); padding: 72px 80px 64px;
+  position: relative; overflow: hidden;
+}
+.hero::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--orange); }
+.hero-line { width: 36px; height: 2px; background: var(--orange); margin-bottom: 28px; }
+.hero h1 { font-size: clamp(28px, 4vw, 48px); font-weight: 700; color: var(--white); letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 12px; }
+.hero-sub { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.38); max-width: 460px; line-height: 1.65; margin-bottom: 28px; }
+.hero-date { font-size: 12px; color: rgba(255,255,255,0.22); font-family: var(--font-mono); }
+
+/* ─── Progress bar ─── */
+.progress-overview {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px; margin: 24px 0 0;
+}
+.progress-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 16px 18px; text-align: center;
+}
+.progress-card-num { font-size: 28px; font-weight: 700; color: var(--orange); font-family: var(--font-mono); }
+.progress-card-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+/* ─── Content ─── */
+.content { padding: 0 6vw; }
+
+section {
+  padding: var(--section-gap) 0;
+  border-bottom: 1px solid var(--border);
+}
+section:last-of-type { border-bottom: none; }
+
+.section-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 28px; padding-bottom: 14px; border-bottom: 1.5px solid var(--navy); }
+.section-num { font-family: var(--font-mono); font-size: 36px; font-weight: 400; color: var(--orange); line-height: 1; }
+.section-title { font-size: 22px; font-weight: 700; color: var(--navy); }
+
+.desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.75; }
+
+h3 { font-size: 13.5px; font-weight: 700; color: var(--navy); margin: 28px 0 12px; display: flex; align-items: center; gap: 9px; }
+h3::before { content: ''; display: block; width: 3px; height: 13px; background: var(--orange); flex-shrink: 0; border-radius: 1px; }
+
+/* ─── Tables ─── */
+.table-wrap { overflow-x: auto; margin: 12px 0 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--white); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+thead th { background: var(--navy); color: var(--white); font-weight: 600; padding: 12px 18px; text-align: left; font-size: 12px; white-space: nowrap; }
+td { padding: 11px 18px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.7; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: #f9fafb; }
+.td-label { font-weight: 600; color: var(--navy); white-space: nowrap; font-size: 13px; }
+
+/* ─── Status badges ─── */
+.badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-done { background: var(--green-dim); color: var(--green); }
+.badge-progress { background: var(--orange-dim); color: var(--orange); }
+.badge-todo { background: #f3f4f6; color: var(--text-faint); }
+
+/* ─── Milestone card ─── */
+.milestone {
+  background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px 24px; margin-bottom: 16px; transition: border-color 0.15s;
+}
+.milestone:hover { border-color: var(--orange); }
+.milestone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.milestone-title { font-size: 15px; font-weight: 700; color: var(--navy); }
+.milestone-bar { height: 4px; background: #f3f4f6; border-radius: 2px; margin-bottom: 12px; overflow: hidden; }
+.milestone-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.milestone-bar-fill.done { background: var(--green); }
+.milestone-bar-fill.progress { background: var(--orange); }
+
+.checklist { list-style: none; padding: 0; }
+.checklist li { padding: 4px 0; font-size: 13px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 8px; }
+.checklist li::before { content: ''; display: inline-block; width: 14px; height: 14px; border: 1.5px solid var(--border); border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
+.checklist li.checked { color: var(--text); }
+.checklist li.checked::before { background: var(--green); border-color: var(--green); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 7.5L6 10L10.5 4.5' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+/* ─── Callout ─── */
+.callout { border-left: 3px solid var(--orange); background: var(--orange-pale); padding: 14px 18px; margin: 16px 0; font-size: 13.5px; line-height: 1.75; }
+.callout strong { color: var(--navy); font-weight: 700; }
+
+/* ─── Daily log ─── */
+.log-entry { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 12px; }
+.log-date { font-family: var(--font-mono); font-size: 12px; color: var(--orange); font-weight: 500; margin-bottom: 8px; }
+.log-content { font-size: 13.5px; line-height: 1.75; }
+.log-content ul { padding-left: 18px; margin: 6px 0; }
+.log-content li { margin-bottom: 4px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .mobile-header { display: flex; }
+  .main { margin-left: 0; }
+  .hero { padding: 74px 24px 48px; }
+  .content { padding: 0 20px; }
+  .progress-overview { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-line"></div>
+    <h2>바코드 스캐너<br>시스템</h2>
+    <p>개발 진행 현황</p>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="#overview"><span class="nav-num">00</span><span class="nav-label">전체 현황</span></a>
+    <a class="nav-item" href="#milestones"><span class="nav-num">01</span><span class="nav-label">마일스톤</span></a>
+    <a class="nav-item" href="#daily"><span class="nav-num">02</span><span class="nav-label">일일 작업 로그</span></a>
+    <a class="nav-item" href="#next"><span class="nav-num">03</span><span class="nav-label">다음 단계</span></a>
+    <a class="nav-item" href="#blockers"><span class="nav-num">04</span><span class="nav-label">확인 필요 사항</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="index.html">제안서 보기 &rarr;</a>
+    <a href="demo.html">데모 페이지 보기 &rarr;</a>
+    <a href="mailto:korea5410@gmail.com">korea5410@gmail.com</a>
+  </div>
+</nav>
+
+<!-- Mobile header -->
+<div class="mobile-header">
+  <span class="mobile-header-title">개발 진행 현황</span>
+  <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a class="nav-item" href="#overview" onclick="closeDrawer()"><span class="nav-num">00</span><span class="nav-label">전체 현황</span></a>
+  <a class="nav-item" href="#milestones" onclick="closeDrawer()"><span class="nav-num">01</span><span class="nav-label">마일스톤</span></a>
+  <a class="nav-item" href="#daily" onclick="closeDrawer()"><span class="nav-num">02</span><span class="nav-label">일일 작업 로그</span></a>
+  <a class="nav-item" href="#next" onclick="closeDrawer()"><span class="nav-num">03</span><span class="nav-label">다음 단계</span></a>
+  <a class="nav-item" href="#blockers" onclick="closeDrawer()"><span class="nav-num">04</span><span class="nav-label">확인 필요 사항</span></a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-line"></div>
+    <h1>개발 진행<br>현황</h1>
+    <div class="hero-sub">바코드 스캐너 시스템 Phase 1 (MVP) 개발 진행 상황을 안내드립니다.</div>
+    <div class="progress-overview">
+      <div class="progress-card">
+        <div class="progress-card-num">0/8</div>
+        <div class="progress-card-label">마일스톤 완료</div>
+      </div>
+      <div class="progress-card">
+        <div class="progress-card-num">D+1</div>
+        <div class="progress-card-label">개발 경과일</div>
+      </div>
+      <div class="progress-card">
+        <div class="progress-card-num">0%</div>
+        <div class="progress-card-label">전체 진행률</div>
+      </div>
+      <div class="progress-card">
+        <div class="progress-card-num">D+10</div>
+        <div class="progress-card-label">목표 완료일</div>
+      </div>
+    </div>
+    <div class="hero-date" style="margin-top:20px;">마지막 업데이트: 2026-03-19</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- 00 Overview -->
+    <section id="overview">
+      <div class="section-head">
+        <div class="section-num">00</div>
+        <div class="section-title">전체 현황</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>마일스톤</th><th>내용</th><th>상태</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">M1</td><td>서버 프로젝트 셋업 + DB</td><td><span class="badge badge-progress">진행 중</span></td></tr>
+            <tr><td class="td-label">M2</td><td>데이터 이관 (xlsx 파서)</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M3</td><td>REST API 개발</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M4</td><td>NAS 이미지 프록시 + 캐싱</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M5</td><td>xlsx 자동 갱신</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M6</td><td>Android 앱 — UI + API 연동</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M7</td><td>Android 앱 — DataWedge 연동</td><td><span class="badge badge-todo">대기</span></td></tr>
+            <tr><td class="td-label">M8</td><td>통합 테스트 + 서버 자동 시작</td><td><span class="badge badge-todo">대기</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 01 Milestones -->
+    <section id="milestones">
+      <div class="section-head">
+        <div class="section-num">01</div>
+        <div class="section-title">마일스톤 상세</div>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M1. 서버 프로젝트 셋업 + DB</span>
+          <span class="badge badge-progress">진행 중</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill progress" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>requirements.txt 존재, pip install 성공</li>
+          <li>uvicorn 에러 없이 기동 (localhost:8000)</li>
+          <li>Swagger UI 200 응답</li>
+          <li>PRODUCT, BARCODE, IMAGE 테이블 생성</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M2. 데이터 이관 (xlsx 파서)</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>codepath.xlsx 11,821건 바코드 DB 적재</li>
+          <li>sku_download.xlsx SKU 데이터 적재</li>
+          <li>이미지 경로 상대경로 변환</li>
+          <li>중복 실행 시 upsert 동작</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M3. REST API 개발</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>/api/scan/{barcode} 상품 정보 조회</li>
+          <li>존재하지 않는 바코드 404 응답</li>
+          <li>/api/search 상품명 검색</li>
+          <li>/api/image 이미지 프록시</li>
+          <li>DB 조회 평균 100ms 이내</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M4. NAS 이미지 프록시 + 캐싱</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>WebDAV 설정 항목</li>
+          <li>썸네일(img/) 이미지 프록시</li>
+          <li>실사(real_image/) 이미지 프록시</li>
+          <li>WebDAV 미연결 시 캐시/기본 이미지 반환</li>
+          <li>캐싱 동작 확인</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M5. xlsx 자동 갱신</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>파일 감지 자동 파싱</li>
+          <li>신규 데이터 API 반영</li>
+          <li>기존 SKU 갱신 반영</li>
+          <li>갱신 이력 로그 기록</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M6. Android 앱 — UI + API 연동</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>APK 빌드 성공</li>
+          <li>메인 화면 (검색 + 리스트 + 이미지)</li>
+          <li>상세 화면 (실사 확대 + 상품 정보)</li>
+          <li>Retrofit API 연동</li>
+          <li>서버 IP 설정</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M7. DataWedge 스캐너 연동</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>DataWedgeManager 스캐너 핸들러</li>
+          <li>BroadcastReceiver Intent 수신</li>
+          <li>DataWedge 프로파일 자동 생성</li>
+          <li>adb broadcast 테스트 통과</li>
+        </ul>
+      </div>
+
+      <div class="milestone">
+        <div class="milestone-header">
+          <span class="milestone-title">M8. 통합 테스트 + 서버 자동 시작</span>
+          <span class="badge badge-todo">대기</span>
+        </div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:0%"></div></div>
+        <ul class="checklist">
+          <li>전체 플로우 테스트 스크립트</li>
+          <li>서버 자동 시작 설정</li>
+          <li>APK 빌드 + 설치 스크립트</li>
+          <li>바코드 스캔 0.5초 이내 응답</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 Daily Log -->
+    <section id="daily">
+      <div class="section-head">
+        <div class="section-num">02</div>
+        <div class="section-title">일일 작업 로그</div>
+      </div>
+
+      <div class="log-entry">
+        <div class="log-date">2026-03-19 (D+1)</div>
+        <div class="log-content">
+          <ul>
+            <li>프로젝트 착수 — 착수금 입금 확인</li>
+            <li>기존 프로그램(scan13.exe) 분석: PySide6 + PyArmor 난독화, 소스 복원 불가 확인</li>
+            <li>클라이언트 데이터 분석: codepath.xlsx (11,821건), sku_download.xlsx 구조 파악</li>
+            <li>NAS 폴더 구조 확인: img/ (썸네일), real_image/ (실사), WebDAV 마운트</li>
+            <li>TC60 PDA 조사: DataWedge Intent API 방식 확정, 외부 SDK 불필요</li>
+            <li>개발 문서 체계 구성: CLAUDE.md + ROADMAP.md + DEV_NOTES.md</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 Next -->
+    <section id="next">
+      <div class="section-head">
+        <div class="section-num">03</div>
+        <div class="section-title">다음 단계</div>
+      </div>
+
+      <div class="callout">
+        <strong>M1. 서버 프로젝트 셋업 + DB</strong><br><br>
+        FastAPI 서버 프로젝트 구조 생성, SQLite DB 스키마 설계 (PRODUCT, BARCODE, IMAGE 테이블),
+        uvicorn 기동 확인까지 완료 예정입니다.
+      </div>
+    </section>
+
+    <!-- 04 Blockers -->
+    <section id="blockers">
+      <div class="section-head">
+        <div class="section-num">04</div>
+        <div class="section-title">확인 필요 사항</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th><th>필요 시점</th></tr></thead>
+          <tbody>
+            <tr><td class="td-label">sku_download 원본</td><td>전달받은 파일이 SKU ID 1컬럼만 존재합니다. 17컬럼 원본 파일 재전달 부탁드립니다.</td><td>M2 착수 전</td></tr>
+            <tr><td class="td-label">NAS 접속 정보</td><td>WebDAV 주소, 계정, 비밀번호</td><td>M4 착수 전</td></tr>
+            <tr><td class="td-label">PDA 실기기</td><td>TC60 택배 발송 (대표님 귀국 후)</td><td>M7 착수 전</td></tr>
+            <tr><td class="td-label">Mini PC 원격</td><td>AnyDesk 설치 후 접속 정보 공유</td><td>M8 착수 전</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="desc" style="margin-top:20px;">위 항목이 없어도 M1~M3 서버 개발은 정상 진행 가능합니다.</p>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Mobile menu
+const hamburger = document.getElementById('hamburger');
+const drawer = document.getElementById('mobileDrawer');
+function closeDrawer() { drawer.classList.remove('open'); hamburger.classList.remove('open'); }
+hamburger?.addEventListener('click', () => { drawer.classList.toggle('open'); hamburger.classList.toggle('open'); });
+
+// Active nav highlight
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.sidebar .nav-item');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const id = entry.target.id;
+      document.querySelector(`.sidebar .nav-item[href="#${id}"]`)?.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
