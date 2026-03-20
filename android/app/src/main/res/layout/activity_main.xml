@@ -6,6 +6,18 @@
     android:orientation="vertical"
     android:background="@color/background">
 
+    <TextView
+        android:id="@+id/tvOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FF9800"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="오프라인 모드 (캐시된 데이터)"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

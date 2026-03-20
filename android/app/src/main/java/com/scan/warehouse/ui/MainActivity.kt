@@ -106,6 +106,10 @@ class MainActivity : AppCompatActivity() {
                 productAdapter.submitList(it.items)
             }
         }
+
+        viewModel.isOffline.observe(this) { offline ->
+            binding.tvOfflineBanner.visibility = if (offline) View.VISIBLE else View.GONE
+        }
     }
 
     private fun showScanResult(result: ScanResponse) {
