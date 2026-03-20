@@ -17,13 +17,29 @@
         theme: "base",
         themeVariables: {
           primaryColor: "#1a2332",
-          primaryTextColor: "#fff",
+          primaryTextColor: "#ffffff",
           primaryBorderColor: "#e8734a",
           lineColor: "#e8734a",
           secondaryColor: "#f5f5f3",
           tertiaryColor: "#fdf6f3",
           fontFamily: "DM Sans, sans-serif",
           fontSize: "13px",
+          noteBkgColor: "#f5f5f3",
+          noteTextColor: "#1a2332",
+          actorTextColor: "#1a2332",
+          actorBkg: "#f5f5f3",
+          signalTextColor: "#1a2332",
+          labelTextColor: "#1a2332",
+          loopTextColor: "#1a2332",
+          edgeLabelBackground: "#f5f5f3",
+          entityFillColor0: "#f5f5f3",
+          entityFillColor1: "#fdf6f3",
+          attributeBackgroundColorOdd: "#f5f5f3",
+          attributeBackgroundColorEven: "#fdf6f3",
+          nodeBkg: "#f5f5f3",
+          nodeTextColor: "#1a2332",
+          mainBkg: "#f5f5f3",
+          clusterBkg: "#f5f5f3",
         },
       });
     </script>
@@ -561,6 +577,18 @@
         .progress-overview {
           grid-template-columns: repeat(2, 1fr);
         }
+      }
+
+      pre.mermaid {
+        background: #f5f5f3;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 16px 0;
+        overflow-x: auto;
+      }
+
+      pre.mermaid svg {
+        max-width: 100%;
       }
     </style>
   </head>
