@@ -11,6 +11,7 @@
 ### 경로 변환
 
 B컬럼 값 예시:
+
 ```
 Z:\물류부\scan\img\8801234567890.jpg
 Z:\물류부\scan\real_image\8801234567890_1.jpg
@@ -33,11 +34,10 @@ openpyxl (read_only=True, data_only=True).
 
 ### DB 적재 동작
 
-1. 바코드(A컬럼)로 `product` placeholder 생성 (`ON CONFLICT DO NOTHING`).
-   - codepath에는 SKU ID 없음 → 바코드 값을 sku_id로 임시 사용.
-2. `barcode` upsert: `ON CONFLICT(barcode, sku_id) DO UPDATE SET updated_at`.
-3. `image` upsert: `ON CONFLICT(sku_id, file_path) DO UPDATE SET image_type, updated_at`.
-4. B컬럼이 None 또는 `"none"` 문자열인 경우 image 적재 스킵.
+1. `barcode` upsert: `ON CONFLICT(barcode) DO UPDATE SET updated_at` (sku_id가 NULL이거나 빈 문자열인 경우만).
+   - codepath에는 SKU ID 없음 → barcode 테이블에 sku_id=NULL 상태로 생성.
+2. `image` upsert: `ON CONFLICT(barcode, file_path) DO UPDATE SET image_type, updated_at`.
+3. B컬럼이 None 또는 `"none"` 문자열인 경우 image 적재 스킵.
 
 ### 에러 처리
 
@@ -47,7 +47,7 @@ openpyxl (read_only=True, data_only=True).
 
 ---
 
-## sku_download.xlsx (coupangmd00_sku_download_*.xlsx)
+## sku*download.xlsx (coupangmd00_sku_download*\*.xlsx)
 
 ### 파일 형식
 
@@ -66,6 +66,7 @@ rows = root.findall(".//s:row", NS)
 ```
 
 셀값 추출 우선순위:
+
 1. `<v>` 태그 (숫자/날짜 타입)
 2. `<is><t>` 태그 (inlineStr 타입)
 
@@ -77,20 +78,20 @@ rows = root.findall(".//s:row", NS)
 
 필수 컬럼:
 
-| 내부 필드 | 매칭 후보 키워드 |
-|-----------|----------------|
-| sku_id | sku id, skuid, sku_id, 상품id |
+| 내부 필드    | 매칭 후보 키워드                            |
+| ------------ | ------------------------------------------- |
+| sku_id       | sku id, skuid, sku_id, 상품id               |
 | product_name | 상품명, 상품 명, 제품명, 품명, product name |
-| barcode | 바코드, barcode, bar code, ean |
+| barcode      | 바코드, barcode, bar code, ean              |
 
 옵션 컬럼:
 
-| 내부 필드 | 매칭 후보 키워드 |
-|-----------|----------------|
-| category | 카테고리, 업종, 분류, category |
-| brand | 브랜드, 제조사, brand |
-| moq | 최소구매수량, moq, 최소 구매수량 |
-| weight | 중량, 무게, weight |
+| 내부 필드 | 매칭 후보 키워드                 |
+| --------- | -------------------------------- |
+| category  | 카테고리, 업종, 분류, category   |
+| brand     | 브랜드, 제조사, brand            |
+| moq       | 최소구매수량, moq, 최소 구매수량 |
+| weight    | 중량, 무게, weight               |
 
 필수 컬럼 매칭 실패 시 → 에러 로그 후 파싱 중단 (해당 파일 전체 스킵).
 
@@ -101,12 +102,13 @@ rows = root.findall(".//s:row", NS)
 1. `product` upsert:
    - 존재 시 UPDATE (product_name, category, brand, extra, updated_at).
    - 미존재 시 INSERT.
-2. `barcode` upsert: `ON CONFLICT(barcode, sku_id) DO UPDATE SET updated_at`.
+2. `barcode` upsert: `ON CONFLICT(barcode) DO UPDATE SET sku_id, updated_at`.
    - 바코드가 빈 문자열 또는 `"none"` 문자열인 경우 스킵.
 
 ### 에러 처리
 
 codepath_parser와 동일:
+
 - 행 단위 try/except, 에러 10건까지 logger.warning.
 - parse_log 1건 INSERT.
 

@@ -12,9 +12,9 @@
 
 ```
 product (sku_id PK)
-    ├── 1:N → barcode (sku_id FK)
-    ├── 1:N → image (sku_id FK)
-    └── 독립 → parse_log (관계 없음, 적재 이력)
+    └── 1:N → barcode (sku_id FK, NULL 허용)
+                └── 1:N → image (barcode 참조)
+독립 → parse_log (관계 없음, 적재 이력)
 ```
 
 ---
@@ -23,68 +23,73 @@ product (sku_id PK)
 
 ### product
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|------|------|------|------|
-| sku_id | TEXT | PRIMARY KEY | 쿠팡 SKU ID |
-| product_name | TEXT | NOT NULL DEFAULT '' | 상품명 |
-| category | TEXT | NOT NULL DEFAULT '' | 카테고리 |
-| brand | TEXT | NOT NULL DEFAULT '' | 브랜드/제조사 |
-| extra | TEXT | NOT NULL DEFAULT '{}' | 기타 필드 (JSON) |
-| created_at | TEXT | NOT NULL DEFAULT datetime('now') | |
-| updated_at | TEXT | NOT NULL DEFAULT datetime('now') | |
+| 컬럼         | 타입 | 제약                             | 설명             |
+| ------------ | ---- | -------------------------------- | ---------------- |
+| sku_id       | TEXT | PRIMARY KEY                      | 쿠팡 SKU ID      |
+| product_name | TEXT | NOT NULL DEFAULT ''              | 상품명           |
+| category     | TEXT | NOT NULL DEFAULT ''              | 카테고리         |
+| brand        | TEXT | NOT NULL DEFAULT ''              | 브랜드/제조사    |
+| extra        | TEXT | NOT NULL DEFAULT '{}'            | 기타 필드 (JSON) |
+| created_at   | TEXT | NOT NULL DEFAULT datetime('now') |                  |
+| updated_at   | TEXT | NOT NULL DEFAULT datetime('now') |                  |
 
 - `extra`: moq, weight 등 비정형 옵션 컬럼을 JSON으로 수용.
 - codepath.xlsx만 적재된 경우 `product_name = ''`인 placeholder 행 존재. sku_download 적재 시 실데이터로 갱신.
 
 ### barcode
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|------|------|------|------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT | |
-| barcode | TEXT | NOT NULL | EAN-13 바코드 |
-| sku_id | TEXT | NOT NULL, FK → product | |
-| created_at | TEXT | NOT NULL DEFAULT datetime('now') | |
-| updated_at | TEXT | NOT NULL DEFAULT datetime('now') | |
+| 컬럼         | 타입    | 제약                              | 설명          |
+| ------------ | ------- | --------------------------------- | ------------- |
+| id           | INTEGER | PRIMARY KEY AUTOINCREMENT         |               |
+| barcode      | TEXT    | NOT NULL UNIQUE                   | EAN-13 바코드 |
+| sku_id       | TEXT    | FK → product (ON DELETE SET NULL) |               |
+| barcode_type | TEXT    | NOT NULL DEFAULT 'EAN-13'         | 바코드 유형   |
+| created_at   | TEXT    | NOT NULL DEFAULT datetime('now')  |               |
+| updated_at   | TEXT    | NOT NULL DEFAULT datetime('now')  |               |
 
-- UNIQUE (barcode, sku_id): 같은 바코드가 같은 SKU에 중복 등록 불가.
+- UNIQUE(barcode): 동일 바코드 중복 등록 불가.
+- sku_id는 NULL 허용 (codepath에서 SKU 미매칭 상태로 생성 가능).
 - 상품당 복수 바코드 허용 (동일 sku_id에 여러 barcode 행).
 - 인덱스: `idx_barcode_barcode`, `idx_barcode_sku_id`
 
 ### image
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|------|------|------|------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT | |
-| sku_id | TEXT | NOT NULL, FK → product | |
-| file_path | TEXT | NOT NULL | 상대경로 (img/xxx.jpg) |
-| image_type | TEXT | NOT NULL DEFAULT 'thumbnail' | thumbnail / real |
-| created_at | TEXT | NOT NULL DEFAULT datetime('now') | |
-| updated_at | TEXT | NOT NULL DEFAULT datetime('now') | |
+| 컬럼       | 타입    | 제약                             | 설명                         |
+| ---------- | ------- | -------------------------------- | ---------------------------- |
+| id         | INTEGER | PRIMARY KEY AUTOINCREMENT        |                              |
+| barcode    | TEXT    | NOT NULL                         | 바코드 (barcode 테이블 참조) |
+| file_path  | TEXT    | NOT NULL                         | 상대경로 (img/xxx.jpg)       |
+| image_type | TEXT    | NOT NULL DEFAULT 'thumbnail'     | thumbnail / real             |
+| sort_order | INTEGER | NOT NULL DEFAULT 0               | 정렬 순서                    |
+| created_at | TEXT    | NOT NULL DEFAULT datetime('now') |                              |
+| updated_at | TEXT    | NOT NULL DEFAULT datetime('now') |                              |
 
-- UNIQUE (sku_id, file_path): 동일 경로 중복 저장 불가.
+- UNIQUE (barcode, file_path): 동일 바코드+경로 중복 저장 불가.
 - `image_type`: 경로에 `real_image` 포함 시 `real`, 그 외 `thumbnail`.
-- 인덱스: `idx_image_sku_id`
+- 인덱스: `idx_image_barcode`
 
 ### parse_log
 
-| 컬럼 | 타입 | 설명 |
-|------|------|------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| file_name | TEXT | 파싱한 파일 경로 |
-| file_type | TEXT | `codepath` / `sku_download` |
-| added_count | INTEGER | 신규 추가 행 수 |
-| updated_count | INTEGER | 갱신 행 수 |
-| skipped_count | INTEGER | 스킵 행 수 (빈 행 등) |
-| error_count | INTEGER | 에러 행 수 |
-| errors | TEXT | 에러 상세 목록 (JSON, 최대 50건) |
-| parsed_at | TEXT | 파싱 시각 |
+| 컬럼          | 타입    | 설명                             |
+| ------------- | ------- | -------------------------------- |
+| id            | INTEGER | PRIMARY KEY AUTOINCREMENT        |
+| file_name     | TEXT    | 파싱한 파일 경로                 |
+| file_type     | TEXT    | `codepath` / `sku_download`      |
+| record_count  | INTEGER | 총 처리 행 수                    |
+| added_count   | INTEGER | 신규 추가 행 수                  |
+| updated_count | INTEGER | 갱신 행 수                       |
+| skipped_count | INTEGER | 스킵 행 수 (빈 행 등)            |
+| error_count   | INTEGER | 에러 행 수                       |
+| errors        | TEXT    | 에러 상세 목록 (JSON, 최대 50건) |
+| duration_ms   | INTEGER | 파싱 소요 시간 (ms)              |
+| parsed_at     | TEXT    | 파싱 시각                        |
 
 ---
 
 ## 설계 의도
 
-- **정규화**: product 1 : barcode N, product 1 : image N. 복수 바코드/이미지 자연스럽게 수용.
-- **placeholder 전략**: codepath.xlsx에는 SKU ID가 없으므로 바코드 값을 임시 sku_id로 사용해 product 행 생성. sku_download 적재 시 실 SKU ID로 교체 불가능한 구조상 한계 — M3 API 구현 전에 적재 순서(sku_download 먼저) 또는 별도 매핑 로직 검토 필요.
+- **정규화**: product 1 : barcode N, barcode 1 : image N. 복수 바코드/이미지 자연스럽게 수용.
+- **barcode 중심 설계**: codepath.xlsx에는 SKU ID가 없으므로 barcode 테이블에 sku_id=NULL 상태로 생성. image 테이블은 barcode 기준으로 연결. sku_download 적재 시 barcode.sku_id가 갱신되어 product와 연결.
 - **extra JSON**: 쿠팡 xlsx 컬럼 변경에 유연하게 대응. 자주 조회되는 필드는 향후 정식 컬럼으로 승격.
 
 ---
