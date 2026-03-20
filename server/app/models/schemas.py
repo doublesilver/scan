@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ImageItem(BaseModel):
@@ -17,7 +17,7 @@ class ScanResponse(BaseModel):
 
 
 class StockUpdate(BaseModel):
-    quantity: int
+    quantity: int = Field(ge=0, le=999999)
     memo: str = ""
     updated_by: str = "PDA"
 

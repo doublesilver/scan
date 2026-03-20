@@ -83,7 +83,8 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
 async def search_products(db, query: str, limit: int) -> list[SearchItem]:
     try:
         cursor = await db.execute(
-            "SELECT p.sku_id, p.product_name, p.category, p.brand "
+            "SELECT p.sku_id, p.product_name, p.category, p.brand, "
+            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = p.sku_id LIMIT 1) as first_barcode "
             "FROM product_fts f JOIN product p ON f.sku_id = p.sku_id "
             "WHERE product_fts MATCH ? LIMIT ?",
             (query, limit),
@@ -93,26 +94,21 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
         logger.warning("FTS5 검색 실패, LIKE 폴백: %s", e)
         pattern = f"%{query}%"
         cursor = await db.execute(
-            "SELECT sku_id, product_name, category, brand FROM product "
+            "SELECT sku_id, product_name, category, brand, "
+            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = product.sku_id LIMIT 1) as first_barcode "
+            "FROM product "
             "WHERE product_name LIKE ? OR sku_id LIKE ? LIMIT ?",
             (pattern, pattern, limit),
         )
         rows = await cursor.fetchall()
 
-    items = []
-    for r in rows:
-        bc_cursor = await db.execute(
-            "SELECT barcode FROM barcode WHERE sku_id = ? LIMIT 1",
-            (r["sku_id"],),
+    return [
+        SearchItem(
+            sku_id=r["sku_id"],
+            product_name=_strip_brands(r["product_name"]),
+            category=r["category"],
+            brand=r["brand"],
+            barcode=r["first_barcode"],
         )
-        bc_row = await bc_cursor.fetchone()
-        items.append(
-            SearchItem(
-                sku_id=r["sku_id"],
-                product_name=_strip_brands(r["product_name"]),
-                category=r["category"],
-                brand=r["brand"],
-                barcode=bc_row["barcode"] if bc_row else None,
-            )
-        )
-    return items
+        for r in rows
+    ]

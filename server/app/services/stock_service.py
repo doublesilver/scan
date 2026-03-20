@@ -33,6 +33,8 @@ async def update_stock(db, sku_id: str, data: StockUpdate) -> StockResponse | No
     if not await cursor.fetchone():
         return None
 
+    await db.execute("BEGIN IMMEDIATE")
+
     cursor = await db.execute(
         "SELECT quantity FROM stock WHERE sku_id = ?", (sku_id,)
     )

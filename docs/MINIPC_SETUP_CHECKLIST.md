@@ -109,7 +109,7 @@
 
   ```bash
   # Git clone 방식
-  git clone https://[repository-url].git scan
+  git clone https://github.com/doublesilver/scan.git scan
   cd scan
 
   # 또는 zip 파일 방식
@@ -225,7 +225,7 @@
 
 - [ ] 프로젝트 폴더 복사
   ```bash
-  git clone https://[repository-url].git scan
+  git clone https://github.com/doublesilver/scan.git scan
   cd scan
   ```
 

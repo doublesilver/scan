@@ -20,7 +20,8 @@ object DataWedgeManager {
     private const val EXTRA_CREATE_PROFILE = "com.symbol.datawedge.api.CREATE_PROFILE"
     private const val EXTRA_SET_CONFIG = "com.symbol.datawedge.api.SET_CONFIG"
 
-    private val barcodeRegex = Regex("^\\d{8,13}$")
+    const val BARCODE_PATTERN = "^\\d{8,13}$"
+    private val barcodeRegex = Regex(BARCODE_PATTERN)
 
     private val _scanFlow = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val scanFlow: SharedFlow<String> = _scanFlow.asSharedFlow()

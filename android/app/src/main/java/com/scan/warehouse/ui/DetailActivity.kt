@@ -1,16 +1,9 @@
 package com.scan.warehouse.ui
 
-import android.content.Intent
-import android.graphics.Typeface
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.text.Spannable
 import android.text.SpannableStringBuilder
-import android.text.style.RelativeSizeSpan
-import android.text.style.StyleSpan
 import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import com.scan.warehouse.R
@@ -56,7 +49,7 @@ class DetailActivity : AppCompatActivity() {
         val barcodeText = SpannableStringBuilder()
         data.barcodes.forEachIndexed { index, barcode ->
             if (index > 0) barcodeText.append("\n")
-            barcodeText.append(formatBarcodeBold(barcode))
+            barcodeText.append(BarcodeUtils.formatBold(barcode))
         }
         binding.tvDetailBarcodes.text = if (barcodeText.isNotEmpty()) barcodeText else SpannableStringBuilder("-")
 
@@ -91,28 +84,6 @@ class DetailActivity : AppCompatActivity() {
             }
         }
 
-        binding.btnOrder.setOnClickListener {
-            val url = binding.btnOrder.tag as? String ?: return@setOnClickListener
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-        }
-    }
-
-    private fun formatBarcodeBold(barcode: String): SpannableStringBuilder {
-        val spannable = SpannableStringBuilder(barcode)
-        if (barcode.length >= 5) {
-            val start = barcode.length - 5
-            spannable.setSpan(
-                StyleSpan(Typeface.BOLD),
-                start, barcode.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                RelativeSizeSpan(1.3f),
-                start, barcode.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-        return spannable
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

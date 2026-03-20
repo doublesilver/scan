@@ -84,6 +84,47 @@ product (sku_id PK)
 | duration_ms   | INTEGER | 파싱 소요 시간 (ms)              |
 | parsed_at     | TEXT    | 파싱 시각                        |
 
+### stock (마이그레이션 v3)
+
+| 컬럼       | 타입    | 제약                                          | 설명        |
+| ---------- | ------- | --------------------------------------------- | ----------- |
+| sku_id     | TEXT    | PRIMARY KEY, FK → product (ON DELETE CASCADE) | 쿠팡 SKU ID |
+| quantity   | INTEGER | NOT NULL DEFAULT 0                            | 재고 수량   |
+| memo       | TEXT    | NOT NULL DEFAULT ''                           | 메모        |
+| updated_by | TEXT    | NOT NULL DEFAULT ''                           | 수정자      |
+| updated_at | TEXT    | NOT NULL DEFAULT datetime('now')              |             |
+
+### stock_log (마이그레이션 v3)
+
+| 컬럼       | 타입    | 제약                                       | 설명         |
+| ---------- | ------- | ------------------------------------------ | ------------ |
+| id         | INTEGER | PRIMARY KEY AUTOINCREMENT                  |              |
+| sku_id     | TEXT    | NOT NULL, FK → product (ON DELETE CASCADE) | 쿠팡 SKU ID  |
+| before_qty | INTEGER | NOT NULL                                   | 변경 전 수량 |
+| after_qty  | INTEGER | NOT NULL                                   | 변경 후 수량 |
+| memo       | TEXT    | NOT NULL DEFAULT ''                        | 메모         |
+| updated_by | TEXT    | NOT NULL DEFAULT ''                        | 수정자       |
+| created_at | TEXT    | NOT NULL DEFAULT datetime('now')           |              |
+
+- 인덱스: `idx_stock_log_sku`, `idx_stock_log_date`
+
+### product_fts (마이그레이션 v2)
+
+FTS5 가상 테이블. product 테이블의 전문 검색 인덱스.
+
+```sql
+CREATE VIRTUAL TABLE product_fts USING fts5(
+    sku_id, product_name, category, brand,
+    content='product', content_rowid='rowid'
+);
+```
+
+동기화 트리거:
+
+- `product_fts_insert`: product INSERT 시 자동 반영
+- `product_fts_update`: product UPDATE 시 기존 삭제 후 재삽입
+- `product_fts_delete`: product DELETE 시 삭제
+
 ---
 
 ## 설계 의도
@@ -152,5 +193,7 @@ CREATE INDEX idx_scan_log_scanned_at ON scan_log(scanned_at);
 
 ## 마이그레이션 전략
 
-- **현재 (M1~M2)**: `CREATE TABLE IF NOT EXISTS`. 스키마 변경 시 DB 파일 삭제 후 재적재.
-- **향후 (Phase 2)**: alembic 도입 검토. `alembic init`, `alembic revision --autogenerate`, `alembic upgrade head` 흐름.
+- `db_version` 테이블로 현재 스키마 버전 관리 (현재 SCHEMA_VERSION = 3).
+- 서버 기동 시 `_run_migrations()`가 `MIGRATIONS` 딕셔너리를 버전 순으로 순회하며 미적용 마이그레이션을 자동 실행.
+- 각 버전별 SQL 리스트를 순서대로 실행 후 `db_version`에 기록.
+- 기본 테이블은 `CREATE TABLE IF NOT EXISTS`로 생성 (SCHEMA_SQL), 이후 변경은 MIGRATIONS에 추가.

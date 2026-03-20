@@ -24,7 +24,7 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "서버 설정"
 
-        repository = ProductRepository(this)
+        repository = ProductRepository(applicationContext)
 
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
 

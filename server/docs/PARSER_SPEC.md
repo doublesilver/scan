@@ -121,4 +121,4 @@ codepath_parser와 동일:
 2. codepath.xlsx 적재 → barcode + image 연결
 ```
 
-역순(codepath → sku_download) 적재 시: codepath에서 생성된 placeholder product 행(sku_id = 바코드값)이 sku_download의 실 SKU ID와 연결되지 않음. 현재 코드는 이 한계 존재.
+역순(codepath → sku_download) 적재 시에도 기존 sku_id가 유실되지 않도록 방어 로직을 적용하였다. codepath 파서의 barcode upsert는 `WHERE sku_id IS NULL OR sku_id = ''` 조건부로 동작하여, 이미 sku_download에서 할당된 sku_id를 덮어쓰지 않는다.

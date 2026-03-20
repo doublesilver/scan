@@ -78,8 +78,6 @@ async def get_image(path: str, request: Request, width: int | None = None) -> Re
     image_bytes, file_path, resized_width = await get_image_data(path, width, http_client)
 
     media_type = guess_media_type(path)
-    if file_path and resized_width is None:
-        return FileResponse(str(file_path), media_type=media_type)
-    if file_path and resized_width is not None:
+    if file_path:
         return FileResponse(str(file_path), media_type=media_type)
     return Response(content=image_bytes, media_type=media_type)

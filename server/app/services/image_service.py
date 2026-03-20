@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def validate_path(base: Path, sub_path: str) -> Path:
     resolved = (base / sub_path).resolve()
-    if not str(resolved).startswith(str(base)):
+    if not resolved.is_relative_to(base):
         raise HTTPException(status_code=400, detail="invalid path")
     return resolved
 

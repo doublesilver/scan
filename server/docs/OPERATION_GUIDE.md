@@ -7,22 +7,44 @@
 시스템 부팅 후 자동으로 시작됩니다. 수동으로 시작해야 하는 경우:
 
 ```bash
+# Linux
 sudo systemctl start scanner-server
+
+# Windows (NSSM)
+nssm start ScannerAPI
 ```
 
 ### 1.2 서버 중지
 
 ```bash
+# Linux
 sudo systemctl stop scanner-server
+
+# Windows (NSSM)
+nssm stop ScannerAPI
 ```
 
 ### 1.3 서버 상태 확인
 
 ```bash
+# Linux
 sudo systemctl status scanner-server
+
+# Windows (NSSM)
+nssm status ScannerAPI
 ```
 
-정상 상태 표시: `active (running)`
+정상 상태 표시: Linux `active (running)` / Windows `SERVICE_RUNNING`
+
+### 1.3.1 서버 재시작
+
+```bash
+# Linux
+sudo systemctl restart scanner-server
+
+# Windows (NSSM)
+nssm restart ScannerAPI
+```
 
 ### 1.4 서버 IP 주소 확인
 
@@ -186,7 +208,7 @@ sudo systemctl status scanner-backup.timer
 ls -lh /opt/scanner/server/data/backups/
 ```
 
-백업은 최근 6일치만 유지됩니다 (자동 삭제).
+백업은 최근 7일치만 유지됩니다 (자동 삭제).
 
 ### 4.2 수동 백업
 

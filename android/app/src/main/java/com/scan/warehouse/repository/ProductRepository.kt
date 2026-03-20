@@ -16,6 +16,7 @@ class ProductRepository(private val context: Context) {
     private val dao get() = AppDatabase.getInstance(context).productDao()
     private val gson = Gson()
 
+    @Volatile
     private var _isOffline = false
     val isOffline: Boolean get() = _isOffline
 

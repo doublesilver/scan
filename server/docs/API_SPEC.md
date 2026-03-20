@@ -1,6 +1,6 @@
 # API 명세
 
-> M3 구현 완료.
+> 구현 완료.
 
 ## 공통
 
@@ -22,6 +22,7 @@
 | PATCH  | /api/stock/{sku_id}     | 재고 수정              |
 | GET    | /api/stock/{sku_id}/log | 재고 수정 이력         |
 | GET    | /api/image/{path}       | NAS 이미지 프록시      |
+| GET    | /api/status             | 서버 상태 대시보드     |
 
 ---
 
@@ -115,13 +116,12 @@ EAN-13 바코드로 상품 정보 + 이미지 경로 조회.
 NAS WebDAV에서 이미지를 가져와 PDA에 전달하는 프록시.
 `{path}` = `img/xxx.jpg` 또는 `real_image/xxx.jpg` (image.file_path 값).
 
-> M4 구현 예정. M3에서는 file_path만 반환하고 PDA가 직접 NAS 접근하는 방식 검토.
-
 **파라미터**
 
-| 위치 | 이름 | 타입   | 필수 | 설명            |
-| ---- | ---- | ------ | ---- | --------------- |
-| path | path | string | Y    | 이미지 상대경로 |
+| 위치  | 이름  | 타입    | 필수 | 설명                              |
+| ----- | ----- | ------- | ---- | --------------------------------- |
+| path  | path  | string  | Y    | 이미지 상대경로                   |
+| query | width | integer | N    | 리사이즈 폭 (px). 미지정 시 원본. |
 
 **응답 200**: `image/jpeg` 바이트 스트림
 
@@ -129,6 +129,44 @@ NAS WebDAV에서 이미지를 가져와 PDA에 전달하는 프록시.
 
 ```json
 { "detail": "image not found" }
+```
+
+---
+
+## GET /api/status
+
+서버 상태 대시보드. DB 건수, 최근 파싱, NAS 연결, 디스크 사용량 등을 반환.
+
+**응답 200**
+
+```json
+{
+  "server": {
+    "uptime": "2시간 30분",
+    "version": "1.0.0"
+  },
+  "database": {
+    "products": 11821,
+    "barcodes": 11821,
+    "images": 11673,
+    "stock_entries": 0
+  },
+  "last_parse": {
+    "file": "codepath.xlsx",
+    "parsed_at": "2026-03-20 12:00:00",
+    "added": 100,
+    "updated": 50
+  },
+  "nas_sync": {
+    "last_check": "2026-03-20 12:00:00",
+    "status": "connected"
+  },
+  "disk": {
+    "cache_size_mb": 120.5,
+    "cache_limit_mb": 500,
+    "backup_count": 7
+  }
+}
 ```
 
 ---
@@ -144,7 +182,7 @@ NAS WebDAV에서 이미지를 가져와 PDA에 전달하는 프록시.
 
 ---
 
-## 응답 모델 (Pydantic, M3 구현 예정)
+## 응답 모델 (Pydantic, 구현 완료)
 
 ```python
 class ImageItem(BaseModel):
@@ -165,6 +203,7 @@ class SearchItem(BaseModel):
     product_name: str
     category: str
     brand: str
+    barcode: str | None = None
 
 class SearchResponse(BaseModel):
     total: int

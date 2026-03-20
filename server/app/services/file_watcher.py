@@ -73,7 +73,7 @@ def start_watcher() -> None:
     watch_dir = Path(settings.xlsx_watch_dir)
     watch_dir.mkdir(parents=True, exist_ok=True)
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     handler = XlsxHandler(loop)
     _observer = Observer()
     _observer.schedule(handler, str(watch_dir), recursive=False)

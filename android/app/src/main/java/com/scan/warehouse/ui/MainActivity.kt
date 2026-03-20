@@ -2,13 +2,8 @@ package com.scan.warehouse.ui
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.EditText
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.RelativeSizeSpan
-import android.text.style.StyleSpan
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -70,7 +65,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun performSearch(query: String) {
         if (query.isBlank()) return
-        if (query.matches(Regex("^\\d{8,13}$"))) {
+        if (query.matches(Regex(DataWedgeManager.BARCODE_PATTERN))) {
             viewModel.scanBarcode(query)
         } else {
             viewModel.searchProducts(query)
@@ -159,7 +154,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvSkuId.text = "SKU: ${result.skuId}"
 
         val barcode = result.barcodes.firstOrNull() ?: ""
-        binding.tvBarcode.text = formatBarcodeBold(barcode)
+        binding.tvBarcode.text = BarcodeUtils.formatBold(barcode)
 
         val thumbImage = result.images.firstOrNull { it.imageType == "thumbnail" }
             ?: result.images.firstOrNull()
@@ -180,24 +175,6 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
-    }
-
-    private fun formatBarcodeBold(barcode: String): SpannableStringBuilder {
-        val spannable = SpannableStringBuilder(barcode)
-        if (barcode.length >= 5) {
-            val start = barcode.length - 5
-            spannable.setSpan(
-                StyleSpan(Typeface.BOLD),
-                start, barcode.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                RelativeSizeSpan(1.3f),
-                start, barcode.length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
-        return spannable
     }
 
     override fun onResume() {

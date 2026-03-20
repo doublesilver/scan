@@ -15,6 +15,7 @@ object RetrofitClient {
 
     @Volatile
     private var apiService: ApiService? = null
+    @Volatile
     private var currentBaseUrl: String = ""
 
     fun getApiService(context: Context): ApiService {

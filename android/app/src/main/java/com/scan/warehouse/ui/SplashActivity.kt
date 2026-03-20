@@ -24,7 +24,7 @@ class SplashActivity : AppCompatActivity() {
 
         supportActionBar?.hide()
 
-        repository = ProductRepository(this)
+        repository = ProductRepository(applicationContext)
 
         binding.btnRetry.setOnClickListener { checkServer() }
         binding.btnSettings.setOnClickListener {
