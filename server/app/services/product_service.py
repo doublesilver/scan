@@ -51,9 +51,12 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
     if sku_id and not product:
         return None
 
+    product_name = product["product_name"] if product else ""
+    product_name = product_name.replace("스페이스쉴드", "").strip()
+
     return ScanResponse(
         sku_id=product["sku_id"] if product else "",
-        product_name=product["product_name"] if product else "",
+        product_name=product_name,
         category=product["category"] if product else "",
         brand=product["brand"] if product else "",
         barcodes=barcodes,
@@ -83,7 +86,7 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
     return [
         SearchItem(
             sku_id=r["sku_id"],
-            product_name=r["product_name"],
+            product_name=r["product_name"].replace("스페이스쉴드", "").strip(),
             category=r["category"],
             brand=r["brand"],
         )

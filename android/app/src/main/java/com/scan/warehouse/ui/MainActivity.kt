@@ -1,7 +1,12 @@
 package com.scan.warehouse.ui
 
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -118,8 +123,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvProductName.text = result.productName
         binding.tvSkuId.text = "SKU: ${result.skuId}"
-        binding.tvCategory.text = result.category ?: "-"
-        binding.tvBrand.text = result.brand ?: "-"
+
+        val barcode = result.barcodes.firstOrNull() ?: ""
+        binding.tvBarcode.text = formatBarcodeBold(barcode)
 
         val thumbImage = result.images.firstOrNull { it.imageType == "thumbnail" }
             ?: result.images.firstOrNull()
@@ -140,6 +146,24 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
+    }
+
+    private fun formatBarcodeBold(barcode: String): SpannableStringBuilder {
+        val spannable = SpannableStringBuilder(barcode)
+        if (barcode.length >= 5) {
+            val start = barcode.length - 5
+            spannable.setSpan(
+                StyleSpan(Typeface.BOLD),
+                start, barcode.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            spannable.setSpan(
+                RelativeSizeSpan(1.3f),
+                start, barcode.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        return spannable
     }
 
     override fun onResume() {

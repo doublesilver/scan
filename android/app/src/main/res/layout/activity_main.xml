@@ -83,81 +83,70 @@
             android:textSize="18sp" />
     </LinearLayout>
 
-    <ScrollView
+    <LinearLayout
         android:id="@+id/layoutScanResult"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:orientation="vertical"
         android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivProductImage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/image_background"
+            android:contentDescription="상품 이미지"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_placeholder" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="12dp">
 
-            <ImageView
-                android:id="@+id/ivProductImage"
-                android:layout_width="match_parent"
-                android:layout_height="320dp"
-                android:background="@color/image_background"
-                android:contentDescription="상품 이미지"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_placeholder" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvBarcode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:textSize="18sp"
+                android:textColor="@color/text_dark"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="2dp" />
 
-                <TextView
-                    android:id="@+id/tvProductName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="상품명"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/navy"
-                    android:layout_marginBottom="8dp" />
+            <TextView
+                android:id="@+id/tvSkuId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SKU: -"
+                android:textSize="15sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="6dp" />
 
-                <TextView
-                    android:id="@+id/tvSkuId"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="SKU: -"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="4dp" />
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="상품명"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/navy"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
-                <TextView
-                    android:id="@+id/tvCategory"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="-"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="탭하여 상세 보기"
+                android:textSize="13sp"
+                android:textColor="@color/orange"
+                android:layout_marginTop="4dp"
+                android:gravity="end" />
 
-                <TextView
-                    android:id="@+id/tvBrand"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="-"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="탭하여 상세 보기"
-                    android:textSize="14sp"
-                    android:textColor="@color/orange"
-                    android:layout_marginTop="12dp"
-                    android:gravity="end" />
-
-            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvProducts"

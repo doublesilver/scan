@@ -1,10 +1,19 @@
 package com.scan.warehouse.ui
 
+import android.content.Intent
+import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import coil.load
+import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityDetailBinding
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.network.RetrofitClient
@@ -16,6 +25,9 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityDetailBinding
+    private var showingThumbnail = true
+    private var thumbnailUrl: String? = null
+    private var realImageUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,21 +52,67 @@ class DetailActivity : AppCompatActivity() {
         binding.tvDetailSkuId.text = data.skuId
         binding.tvDetailCategory.text = data.category ?: "-"
         binding.tvDetailBrand.text = data.brand ?: "-"
-        binding.tvDetailBarcodes.text = data.barcodes.joinToString("\n").ifEmpty { "-" }
+
+        val barcodeText = SpannableStringBuilder()
+        data.barcodes.forEachIndexed { index, barcode ->
+            if (index > 0) barcodeText.append("\n")
+            barcodeText.append(formatBarcodeBold(barcode))
+        }
+        binding.tvDetailBarcodes.text = if (barcodeText.isNotEmpty()) barcodeText else SpannableStringBuilder("-")
 
         val baseUrl = RetrofitClient.getBaseUrl(this)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
-        val imageUrls = data.images.map { "${normalized}api/image/${it.filePath}" }
+        val thumbImg = data.images.firstOrNull { it.filePath.startsWith("img/") }
+        val realImg = data.images.firstOrNull { it.filePath.startsWith("real_image/") }
 
-        if (imageUrls.isNotEmpty()) {
-            binding.vpDetailImages.adapter = ImagePagerAdapter(imageUrls)
+        thumbnailUrl = thumbImg?.let { "${normalized}api/image/${it.filePath}" }
+        realImageUrl = realImg?.let { "${normalized}api/image/${it.filePath}" }
 
-            if (imageUrls.size > 1) {
-                binding.tvImageCount.visibility = View.VISIBLE
-                binding.tvImageCount.text = "이미지 ${imageUrls.size}장"
+        val initialUrl = thumbnailUrl ?: realImageUrl
+        if (initialUrl != null) {
+            showingThumbnail = thumbnailUrl != null
+            binding.ivDetailImage.load(initialUrl) {
+                crossfade(true)
+                placeholder(R.drawable.ic_placeholder)
+                error(R.drawable.ic_placeholder)
             }
         }
+
+        if (thumbnailUrl != null && realImageUrl != null) {
+            binding.ivDetailImage.setOnClickListener {
+                showingThumbnail = !showingThumbnail
+                val url = if (showingThumbnail) thumbnailUrl else realImageUrl
+                binding.ivDetailImage.load(url) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_placeholder)
+                    error(R.drawable.ic_placeholder)
+                }
+            }
+        }
+
+        binding.btnOrder.setOnClickListener {
+            val url = binding.btnOrder.tag as? String ?: return@setOnClickListener
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+    }
+
+    private fun formatBarcodeBold(barcode: String): SpannableStringBuilder {
+        val spannable = SpannableStringBuilder(barcode)
+        if (barcode.length >= 5) {
+            val start = barcode.length - 5
+            spannable.setSpan(
+                StyleSpan(Typeface.BOLD),
+                start, barcode.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            spannable.setSpan(
+                RelativeSizeSpan(1.3f),
+                start, barcode.length,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        return spannable
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
