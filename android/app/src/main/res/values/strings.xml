@@ -4,4 +4,9 @@
     <string name="search_hint">상품명 또는 바코드 검색</string>
     <string name="settings_title">서버 설정</string>
     <string name="detail_title">상품 상세</string>
+    <string name="splash_title">창고 스캐너</string>
+    <string name="splash_connecting">서버 연결 확인 중…</string>
+    <string name="splash_error">서버에 연결할 수 없습니다</string>
+    <string name="splash_retry">재시도</string>
+    <string name="splash_settings">설정</string>
 </resources>

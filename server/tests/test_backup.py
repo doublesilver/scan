@@ -5,15 +5,17 @@ import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
 
 class TestBackupScript:
 
     def test_backup_script_exists(self):
-        assert Path("scripts/backup.sh").exists()
+        assert (PROJECT_ROOT / "scripts/backup.sh").exists()
 
     def test_backup_script_executable(self):
         import os
-        assert os.access("scripts/backup.sh", os.X_OK)
+        assert os.access(PROJECT_ROOT / "scripts/backup.sh", os.X_OK)
 
     def test_backup_creates_file(self, tmp_path):
         fake_db = tmp_path / "scanner.db"
@@ -21,7 +23,7 @@ class TestBackupScript:
         backup_dir = tmp_path / "backups"
 
         result = subprocess.run(
-            ["bash", "scripts/backup.sh", str(fake_db), str(backup_dir)],
+            ["bash", str(PROJECT_ROOT / "scripts/backup.sh"), str(fake_db), str(backup_dir)],
             capture_output=True, text=True
         )
         assert result.returncode == 0
@@ -41,7 +43,7 @@ class TestBackupScript:
             old_file.write_text(f"backup day {i}")
 
         result = subprocess.run(
-            ["bash", "scripts/backup.sh", str(fake_db), str(backup_dir)],
+            ["bash", str(PROJECT_ROOT / "scripts/backup.sh"), str(fake_db), str(backup_dir)],
             capture_output=True, text=True
         )
         assert result.returncode == 0
@@ -49,7 +51,7 @@ class TestBackupScript:
         assert len(backups) == 7
 
     def test_restore_script_exists(self):
-        assert Path("scripts/restore.sh").exists()
+        assert (PROJECT_ROOT / "scripts/restore.sh").exists()
 
     def test_restore_recovers_data(self, tmp_path):
         backup_dir = tmp_path / "backups"
@@ -62,7 +64,7 @@ class TestBackupScript:
         restore_target.write_text("corrupted data")
 
         result = subprocess.run(
-            ["bash", "scripts/restore.sh", str(backup_file), str(restore_target)],
+            ["bash", str(PROJECT_ROOT / "scripts/restore.sh"), str(backup_file), str(restore_target)],
             capture_output=True, text=True
         )
         assert result.returncode == 0
@@ -72,6 +74,7 @@ class TestBackupScript:
 class TestCronSetup:
 
     def test_cron_config_exists(self):
-        assert Path("server/scanner-backup.service").exists() or \
-               Path("server/scanner-backup.timer").exists() or \
-               Path("scripts/backup.sh").exists()
+        server_dir = PROJECT_ROOT / "server"
+        assert (server_dir / "scanner-backup.service").exists() or \
+               (server_dir / "scanner-backup.timer").exists() or \
+               (PROJECT_ROOT / "scripts/backup.sh").exists()
