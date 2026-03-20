@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/image_background">
+    android:background="@color/surface_container_low">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
                 android:id="@+id/ivDetailImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/image_background"
+                android:background="@color/surface_container_low"
                 android:contentDescription="상품 이미지"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_placeholder" />
@@ -28,12 +28,15 @@
                 android:id="@+id/tvImageTypeChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="12dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="12dp"
                 android:background="@drawable/bg_image_type_chip"
                 android:text="@string/image_type_thumbnail"
                 android:textColor="@android:color/white"
                 android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.04"
                 android:visibility="gone" />
         </FrameLayout>
 
@@ -42,7 +45,11 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_detail_info_card"
             android:orientation="vertical"
-            android:padding="20dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="20dp"
+            android:layout_marginTop="-6dp"
             android:translationZ="4dp">
 
             <TextView
@@ -51,7 +58,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/primary"
                 android:layout_marginBottom="16dp" />
 
             <LinearLayout
@@ -60,51 +67,56 @@
                 android:orientation="vertical"
                 android:background="@drawable/bg_info_row"
                 android:padding="14dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="SKU ID"
                     android:textSize="11sp"
-                    android:textColor="@color/text_hint"
+                    android:textColor="@color/on_surface_variant"
                     android:textAllCaps="true"
+                    android:textStyle="bold"
                     android:letterSpacing="0.05" />
                 <TextView
                     android:id="@+id/tvDetailSkuId"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="15sp"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_info_row"
+                    android:background="@drawable/bg_info_row_alt"
                     android:padding="14dp"
-                    android:layout_marginEnd="4dp">
+                    android:layout_marginEnd="3dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="카테고리"
                         android:textSize="11sp"
-                        android:textColor="@color/text_hint" />
+                        android:textColor="@color/on_surface_variant"
+                        android:textStyle="bold" />
                     <TextView
                         android:id="@+id/tvDetailCategory"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
                         android:layout_marginTop="2dp"
                         android:maxLines="1"
                         android:ellipsize="end" />
@@ -117,20 +129,22 @@
                     android:orientation="vertical"
                     android:background="@drawable/bg_info_row"
                     android:padding="14dp"
-                    android:layout_marginStart="4dp">
+                    android:layout_marginStart="3dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="브랜드"
                         android:textSize="11sp"
-                        android:textColor="@color/text_hint" />
+                        android:textColor="@color/on_surface_variant"
+                        android:textStyle="bold" />
                     <TextView
                         android:id="@+id/tvDetailBrand"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
                         android:layout_marginTop="2dp"
                         android:maxLines="1"
                         android:ellipsize="end" />
@@ -141,30 +155,31 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_info_row"
-                android:padding="14dp"
-                android:layout_marginTop="8dp">
+                android:background="@drawable/bg_info_row_alt"
+                android:padding="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="바코드"
                     android:textSize="11sp"
-                    android:textColor="@color/text_hint" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textStyle="bold" />
                 <TextView
                     android:id="@+id/tvDetailBarcodes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="15sp"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/primary"
                     android:fontFamily="monospace"
+                    android:textStyle="bold"
                     android:layout_marginTop="2dp" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="길게 눌러 복사"
                     android:textSize="11sp"
-                    android:textColor="@color/text_muted"
+                    android:textColor="@color/outline_variant"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
 

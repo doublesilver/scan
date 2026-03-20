@@ -3,79 +3,107 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/surface">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvOfflineBanner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_offline_chip"
-            android:text="@string/offline_mode"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:visibility="gone" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:background="@color/navy">
+            android:orientation="vertical"
+            android:background="@color/primary">
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_search_bar"
-                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="4dp">
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="4dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_search"
-                    android:contentDescription="검색"
-                    android:layout_marginEnd="8dp" />
-
-                <EditText
-                    android:id="@+id/etSearch"
+                <TextView
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@null"
-                    android:hint="@string/search_hint"
-                    android:textColorHint="@color/text_hint"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:singleLine="true"
-                    android:textSize="15sp"
-                    android:textColor="@color/text_primary" />
+                    android:text="INVENTORY COMMAND"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSearch"
-                style="@style/WarehouseButton.Secondary"
+            <TextView
+                android:id="@+id/tvOfflineBanner"
                 android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:layout_marginStart="8dp"
-                android:text="검색"
-                android:minWidth="60dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_offline_chip"
+                android:text="@string/offline_mode"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:paddingStart="12dp"
-                android:paddingEnd="12dp" />
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_search_bar"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="4dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_search"
+                        android:contentDescription="검색"
+                        android:layout_marginEnd="8dp" />
+
+                    <EditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="@string/search_hint"
+                        android:textColorHint="@color/on_surface_variant"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:singleLine="true"
+                        android:textSize="15sp"
+                        android:textColor="@color/on_surface" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSearch"
+                    style="@style/WarehouseButton.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:text="검색"
+                    android:minWidth="60dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <ProgressBar
@@ -85,7 +113,7 @@
             android:layout_gravity="center_horizontal"
             android:visibility="gone"
             android:layout_marginTop="16dp"
-            android:indeterminateTint="@color/orange" />
+            android:indeterminateTint="@color/secondary_container" />
 
         <LinearLayout
             android:id="@+id/layoutScanWaiting"
@@ -101,14 +129,14 @@
                 android:layout_height="80dp"
                 android:src="@drawable/ic_barcode_scan"
                 android:contentDescription="스캔 대기"
-                android:alpha="0.25" />
+                android:alpha="0.15" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="@string/scan_waiting_title"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/on_surface"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
@@ -117,7 +145,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/scan_waiting_subtitle"
-                android:textColor="@color/text_hint"
+                android:textColor="@color/on_surface_variant"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -129,8 +157,9 @@
             android:layout_weight="1"
             android:layout_margin="12dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
+            app:cardElevation="0dp"
             app:strokeWidth="0dp"
+            app:cardBackgroundColor="@color/surface_container_lowest"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
@@ -146,7 +175,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:background="@color/image_background"
+                    android:background="@color/surface_container_low"
                     android:contentDescription="상품 이미지"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_placeholder" />
@@ -164,7 +193,7 @@
                         android:text="상품명"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/on_surface"
                         android:maxLines="2"
                         android:ellipsize="end" />
 
@@ -173,7 +202,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textSize="16sp"
-                        android:textColor="@color/text_dark"
+                        android:textColor="@color/on_surface"
                         android:fontFamily="monospace"
                         android:layout_marginTop="4dp" />
 
@@ -191,14 +220,14 @@
                             android:layout_weight="1"
                             android:text="SKU: -"
                             android:textSize="13sp"
-                            android:textColor="@color/text_secondary" />
+                            android:textColor="@color/on_surface_variant" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/tap_to_detail"
                             android:textSize="12sp"
-                            android:textColor="@color/orange"
+                            android:textColor="@color/secondary_container"
                             android:drawableEnd="@drawable/ic_chevron_right"
                             android:drawablePadding="2dp" />
                     </LinearLayout>
@@ -216,6 +245,17 @@
             android:padding="8dp"
             android:visibility="gone" />
 
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/primary"
+            app:menu="@menu/bottom_nav"
+            app:itemIconTint="@color/bottom_nav_color"
+            app:itemTextColor="@color/bottom_nav_color"
+            app:labelVisibilityMode="labeled"
+            app:itemRippleColor="@color/orange_ripple" />
+
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -223,10 +263,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="72dp"
         android:contentDescription="바코드 직접 입력"
         android:src="@drawable/ic_keyboard"
-        app:backgroundTint="@color/orange"
+        app:backgroundTint="@color/secondary_container"
         app:tint="@android:color/white"
         app:fabSize="normal" />
 

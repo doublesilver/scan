@@ -4,8 +4,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.activity.viewModels
@@ -39,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSearch()
         setupManualScan()
+        setupBottomNav()
         observeViewModel()
 
         lifecycleScope.launch {
@@ -46,6 +45,29 @@ class MainActivity : AppCompatActivity() {
                 DataWedgeManager.scanFlow.collect { barcode ->
                     viewModel.scanBarcode(barcode)
                 }
+            }
+        }
+    }
+
+    private fun setupBottomNav() {
+        binding.bottomNav.selectedItemId = R.id.nav_scan
+        binding.bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_scan -> {
+                    binding.etSearch.setText("")
+                    binding.etSearch.clearFocus()
+                    true
+                }
+                R.id.nav_search -> {
+                    binding.etSearch.requestFocus()
+                    true
+                }
+                R.id.nav_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    true
+                }
+                else -> false
             }
         }
     }
@@ -182,26 +204,11 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         DataWedgeManager.register(this)
+        binding.bottomNav.selectedItemId = R.id.nav_scan
     }
 
     override fun onPause() {
         super.onPause()
         DataWedgeManager.unregister(this)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menu_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 }

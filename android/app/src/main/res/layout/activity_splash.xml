@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/navy">
+    android:background="@color/primary">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -17,44 +17,48 @@
             android:layout_height="72dp"
             android:src="@drawable/ic_barcode_scan"
             android:contentDescription="앱 아이콘"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="24dp"
             app:tint="@android:color/white" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/splash_title"
+            android:text="INVENTORY\nCOMMAND"
             android:textColor="@android:color/white"
-            android:textSize="28sp"
+            android:textSize="32sp"
             android:textStyle="bold"
-            android:letterSpacing="0.05" />
+            android:letterSpacing="0.12"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:text="@string/splash_subtitle"
-            android:textColor="#99FFFFFF"
-            android:textSize="14sp" />
+            android:textColor="#80FFFFFF"
+            android:textSize="13sp"
+            android:letterSpacing="0.08"
+            android:textAllCaps="true" />
 
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="40dp"
             android:text="@string/splash_connecting"
-            android:textColor="#BBFFFFFF"
+            android:textColor="#AAFFFFFF"
             android:textSize="14sp" />
 
     </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="100dp"
-        android:indeterminateTint="@color/orange" />
+        android:indeterminateTint="@color/secondary_container" />
 
     <LinearLayout
         android:id="@+id/layoutButtons"

@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="navy">#1a2332</color>
-    <color name="navy_dark">#111820</color>
-    <color name="navy_light">#2a3a4f</color>
-    <color name="orange">#ff6b35</color>
-    <color name="orange_dark">#e8551f</color>
-    <color name="orange_ripple">#33ff6b35</color>
-    <color name="background">#f5f6f8</color>
-    <color name="surface">#ffffff</color>
-    <color name="surface_variant">#f0f1f3</color>
-    <color name="text_primary">#1a2332</color>
-    <color name="text_secondary">#5a6474</color>
-    <color name="text_hint">#8e95a2</color>
-    <color name="text_muted">#b0b7c3</color>
-    <color name="text_dark">#2d3440</color>
+    <color name="primary">#040d1b</color>
+    <color name="primary_container">#1a2332</color>
+    <color name="secondary">#ab3500</color>
+    <color name="secondary_container">#fe6a34</color>
+    <color name="surface">#f8f9fa</color>
+    <color name="surface_container_low">#f3f4f5</color>
+    <color name="surface_container_lowest">#ffffff</color>
+    <color name="surface_container_high">#e7e8e9</color>
+    <color name="on_surface">#191c1d</color>
+    <color name="on_surface_variant">#45474c</color>
+    <color name="outline_variant">#c5c6cc</color>
+    <color name="orange_ripple">#33fe6a34</color>
     <color name="image_background">#eef0f2</color>
-    <color name="divider">#e8eaed</color>
     <color name="success">#2e7d32</color>
     <color name="error">#c62828</color>
-    <color name="status_bar">#111820</color>
+
+    <color name="navy">#040d1b</color>
+    <color name="navy_dark">#040d1b</color>
+    <color name="navy_light">#1a2332</color>
+    <color name="orange">#fe6a34</color>
+    <color name="orange_dark">#ab3500</color>
+    <color name="background">#f8f9fa</color>
+    <color name="text_primary">#191c1d</color>
+    <color name="text_secondary">#45474c</color>
+    <color name="text_hint">#45474c</color>
+    <color name="text_muted">#c5c6cc</color>
+    <color name="text_dark">#191c1d</color>
+    <color name="divider">#c5c6cc</color>
+    <color name="status_bar">#040d1b</color>
 </resources>
