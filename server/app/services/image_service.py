@@ -71,7 +71,11 @@ async def get_image_data(
 
 
 async def _fetch_from_webdav(client, path: str) -> bytes | None:
-    url = f"{settings.webdav_base_url.rstrip('/')}/{path}"
+    from urllib.parse import quote
+    prefix = settings.webdav_path_prefix.strip("/")
+    encoded_prefix = quote(prefix) if prefix else ""
+    base = settings.webdav_base_url.rstrip("/")
+    url = f"{base}/{encoded_prefix}/{path}" if encoded_prefix else f"{base}/{path}"
     try:
         auth = None
         if settings.webdav_username:

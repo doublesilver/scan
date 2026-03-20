@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     # NAS WebDAV (M4)
     webdav_base_url: str = ""
+    webdav_path_prefix: str = ""
     webdav_username: str = ""
     webdav_password: str = ""
 
