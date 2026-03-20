@@ -99,12 +99,20 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
         )
         rows = await cursor.fetchall()
 
-    return [
-        SearchItem(
-            sku_id=r["sku_id"],
-            product_name=_strip_brands(r["product_name"]),
-            category=r["category"],
-            brand=r["brand"],
+    items = []
+    for r in rows:
+        bc_cursor = await db.execute(
+            "SELECT barcode FROM barcode WHERE sku_id = ? LIMIT 1",
+            (r["sku_id"],),
         )
-        for r in rows
-    ]
+        bc_row = await bc_cursor.fetchone()
+        items.append(
+            SearchItem(
+                sku_id=r["sku_id"],
+                product_name=_strip_brands(r["product_name"]),
+                category=r["category"],
+                brand=r["brand"],
+                barcode=bc_row["barcode"] if bc_row else None,
+            )
+        )
+    return items

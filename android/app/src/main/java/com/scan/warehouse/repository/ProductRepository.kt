@@ -102,7 +102,8 @@ class ProductRepository(private val context: Context) {
             skuId = skuId,
             productName = productName,
             category = categoryName,
-            brand = brandName
+            brand = brandName,
+            barcode = barcode
         )
     }
 }

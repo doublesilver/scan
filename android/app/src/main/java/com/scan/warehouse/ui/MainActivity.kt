@@ -1,8 +1,10 @@
 package com.scan.warehouse.ui
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
+import android.widget.EditText
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.RelativeSizeSpan
@@ -41,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupSearch()
+        setupManualScan()
         observeViewModel()
 
         lifecycleScope.launch {
@@ -54,7 +57,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         productAdapter = ProductAdapter { item ->
-            viewModel.scanBarcode(item.skuId)
+            val barcode = item.barcode
+            if (barcode != null) {
+                viewModel.scanBarcode(barcode)
+            }
         }
         binding.rvProducts.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -62,16 +68,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun performSearch(query: String) {
+        if (query.isBlank()) return
+        if (query.matches(Regex("^\\d{8,13}$"))) {
+            viewModel.scanBarcode(query)
+        } else {
+            viewModel.searchProducts(query)
+        }
+    }
+
+    private fun setupManualScan() {
+        binding.btnManualScan.setOnClickListener {
+            val input = EditText(this).apply {
+                hint = "바코드 번호 입력"
+                inputType = android.text.InputType.TYPE_CLASS_NUMBER
+                textSize = 20f
+            }
+            AlertDialog.Builder(this)
+                .setTitle("바코드 입력")
+                .setView(input)
+                .setPositiveButton("스캔") { _, _ ->
+                    val barcode = input.text.toString().trim()
+                    if (barcode.isNotBlank()) {
+                        viewModel.scanBarcode(barcode)
+                    }
+                }
+                .setNegativeButton("취소", null)
+                .show()
+        }
+    }
+
     private fun setupSearch() {
         binding.btnSearch.setOnClickListener {
-            val query = binding.etSearch.text.toString().trim()
-            viewModel.searchProducts(query)
+            performSearch(binding.etSearch.text.toString().trim())
         }
 
         binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val query = binding.etSearch.text.toString().trim()
-                viewModel.searchProducts(query)
+                performSearch(binding.etSearch.text.toString().trim())
                 true
             } else false
         }
@@ -84,11 +118,11 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.error.observe(this) { error ->
             error?.let {
-                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG)
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_INDEFINITE)
                     .setAction("재시도") {
                         val query = binding.etSearch.text.toString().trim()
                         if (query.isNotBlank()) {
-                            viewModel.searchProducts(query)
+                            performSearch(query)
                         }
                     }
                     .show()

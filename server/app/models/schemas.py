@@ -43,6 +43,7 @@ class SearchItem(BaseModel):
     product_name: str
     category: str
     brand: str
+    barcode: str | None = None
 
 
 class SearchResponse(BaseModel):

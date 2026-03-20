@@ -81,6 +81,18 @@
             android:text="PDA 버튼을 눌러 스캔하세요"
             android:textColor="@color/text_secondary"
             android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btnManualScan"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/navy"
+            android:text="바코드 직접 입력"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -108,6 +120,18 @@
             android:padding="12dp">
 
             <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="상품명"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/navy"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
                 android:id="@+id/tvBarcode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -122,19 +146,7 @@
                 android:layout_height="wrap_content"
                 android:text="SKU: -"
                 android:textSize="15sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="6dp" />
-
-            <TextView
-                android:id="@+id/tvProductName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="상품명"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/navy"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:textColor="@color/text_secondary" />
 
             <TextView
                 android:layout_width="match_parent"

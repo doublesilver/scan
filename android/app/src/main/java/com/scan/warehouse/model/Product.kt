@@ -11,7 +11,8 @@ data class ScanResponse(
     @SerializedName("category") val category: String?,
     @SerializedName("brand") val brand: String?,
     @SerializedName("barcodes") val barcodes: List<String>,
-    @SerializedName("images") val images: List<ImageItem>
+    @SerializedName("images") val images: List<ImageItem>,
+    @SerializedName("quantity") val quantity: Int? = null
 ) : Parcelable
 
 @Parcelize
@@ -29,5 +30,6 @@ data class SearchItem(
     @SerializedName("sku_id") val skuId: String,
     @SerializedName("product_name") val productName: String,
     @SerializedName("category") val category: String?,
-    @SerializedName("brand") val brand: String?
+    @SerializedName("brand") val brand: String?,
+    @SerializedName("barcode") val barcode: String? = null
 )

@@ -40,6 +40,8 @@ class TestSearchAPI:
         data = resp.json()
         assert "items" in data
         assert len(data["items"]) >= 1
+        for item in data["items"]:
+            assert "barcode" in item
 
     def test_search_empty_query(self, client):
         resp = client.get("/api/search", params={"q": ""})
