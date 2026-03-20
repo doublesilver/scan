@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -72,5 +72,27 @@ MIGRATIONS = {
             INSERT INTO product_fts(product_fts, rowid, sku_id, product_name, category, brand)
             VALUES ('delete', old.rowid, old.sku_id, old.product_name, old.category, old.brand);
         END""",
+    ],
+    3: [
+        """CREATE TABLE IF NOT EXISTS stock (
+            sku_id TEXT PRIMARY KEY,
+            quantity INTEGER NOT NULL DEFAULT 0,
+            memo TEXT NOT NULL DEFAULT '',
+            updated_by TEXT NOT NULL DEFAULT '',
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (sku_id) REFERENCES product(sku_id) ON DELETE CASCADE
+        )""",
+        """CREATE TABLE IF NOT EXISTS stock_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku_id TEXT NOT NULL,
+            before_qty INTEGER NOT NULL,
+            after_qty INTEGER NOT NULL,
+            memo TEXT NOT NULL DEFAULT '',
+            updated_by TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (sku_id) REFERENCES product(sku_id) ON DELETE CASCADE
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_stock_log_sku ON stock_log(sku_id)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_log_date ON stock_log(created_at)",
     ],
 }

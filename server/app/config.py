@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     codepath_file: str = "codepath.xlsx"
     sku_download_pattern: str = "coupangmd00_sku_download_*.xlsx"
 
+    # NAS 동기화
+    nas_sync_interval: int = 300
+
     # 이미지 캐시 (M4)
     image_cache_dir: str = "./data/cache"
     image_cache_max_size_mb: int = 500

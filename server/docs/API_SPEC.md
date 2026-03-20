@@ -13,12 +13,15 @@
 
 ## 엔드포인트 목록
 
-| 메서드 | 경로                | 설명                   |
-| ------ | ------------------- | ---------------------- |
-| GET    | /health             | 서버 상태 확인         |
-| GET    | /api/scan/{barcode} | 바코드로 상품 조회     |
-| GET    | /api/search         | 상품명/SKU 텍스트 검색 |
-| GET    | /api/image/{path}   | NAS 이미지 프록시      |
+| 메서드 | 경로                    | 설명                   |
+| ------ | ----------------------- | ---------------------- |
+| GET    | /health                 | 서버 상태 확인         |
+| GET    | /api/scan/{barcode}     | 바코드로 상품 조회     |
+| GET    | /api/search             | 상품명/SKU 텍스트 검색 |
+| GET    | /api/stock/{sku_id}     | 재고 조회              |
+| PATCH  | /api/stock/{sku_id}     | 재고 수정              |
+| GET    | /api/stock/{sku_id}/log | 재고 수정 이력         |
+| GET    | /api/image/{path}       | NAS 이미지 프록시      |
 
 ---
 
@@ -56,7 +59,8 @@ EAN-13 바코드로 상품 정보 + 이미지 경로 조회.
   "images": [
     { "file_path": "img/8801234567890.jpg", "image_type": "thumbnail" },
     { "file_path": "real_image/8801234567890_1.jpg", "image_type": "real" }
-  ]
+  ],
+  "quantity": null
 }
 ```
 
@@ -153,6 +157,7 @@ class ScanResponse(BaseModel):
     brand: str
     barcodes: list[str]
     images: list[ImageItem]
+    quantity: int | None = None
 
 class SearchItem(BaseModel):
     sku_id: str

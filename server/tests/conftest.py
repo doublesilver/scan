@@ -7,7 +7,7 @@ import aiosqlite
 import pytest
 from fastapi.testclient import TestClient
 
-from app.db.schema import SCHEMA_SQL
+from app.db.schema import SCHEMA_SQL, MIGRATIONS
 
 SEED_PRODUCTS = [
     ("SKU001", "테스트 상품 A", "가전", "브랜드A"),
@@ -52,6 +52,9 @@ def _create_test_db(db_path: Path) -> None:
         conn.execute("INSERT INTO barcode (barcode, sku_id) VALUES (?, ?)", b)
     for im in SEED_IMAGES:
         conn.execute("INSERT INTO image (barcode, file_path, image_type, sort_order) VALUES (?, ?, ?, ?)", im)
+    for version in sorted(MIGRATIONS.keys()):
+        for sql in MIGRATIONS[version]:
+            conn.execute(sql)
     conn.commit()
     conn.close()
 
@@ -83,10 +86,15 @@ def client(tmp_path):
     default_img = mock_images_dir / "default.png"
     default_img.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
 
+    mock_nas_sync = MagicMock()
+    mock_nas_sync.start = AsyncMock()
+    mock_nas_sync.stop = AsyncMock()
+
     with patch("app.api.routes.get_db", mock_get_db), \
          patch("app.api.routes.get_read_db", mock_get_read_db), \
          patch("app.services.file_watcher.start_watcher"), \
          patch("app.services.file_watcher.stop_watcher"), \
+         patch("app.main.NasSyncService", return_value=mock_nas_sync), \
          patch("app.db.database.get_db", mock_get_db), \
          patch("app.db.database.get_read_db", mock_get_read_db):
 

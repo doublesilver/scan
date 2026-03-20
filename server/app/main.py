@@ -10,6 +10,7 @@ from app.api.routes import router
 from app.config import settings
 from app.db.database import close_db, get_db
 from app.services.file_watcher import start_watcher, stop_watcher
+from app.services.nas_sync import NasSyncService
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,9 +24,13 @@ async def lifespan(app: FastAPI):
     logger.info("서버 시작 — DB 초기화")
     await get_db()
     logger.info("DB 준비 완료: %s", settings.db_path)
-    app.state.http_client = httpx.AsyncClient(timeout=5.0)
+    app.state.http_client = httpx.AsyncClient(timeout=30.0)
     start_watcher()
+    nas_sync = NasSyncService(app.state.http_client)
+    app.state.nas_sync = nas_sync
+    await nas_sync.start()
     yield
+    await nas_sync.stop()
     stop_watcher()
     await app.state.http_client.aclose()
     logger.info("서버 종료 — DB 연결 해제")

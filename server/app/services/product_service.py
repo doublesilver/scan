@@ -54,6 +54,15 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
     product_name = product["product_name"] if product else ""
     product_name = product_name.replace("스페이스쉴드", "").strip()
 
+    quantity = None
+    if sku_id:
+        cursor = await db.execute(
+            "SELECT quantity FROM stock WHERE sku_id = ?", (sku_id,)
+        )
+        stock_row = await cursor.fetchone()
+        if stock_row:
+            quantity = stock_row["quantity"]
+
     return ScanResponse(
         sku_id=product["sku_id"] if product else "",
         product_name=product_name,
@@ -61,6 +70,7 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
         brand=product["brand"] if product else "",
         barcodes=barcodes,
         images=images,
+        quantity=quantity,
     )
 
 
