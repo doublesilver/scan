@@ -1004,367 +1004,10 @@
 
       <!-- Content -->
       <div class="content">
-        <!-- 01 프로젝트 요약 -->
-        <section id="summary">
-          <div class="section-head">
-            <div class="section-num">01</div>
-            <div class="section-title">프로젝트 요약</div>
-          </div>
-
-          <h3>이 시스템이 뭔가요?</h3>
-          <p class="desc">
-            PDA(휴대용 스캐너)로 상품 바코드를 찍으면, 상품 이름/이미지가 바로
-            화면에 뜨는 시스템입니다. 기존 PC 프로그램(scan13)은 그대로
-            유지하고, PDA 앱을 추가로 설치합니다.
-          </p>
-
-          <h3>기존과 뭐가 달라지나요?</h3>
-          <div class="compare-grid">
-            <div class="compare-card before">
-              <div class="compare-card-title">Before (현재)</div>
-              <ul>
-                <li>PC 앞에 가서 조회해야 함</li>
-                <li>USB 스캐너를 PC에 연결해서 사용</li>
-                <li>이미지가 작게 표시됨</li>
-                <li>엑셀 헤더가 바뀌면 인식 실패</li>
-              </ul>
-            </div>
-            <div class="compare-card after">
-              <div class="compare-card-title">After (도입 후)</div>
-              <ul>
-                <li>PDA 들고 다니며 현장에서 바로 조회</li>
-                <li>PDA 버튼만 누르면 스캔</li>
-                <li>이미지가 화면 전체에 크게 표시</li>
-                <li>엑셀 양식 바뀌어도 자동 인식</li>
-              </ul>
-            </div>
-          </div>
-
-          <h3>뭘로 구성되나요?</h3>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 16px;
-              flex-wrap: wrap;
-              margin: 24px 0;
-            "
-          >
-            <div
-              style="
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                padding: 16px 24px;
-                text-align: center;
-                min-width: 130px;
-              "
-            >
-              <div style="font-weight: 700; font-size: 14px">PDA</div>
-              <div style="font-size: 11px; opacity: 0.6">TC60 스캐너 앱</div>
-            </div>
-            <div
-              style="font-size: 24px; color: var(--orange); font-weight: 700"
-            >
-              &#10132;
-            </div>
-            <div
-              style="
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                padding: 16px 24px;
-                text-align: center;
-                min-width: 130px;
-                border: 2px solid var(--orange);
-              "
-            >
-              <div style="font-weight: 700; font-size: 14px">Mini PC</div>
-              <div style="font-size: 11px; opacity: 0.6">데이터 서버</div>
-            </div>
-            <div
-              style="font-size: 24px; color: var(--orange); font-weight: 700"
-            >
-              &#10132;
-            </div>
-            <div
-              style="
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                padding: 16px 24px;
-                text-align: center;
-                min-width: 130px;
-              "
-            >
-              <div style="font-weight: 700; font-size: 14px">NAS</div>
-              <div style="font-size: 11px; opacity: 0.6">
-                이미지/엑셀 저장소
-              </div>
-            </div>
-          </div>
-          <div class="callout">
-            <strong>기존 프로그램과 공존합니다.</strong>
-            Mini PC의 scan13 프로그램과 USB 스캐너는 그대로 사용하고, PDA 앱이
-            별도로 동작합니다. 서로 간섭하지 않습니다.
-          </div>
-        </section>
-
-        <!-- 02 사용 흐름 -->
-        <section id="usage-flow">
-          <div class="section-head">
-            <div class="section-num">02</div>
-            <div class="section-title">사용 흐름</div>
-          </div>
-          <p class="desc">실제 현장에서 PDA를 사용하는 순서입니다.</p>
-
-          <div class="step-grid">
-            <div class="step-card">
-              <div class="step-num">01</div>
-              <div class="step-title">PDA 전원 켜기</div>
-              <div class="step-desc">
-                전원 켜면 앱이 자동 실행됩니다. 별도 로그인 없음.
-              </div>
-            </div>
-            <div class="step-card">
-              <div class="step-num">02</div>
-              <div class="step-title">바코드 스캔</div>
-              <div class="step-desc">
-                PDA 옆면 버튼을 누르면 스캐너가 작동합니다.
-              </div>
-            </div>
-            <div class="step-card">
-              <div class="step-num">03</div>
-              <div class="step-title">상품 정보 확인</div>
-              <div class="step-desc">
-                상품명, 바코드, 이미지가 화면에 표시됩니다.
-              </div>
-              <div class="step-time">0.3초 이내</div>
-            </div>
-            <div class="step-card">
-              <div class="step-num">04</div>
-              <div class="step-title">이미지 확인</div>
-              <div class="step-desc">
-                이미지를 터치하면 쿠팡 사진 / 실사 사진이 전환됩니다.
-              </div>
-            </div>
-            <div class="step-card">
-              <div class="step-num">05</div>
-              <div class="step-title">다음 상품 스캔</div>
-              <div class="step-desc">
-                바로 다음 상품 바코드를 스캔하면 됩니다. 뒤로가기 필요 없음.
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 03 예상 시나리오 -->
-        <section id="scenarios">
-          <div class="section-head">
-            <div class="section-num">03</div>
-            <div class="section-title">예상 시나리오</div>
-          </div>
-          <p class="desc">실제 업무에서 이런 상황이 생기면 이렇게 됩니다.</p>
-
-          <div class="scenario-card">
-            <div class="scenario-header">
-              <div class="scenario-icon">1</div>
-              <div class="scenario-title">신입 직원이 상품을 찾아야 할 때</div>
-            </div>
-            <div class="scenario-body">
-              <div class="scenario-situation">
-                상품명만 보고는 어떤 물건인지 모르겠다
-              </div>
-              <div class="scenario-arrow">&#10132;</div>
-              <div class="scenario-result">
-                바코드 스캔하면 상품 사진이 크게 표시되어 바로 확인 가능
-              </div>
-            </div>
-          </div>
-
-          <div class="scenario-card">
-            <div class="scenario-header">
-              <div class="scenario-icon">2</div>
-              <div class="scenario-title">같은 상품인데 바코드가 다를 때</div>
-            </div>
-            <div class="scenario-body">
-              <div class="scenario-situation">
-                하나의 상품에 바코드가 3~5개 붙어 있다
-              </div>
-              <div class="scenario-arrow">&#10132;</div>
-              <div class="scenario-result">
-                어떤 바코드로 스캔해도 같은 상품 정보가 표시됨
-              </div>
-            </div>
-          </div>
-
-          <div class="scenario-card">
-            <div class="scenario-header">
-              <div class="scenario-icon">3</div>
-              <div class="scenario-title">WiFi가 끊기는 구간에서</div>
-            </div>
-            <div class="scenario-body">
-              <div class="scenario-situation">
-                5층 건물 이동 중 WiFi 신호가 약해진다
-              </div>
-              <div class="scenario-arrow">&#10132;</div>
-              <div class="scenario-result">
-                이전에 조회한 상품은 인터넷 없이도 확인 가능 (자동 저장)
-              </div>
-            </div>
-          </div>
-
-          <div class="scenario-card">
-            <div class="scenario-header">
-              <div class="scenario-icon">4</div>
-              <div class="scenario-title">새 상품이 입고되었을 때</div>
-            </div>
-            <div class="scenario-body">
-              <div class="scenario-situation">
-                쿠팡에서 새 엑셀 파일을 다운받았다
-              </div>
-              <div class="scenario-arrow">&#10132;</div>
-              <div class="scenario-result">
-                NAS에 엑셀 파일 올리면 5분 내 자동 반영. 별도 작업 없음
-              </div>
-            </div>
-          </div>
-
-          <div class="scenario-card">
-            <div class="scenario-header">
-              <div class="scenario-icon">5</div>
-              <div class="scenario-title">서버가 꺼졌을 때</div>
-            </div>
-            <div class="scenario-body">
-              <div class="scenario-situation">
-                Mini PC가 재부팅되거나 서버가 멈췄다
-              </div>
-              <div class="scenario-arrow">&#10132;</div>
-              <div class="scenario-result">
-                앱에 안내 메시지 표시 + 이전 조회 상품은 캐시로 계속 사용.
-                서버는 PC 시작 시 자동 실행됨
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 04 주요 기능 -->
-        <section id="features">
-          <div class="section-head">
-            <div class="section-num">04</div>
-            <div class="section-title">주요 기능</div>
-          </div>
-
-          <div class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-card-title">바코드 스캔</div>
-              <div class="feature-card-desc">
-                PDA 옆면 버튼을 누르면 0.3초 안에 상품 정보가 표시됩니다. EAN-13
-                바코드 기본 지원, QR 코드도 대응 가능합니다.
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-title">상품 검색</div>
-              <div class="feature-card-desc">
-                바코드가 없는 경우 상품명으로 직접 검색할 수 있습니다. 현재
-                11,821건 등록, 10만건까지 대응 가능합니다.
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-title">이미지 확인</div>
-              <div class="feature-card-desc">
-                쿠팡 썸네일과 실사 사진을 화면 가득 크게 표시합니다. 이미지를
-                터치하면 썸네일/실사가 전환됩니다.
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-title">자동 데이터 갱신</div>
-              <div class="feature-card-desc">
-                NAS에 새 엑셀 파일을 올리면 5분 이내 자동 반영됩니다. 별도
-                작업이 필요 없습니다.
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-title">오프라인 지원</div>
-              <div class="feature-card-desc">
-                WiFi가 불안정해도 최근에 조회한 상품은 PDA에 자동 저장되어 계속
-                확인할 수 있습니다.
-              </div>
-            </div>
-            <div class="feature-card">
-              <div class="feature-card-title">자동 백업</div>
-              <div class="feature-card-desc">
-                매일 새벽 3시에 전체 데이터를 자동 백업합니다. 최근 7일치를
-                보관하며, 문제 발생 시 즉시 복구 가능합니다.
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 05 데이터 관리 -->
-        <section id="data-mgmt">
-          <div class="section-head">
-            <div class="section-num">05</div>
-            <div class="section-title">데이터 관리</div>
-          </div>
-          <p class="desc">
-            기존에 하시던 방식 그대로입니다. 추가 작업이 필요 없습니다.
-          </p>
-
-          <div class="data-mgmt-grid">
-            <div class="data-mgmt-box">
-              <h4>상품 데이터는 어떻게 관리하나요?</h4>
-              <ol>
-                <li>쿠팡 서플라이어허브에서 엑셀(xlsx) 다운로드</li>
-                <li>NAS의 기존 폴더에 저장</li>
-                <li>끝 -- 서버가 자동으로 감지해서 반영합니다</li>
-              </ol>
-              <p
-                style="
-                  font-size: 13px;
-                  color: var(--text-muted);
-                  margin-top: 12px;
-                  line-height: 1.6;
-                "
-              >
-                새 상품 추가, 기존 상품 정보 변경 모두 자동 처리됩니다. 쿠팡에서
-                엑셀 양식이 바뀌어도 컬럼을 자동 인식합니다.
-              </p>
-            </div>
-            <div class="data-mgmt-box">
-              <h4>이미지는?</h4>
-              <ul style="list-style: none; padding: 0">
-                <li
-                  style="padding: 8px 0; border-bottom: 1px solid var(--border)"
-                >
-                  <strong style="color: var(--navy)">쿠팡 썸네일</strong><br />
-                  NAS의 img/ 폴더에 넣으면 자동 연결
-                </li>
-                <li style="padding: 8px 0">
-                  <strong style="color: var(--navy)">실사 사진</strong><br />
-                  NAS의 real_image/ 폴더에 넣으면 자동 연결
-                </li>
-              </ul>
-              <p
-                style="
-                  font-size: 13px;
-                  color: var(--text-muted);
-                  margin-top: 12px;
-                  line-height: 1.6;
-                "
-              >
-                이미지 파일명과 바코드의 매핑은 codepath.xlsx가 관리합니다. 기존
-                방식과 동일합니다.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- 06 개발 진행 상황 -->
+        <!-- 01 개발 진행 상황 -->
         <section id="milestones">
           <div class="section-head">
-            <div class="section-num">06</div>
+            <div class="section-num">01</div>
             <div class="section-title">개발 진행 상황</div>
           </div>
           <p class="desc">
@@ -1499,50 +1142,10 @@
           </div>
         </section>
 
-        <!-- 07 작업 로그 -->
-        <section id="daily">
-          <div class="section-head">
-            <div class="section-num">07</div>
-            <div class="section-title">작업 로그</div>
-          </div>
-
-          <div class="log-entry">
-            <div class="log-date">2026-03-20 (D+2)</div>
-            <div class="log-content">
-              <ul>
-                <li>
-                  앱 디자인 완성 -- 요청사항(이미지 최대, 바코드 볼드, 이미지
-                  토글) 반영
-                </li>
-                <li>Mini PC에 서버 배포 완료</li>
-                <li>NAS 이미지 실연결 완료 (썸네일 + 실사)</li>
-                <li>엑셀 자동 갱신 (5분 주기) 설정</li>
-                <li>자동 백업 설정 (매일 새벽 3시, 7일 보관)</li>
-                <li>보안 점검 및 버그 수정</li>
-                <li>서버 테스트 53개, 앱 테스트 16개 전부 통과</li>
-                <li>운영 가이드 문서 작성</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="log-entry">
-            <div class="log-date">2026-03-19 (D+1)</div>
-            <div class="log-content">
-              <ul>
-                <li>프로젝트 착수</li>
-                <li>기존 프로그램(scan13) 분석, NAS 폴더 구조 확인</li>
-                <li>상품 데이터 11,821건 분석 및 서버 적재</li>
-                <li>PDA(TC60) 스캐너 연동 방식 확정</li>
-                <li>전체 개발 항목(M1~M8) 구현 완료</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- 08 앞으로의 일정 -->
+        <!-- 02 앞으로의 일정 -->
         <section id="schedule">
           <div class="section-head">
-            <div class="section-num">08</div>
+            <div class="section-num">02</div>
             <div class="section-title">앞으로의 일정</div>
           </div>
 
@@ -1584,6 +1187,403 @@
             <strong>현재 상태:</strong>
             개발은 사실상 완료. PDA 실기기가 도착하면 앱 설치 후 실제 바코드
             스캔 테스트만 진행하면 됩니다. 일정 여유 충분합니다.
+          </div>
+        </section>
+
+        <!-- 03 작업 로그 -->
+        <section id="daily">
+          <div class="section-head">
+            <div class="section-num">03</div>
+            <div class="section-title">작업 로그</div>
+          </div>
+
+          <div class="log-entry">
+            <div class="log-date">2026-03-20 (D+2)</div>
+            <div class="log-content">
+              <ul>
+                <li>
+                  앱 디자인 완성 -- 요청사항(이미지 최대, 바코드 볼드, 이미지
+                  토글) 반영
+                </li>
+                <li>Mini PC에 서버 배포 완료</li>
+                <li>NAS 이미지 실연결 완료 (썸네일 + 실사)</li>
+                <li>엑셀 자동 갱신 (5분 주기) 설정</li>
+                <li>자동 백업 설정 (매일 새벽 3시, 7일 보관)</li>
+                <li>보안 점검 및 버그 수정</li>
+                <li>서버 테스트 53개, 앱 테스트 16개 전부 통과</li>
+                <li>운영 가이드 문서 작성</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="log-entry">
+            <div class="log-date">2026-03-19 (D+1)</div>
+            <div class="log-content">
+              <ul>
+                <li>프로젝트 착수</li>
+                <li>기존 프로그램(scan13) 분석, NAS 폴더 구조 확인</li>
+                <li>상품 데이터 11,821건 분석 및 서버 적재</li>
+                <li>PDA(TC60) 스캐너 연동 방식 확정</li>
+                <li>전체 개발 항목(M1~M8) 구현 완료</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 04 프로젝트 요약 -->
+        <section id="summary">
+          <div class="section-head">
+            <div class="section-num">04</div>
+            <div class="section-title">프로젝트 요약</div>
+          </div>
+
+          <h3>이 시스템이 뭔가요?</h3>
+          <p class="desc">
+            PDA(휴대용 스캐너)로 상품 바코드를 찍으면, 상품 이름/이미지가 바로
+            화면에 뜨는 시스템입니다. 기존 PC 프로그램(scan13)은 그대로
+            유지하고, PDA 앱을 추가로 설치합니다.
+          </p>
+
+          <h3>기존과 뭐가 달라지나요?</h3>
+          <div class="compare-grid">
+            <div class="compare-card before">
+              <div class="compare-card-title">Before (현재)</div>
+              <ul>
+                <li>PC 앞에 가서 조회해야 함</li>
+                <li>USB 스캐너를 PC에 연결해서 사용</li>
+                <li>이미지가 작게 표시됨</li>
+                <li>엑셀 헤더가 바뀌면 인식 실패</li>
+              </ul>
+            </div>
+            <div class="compare-card after">
+              <div class="compare-card-title">After (도입 후)</div>
+              <ul>
+                <li>PDA 들고 다니며 현장에서 바로 조회</li>
+                <li>PDA 버튼만 누르면 스캔</li>
+                <li>이미지가 화면 전체에 크게 표시</li>
+                <li>엑셀 양식 바뀌어도 자동 인식</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>뭘로 구성되나요?</h3>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
+              flex-wrap: wrap;
+              margin: 24px 0;
+            "
+          >
+            <div
+              style="
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                padding: 16px 24px;
+                text-align: center;
+                min-width: 130px;
+              "
+            >
+              <div style="font-weight: 700; font-size: 14px">PDA</div>
+              <div style="font-size: 11px; opacity: 0.6">TC60 스캐너 앱</div>
+            </div>
+            <div
+              style="font-size: 24px; color: var(--orange); font-weight: 700"
+            >
+              &#10132;
+            </div>
+            <div
+              style="
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                padding: 16px 24px;
+                text-align: center;
+                min-width: 130px;
+                border: 2px solid var(--orange);
+              "
+            >
+              <div style="font-weight: 700; font-size: 14px">Mini PC</div>
+              <div style="font-size: 11px; opacity: 0.6">데이터 서버</div>
+            </div>
+            <div
+              style="font-size: 24px; color: var(--orange); font-weight: 700"
+            >
+              &#10132;
+            </div>
+            <div
+              style="
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                padding: 16px 24px;
+                text-align: center;
+                min-width: 130px;
+              "
+            >
+              <div style="font-weight: 700; font-size: 14px">NAS</div>
+              <div style="font-size: 11px; opacity: 0.6">
+                이미지/엑셀 저장소
+              </div>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>기존 프로그램과 공존합니다.</strong>
+            Mini PC의 scan13 프로그램과 USB 스캐너는 그대로 사용하고, PDA 앱이
+            별도로 동작합니다. 서로 간섭하지 않습니다.
+          </div>
+        </section>
+
+        <!-- 05 사용 흐름 -->
+        <section id="usage-flow">
+          <div class="section-head">
+            <div class="section-num">05</div>
+            <div class="section-title">사용 흐름</div>
+          </div>
+          <p class="desc">실제 현장에서 PDA를 사용하는 순서입니다.</p>
+
+          <div class="step-grid">
+            <div class="step-card">
+              <div class="step-num">01</div>
+              <div class="step-title">PDA 전원 켜기</div>
+              <div class="step-desc">
+                전원 켜면 앱이 자동 실행됩니다. 별도 로그인 없음.
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">02</div>
+              <div class="step-title">바코드 스캔</div>
+              <div class="step-desc">
+                PDA 옆면 버튼을 누르면 스캐너가 작동합니다.
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">03</div>
+              <div class="step-title">상품 정보 확인</div>
+              <div class="step-desc">
+                상품명, 바코드, 이미지가 화면에 표시됩니다.
+              </div>
+              <div class="step-time">0.3초 이내</div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">04</div>
+              <div class="step-title">이미지 확인</div>
+              <div class="step-desc">
+                이미지를 터치하면 쿠팡 사진 / 실사 사진이 전환됩니다.
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">05</div>
+              <div class="step-title">다음 상품 스캔</div>
+              <div class="step-desc">
+                바로 다음 상품 바코드를 스캔하면 됩니다. 뒤로가기 필요 없음.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 06 예상 시나리오 -->
+        <section id="scenarios">
+          <div class="section-head">
+            <div class="section-num">06</div>
+            <div class="section-title">예상 시나리오</div>
+          </div>
+          <p class="desc">실제 업무에서 이런 상황이 생기면 이렇게 됩니다.</p>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">1</div>
+              <div class="scenario-title">신입 직원이 상품을 찾아야 할 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                상품명만 보고는 어떤 물건인지 모르겠다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                바코드 스캔하면 상품 사진이 크게 표시되어 바로 확인 가능
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">2</div>
+              <div class="scenario-title">같은 상품인데 바코드가 다를 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                하나의 상품에 바코드가 3~5개 붙어 있다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                어떤 바코드로 스캔해도 같은 상품 정보가 표시됨
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">3</div>
+              <div class="scenario-title">WiFi가 끊기는 구간에서</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                5층 건물 이동 중 WiFi 신호가 약해진다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                이전에 조회한 상품은 인터넷 없이도 확인 가능 (자동 저장)
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">4</div>
+              <div class="scenario-title">새 상품이 입고되었을 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                쿠팡에서 새 엑셀 파일을 다운받았다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                NAS에 엑셀 파일 올리면 5분 내 자동 반영. 별도 작업 없음
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">5</div>
+              <div class="scenario-title">서버가 꺼졌을 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                Mini PC가 재부팅되거나 서버가 멈췄다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                앱에 안내 메시지 표시 + 이전 조회 상품은 캐시로 계속 사용.
+                서버는 PC 시작 시 자동 실행됨
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 07 주요 기능 -->
+        <section id="features">
+          <div class="section-head">
+            <div class="section-num">07</div>
+            <div class="section-title">주요 기능</div>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-card-title">바코드 스캔</div>
+              <div class="feature-card-desc">
+                PDA 옆면 버튼을 누르면 0.3초 안에 상품 정보가 표시됩니다. EAN-13
+                바코드 기본 지원, QR 코드도 대응 가능합니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">상품 검색</div>
+              <div class="feature-card-desc">
+                바코드가 없는 경우 상품명으로 직접 검색할 수 있습니다. 현재
+                11,821건 등록, 10만건까지 대응 가능합니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">이미지 확인</div>
+              <div class="feature-card-desc">
+                쿠팡 썸네일과 실사 사진을 화면 가득 크게 표시합니다. 이미지를
+                터치하면 썸네일/실사가 전환됩니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">자동 데이터 갱신</div>
+              <div class="feature-card-desc">
+                NAS에 새 엑셀 파일을 올리면 5분 이내 자동 반영됩니다. 별도
+                작업이 필요 없습니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">오프라인 지원</div>
+              <div class="feature-card-desc">
+                WiFi가 불안정해도 최근에 조회한 상품은 PDA에 자동 저장되어 계속
+                확인할 수 있습니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">자동 백업</div>
+              <div class="feature-card-desc">
+                매일 새벽 3시에 전체 데이터를 자동 백업합니다. 최근 7일치를
+                보관하며, 문제 발생 시 즉시 복구 가능합니다.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 08 데이터 관리 -->
+        <section id="data-mgmt">
+          <div class="section-head">
+            <div class="section-num">08</div>
+            <div class="section-title">데이터 관리</div>
+          </div>
+          <p class="desc">
+            기존에 하시던 방식 그대로입니다. 추가 작업이 필요 없습니다.
+          </p>
+
+          <div class="data-mgmt-grid">
+            <div class="data-mgmt-box">
+              <h4>상품 데이터는 어떻게 관리하나요?</h4>
+              <ol>
+                <li>쿠팡 서플라이어허브에서 엑셀(xlsx) 다운로드</li>
+                <li>NAS의 기존 폴더에 저장</li>
+                <li>끝 -- 서버가 자동으로 감지해서 반영합니다</li>
+              </ol>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--text-muted);
+                  margin-top: 12px;
+                  line-height: 1.6;
+                "
+              >
+                새 상품 추가, 기존 상품 정보 변경 모두 자동 처리됩니다. 쿠팡에서
+                엑셀 양식이 바뀌어도 컬럼을 자동 인식합니다.
+              </p>
+            </div>
+            <div class="data-mgmt-box">
+              <h4>이미지는?</h4>
+              <ul style="list-style: none; padding: 0">
+                <li
+                  style="padding: 8px 0; border-bottom: 1px solid var(--border)"
+                >
+                  <strong style="color: var(--navy)">쿠팡 썸네일</strong><br />
+                  NAS의 img/ 폴더에 넣으면 자동 연결
+                </li>
+                <li style="padding: 8px 0">
+                  <strong style="color: var(--navy)">실사 사진</strong><br />
+                  NAS의 real_image/ 폴더에 넣으면 자동 연결
+                </li>
+              </ul>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--text-muted);
+                  margin-top: 12px;
+                  line-height: 1.6;
+                "
+              >
+                이미지 파일명과 바코드의 매핑은 codepath.xlsx가 관리합니다. 기존
+                방식과 동일합니다.
+              </p>
+            </div>
           </div>
         </section>
 
