@@ -58,7 +58,7 @@
   - [x] ScanResponse Parcelable 적용 (Activity 간 데이터 전달)
   - [x] Snackbar 에러 처리 (재시도 액션 포함)
   - [x] 스캔 대기 화면 + 터치 타겟 56dp + 폰트 확대
-  - [ ] `./gradlew assembleDebug` 빌드 (Android SDK 환경 필요)
+  - [x] `./gradlew assembleDebug` 빌드 성공 (BUILD SUCCESSFUL)
 
 ## M7: Android 앱 — DataWedge 스캐너 연동
 
