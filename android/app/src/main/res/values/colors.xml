@@ -6,4 +6,8 @@
     <color name="surface">#f8f9fa</color>
     <color name="text_primary">#1a2332</color>
     <color name="text_secondary">#666666</color>
+    <color name="text_hint">#888888</color>
+    <color name="text_muted">#aaaaaa</color>
+    <color name="text_dark">#333333</color>
+    <color name="image_background">#f0f0f0</color>
 </resources>

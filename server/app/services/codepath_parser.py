@@ -106,22 +106,19 @@ async def parse_codepath(db, file_path: str) -> dict:
 async def _flush_batch(
     db, barcode_batch: list[tuple], image_batch: list[tuple]
 ) -> tuple[int, int]:
-    added = 0
-    updated = 0
-
-    for (barcode,) in barcode_batch:
-        cursor = await db.execute(
-            "SELECT id FROM barcode WHERE barcode = ?", (barcode,)
-        )
-        existing = await cursor.fetchone()
-        if existing:
-            updated += 1
-        else:
-            added += 1
+    barcodes = [b[0] for b in barcode_batch]
+    placeholders = ",".join("?" * len(barcodes))
+    cursor = await db.execute(
+        f"SELECT COUNT(*) FROM barcode WHERE barcode IN ({placeholders})", barcodes
+    )
+    existing_count = (await cursor.fetchone())[0]
+    added = len(barcodes) - existing_count
+    updated = existing_count
 
     await db.executemany(
         "INSERT INTO barcode (barcode) VALUES (?) "
-        "ON CONFLICT(barcode) DO UPDATE SET updated_at = datetime('now')",
+        "ON CONFLICT(barcode) DO UPDATE SET updated_at = datetime('now') "
+        "WHERE sku_id IS NULL OR sku_id = ''",
         barcode_batch,
     )
 

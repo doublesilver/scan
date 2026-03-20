@@ -34,6 +34,12 @@ class SettingsActivity : AppCompatActivity() {
                 binding.etServerUrl.error = "서버 URL을 입력하세요"
                 return@setOnClickListener
             }
+            try {
+                java.net.URL(url)
+            } catch (_: Exception) {
+                Toast.makeText(this, "올바른 URL을 입력하세요", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             RetrofitClient.saveBaseUrl(this, url)
             Toast.makeText(this, "저장되었습니다", Toast.LENGTH_SHORT).show()
         }
@@ -42,6 +48,12 @@ class SettingsActivity : AppCompatActivity() {
             val url = binding.etServerUrl.text.toString().trim()
             if (url.isEmpty()) {
                 binding.etServerUrl.error = "서버 URL을 입력하세요"
+                return@setOnClickListener
+            }
+            try {
+                java.net.URL(url)
+            } catch (_: Exception) {
+                Toast.makeText(this, "올바른 URL을 입력하세요", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             RetrofitClient.saveBaseUrl(this, url)

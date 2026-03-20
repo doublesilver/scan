@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- 검색바 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,7 +16,7 @@
         <EditText
             android:id="@+id/etSearch"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:background="@android:color/white"
             android:hint="상품명 또는 바코드 검색"
@@ -26,19 +25,19 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:singleLine="true"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/btnSearch"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="56dp"
             android:layout_marginStart="8dp"
             android:backgroundTint="@color/orange"
             android:text="검색"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- 로딩 -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -47,30 +46,52 @@
         android:visibility="gone"
         android:layout_marginTop="8dp" />
 
-    <!-- 스캔 결과 (큰 이미지 + 기본 정보) -->
+    <LinearLayout
+        android:id="@+id/layoutScanWaiting"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_placeholder"
+            android:contentDescription="스캔 대기"
+            android:alpha="0.4" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="PDA 버튼을 눌러 스캔하세요"
+            android:textColor="@color/text_secondary"
+            android:textSize="18sp" />
+    </LinearLayout>
+
     <ScrollView
         android:id="@+id/layoutScanResult"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 상품 이미지 (가장 크게) -->
             <ImageView
                 android:id="@+id/ivProductImage"
                 android:layout_width="match_parent"
                 android:layout_height="320dp"
-                android:background="#f0f0f0"
+                android:background="@color/image_background"
                 android:contentDescription="상품 이미지"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_placeholder" />
 
-            <!-- 상품 정보 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -82,7 +103,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="상품명"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="@color/navy"
                     android:layout_marginBottom="8dp" />
@@ -92,8 +113,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="SKU: -"
-                    android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -101,8 +122,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="-"
-                    android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
@@ -110,14 +131,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="-"
-                    android:textSize="14sp"
-                    android:textColor="#666666" />
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="탭하여 상세 보기"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:textColor="@color/orange"
                     android:layout_marginTop="12dp"
                     android:gravity="end" />
@@ -126,7 +147,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 검색 결과 RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvProducts"
         android:layout_width="match_parent"

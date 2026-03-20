@@ -1,7 +1,10 @@
 package com.scan.warehouse.model
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class ScanResponse(
     @SerializedName("sku_id") val skuId: String,
     @SerializedName("product_name") val productName: String,
@@ -9,12 +12,13 @@ data class ScanResponse(
     @SerializedName("brand") val brand: String?,
     @SerializedName("barcodes") val barcodes: List<String>,
     @SerializedName("images") val images: List<ImageItem>
-)
+) : Parcelable
 
+@Parcelize
 data class ImageItem(
     @SerializedName("file_path") val filePath: String,
     @SerializedName("image_type") val imageType: String
-)
+) : Parcelable
 
 data class SearchResponse(
     @SerializedName("total") val total: Int,

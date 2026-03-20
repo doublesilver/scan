@@ -9,6 +9,7 @@ import android.os.Bundle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 object DataWedgeManager {
 
@@ -19,6 +20,8 @@ object DataWedgeManager {
     private const val EXTRA_CREATE_PROFILE = "com.symbol.datawedge.api.CREATE_PROFILE"
     private const val EXTRA_SET_CONFIG = "com.symbol.datawedge.api.SET_CONFIG"
 
+    private val barcodeRegex = Regex("^\\d{8,13}$")
+
     private val _scanFlow = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val scanFlow: SharedFlow<String> = _scanFlow.asSharedFlow()
 
@@ -26,9 +29,8 @@ object DataWedgeManager {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == ACTION_SCAN) {
                 val barcode = intent.getStringExtra(EXTRA_DATA) ?: return
-                if (barcode.isNotBlank()) {
-                    _scanFlow.tryEmit(barcode.trim())
-                }
+                if (!barcode.matches(barcodeRegex)) return
+                _scanFlow.tryEmit(barcode.trim())
             }
         }
     }
@@ -45,39 +47,34 @@ object DataWedgeManager {
     fun unregister(context: Context) {
         try {
             context.unregisterReceiver(receiver)
-        } catch (e: IllegalArgumentException) {
-            // 이미 해제된 경우 무시
+        } catch (_: IllegalArgumentException) {
         }
     }
 
     fun setupProfile(context: Context) {
-        // CREATE_PROFILE
         Intent(ACTION_DATAWEDGE).also { intent ->
             intent.putExtra(EXTRA_CREATE_PROFILE, "WarehouseScanner")
             context.sendBroadcast(intent)
         }
 
-        // SET_CONFIG
         val profileConfig = Bundle().apply {
             putString("PROFILE_NAME", "WarehouseScanner")
             putString("PROFILE_ENABLED", "true")
             putString("CONFIG_MODE", "CREATE_IF_NOT_EXIST")
 
-            // App association
             val appConfig = Bundle().apply {
                 putString("PACKAGE_NAME", context.packageName)
                 putStringArray("ACTIVITY_LIST", arrayOf("*"))
             }
             putParcelableArray("APP_LIST", arrayOf(appConfig))
 
-            // Intent output plugin
             val intentPlugin = Bundle().apply {
                 putString("PLUGIN_NAME", "INTENT")
                 putString("RESET_CONFIG", "true")
                 val intentParams = Bundle().apply {
                     putString("intent_output_enabled", "true")
                     putString("intent_action", ACTION_SCAN)
-                    putString("intent_delivery", "2") // Broadcast
+                    putString("intent_delivery", "2")
                 }
                 putBundle("PARAM_LIST", intentParams)
             }

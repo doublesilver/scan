@@ -13,14 +13,19 @@ object RetrofitClient {
     private const val PREF_NAME = "warehouse_settings"
     private const val KEY_SERVER_URL = "server_url"
 
+    @Volatile
     private var apiService: ApiService? = null
     private var currentBaseUrl: String = ""
 
     fun getApiService(context: Context): ApiService {
         val baseUrl = getBaseUrl(context)
         if (apiService == null || currentBaseUrl != baseUrl) {
-            currentBaseUrl = baseUrl
-            apiService = buildRetrofit(baseUrl).create(ApiService::class.java)
+            synchronized(this) {
+                if (apiService == null || currentBaseUrl != baseUrl) {
+                    currentBaseUrl = baseUrl
+                    apiService = buildRetrofit(baseUrl).create(ApiService::class.java)
+                }
+            }
         }
         return apiService!!
     }
@@ -35,7 +40,9 @@ object RetrofitClient {
             .edit()
             .putString(KEY_SERVER_URL, url)
             .apply()
-        apiService = null
+        synchronized(this) {
+            apiService = null
+        }
     }
 
     private fun buildRetrofit(baseUrl: String): Retrofit {

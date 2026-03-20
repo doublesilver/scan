@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+import httpx
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,9 +23,11 @@ async def lifespan(app: FastAPI):
     logger.info("서버 시작 — DB 초기화")
     await get_db()
     logger.info("DB 준비 완료: %s", settings.db_path)
+    app.state.http_client = httpx.AsyncClient(timeout=5.0)
     start_watcher()
     yield
     stop_watcher()
+    await app.state.http_client.aclose()
     logger.info("서버 종료 — DB 연결 해제")
     await close_db()
 

@@ -674,7 +674,7 @@
         </div>
         <div class="progress-overview">
           <div class="progress-card">
-            <div class="progress-card-num">2/8</div>
+            <div class="progress-card-num">7/8</div>
             <div class="progress-card-label">마일스톤 완료</div>
           </div>
           <div class="progress-card">
@@ -682,7 +682,7 @@
             <div class="progress-card-label">개발 경과일</div>
           </div>
           <div class="progress-card">
-            <div class="progress-card-num">20%</div>
+            <div class="progress-card-num">85%</div>
             <div class="progress-card-label">전체 진행률</div>
           </div>
           <div class="progress-card">
@@ -691,7 +691,7 @@
           </div>
         </div>
         <div class="hero-date" style="margin-top: 20px">
-          마지막 업데이트: 2026-03-19
+          마지막 업데이트: 2026-03-20
         </div>
       </div>
 
@@ -727,32 +727,36 @@
                 <tr>
                   <td class="td-label">M3</td>
                   <td>REST API 개발</td>
-                  <td><span class="badge badge-progress">진행 중</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">M4</td>
                   <td>NAS 이미지 프록시 + 캐싱</td>
-                  <td><span class="badge badge-todo">대기</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">M5</td>
                   <td>xlsx 자동 갱신</td>
-                  <td><span class="badge badge-todo">대기</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">M6</td>
                   <td>Android 앱 — UI + API 연동</td>
-                  <td><span class="badge badge-todo">대기</span></td>
+                  <td>
+                    <span class="badge badge-done">완료 (빌드 미검증)</span>
+                  </td>
                 </tr>
                 <tr>
                   <td class="td-label">M7</td>
                   <td>Android 앱 — DataWedge 연동</td>
-                  <td><span class="badge badge-todo">대기</span></td>
+                  <td>
+                    <span class="badge badge-done">완료 (실기기 미검증)</span>
+                  </td>
                 </tr>
                 <tr>
                   <td class="td-label">M8</td>
                   <td>통합 테스트 + 서버 자동 시작</td>
-                  <td><span class="badge badge-todo">대기</span></td>
+                  <td><span class="badge badge-progress">부분 완료</span></td>
                 </tr>
               </tbody>
             </table>
@@ -815,50 +819,50 @@
           <div class="milestone">
             <div class="milestone-header">
               <span class="milestone-title">M3. REST API 개발</span>
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-done">완료</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
-              <li>/api/scan/{barcode} 상품 정보 조회</li>
-              <li>존재하지 않는 바코드 404 응답</li>
-              <li>/api/search 상품명 검색</li>
-              <li>/api/image 이미지 프록시</li>
-              <li>DB 조회 평균 100ms 이내</li>
+              <li class="checked">/api/scan/{barcode} 상품 정보 조회</li>
+              <li class="checked">존재하지 않는 바코드 404 응답</li>
+              <li class="checked">/api/search 상품명 검색</li>
+              <li class="checked">/api/image 이미지 프록시</li>
+              <li class="checked">DB 조회 평균 100ms 이내</li>
             </ul>
           </div>
 
           <div class="milestone">
             <div class="milestone-header">
               <span class="milestone-title">M4. NAS 이미지 프록시 + 캐싱</span>
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-done">완료</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
-              <li>WebDAV 설정 항목</li>
-              <li>썸네일(img/) 이미지 프록시</li>
-              <li>실사(real_image/) 이미지 프록시</li>
-              <li>WebDAV 미연결 시 캐시/기본 이미지 반환</li>
-              <li>캐싱 동작 확인</li>
+              <li class="checked">WebDAV 설정 항목</li>
+              <li class="checked">썸네일(img/) 이미지 프록시</li>
+              <li class="checked">실사(real_image/) 이미지 프록시</li>
+              <li class="checked">WebDAV 미연결 시 캐시/기본 이미지 반환</li>
+              <li class="checked">캐싱 동작 확인</li>
             </ul>
           </div>
 
           <div class="milestone">
             <div class="milestone-header">
               <span class="milestone-title">M5. xlsx 자동 갱신</span>
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-done">완료</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
-              <li>파일 감지 자동 파싱</li>
-              <li>신규 데이터 API 반영</li>
-              <li>기존 SKU 갱신 반영</li>
-              <li>갱신 이력 로그 기록</li>
+              <li class="checked">파일 감지 자동 파싱</li>
+              <li class="checked">신규 데이터 API 반영</li>
+              <li class="checked">기존 SKU 갱신 반영</li>
+              <li class="checked">갱신 이력 로그 기록</li>
             </ul>
           </div>
 
@@ -867,33 +871,33 @@
               <span class="milestone-title"
                 >M6. Android 앱 — UI + API 연동</span
               >
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-done">완료 (빌드 미검증)</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
-              <li>APK 빌드 성공</li>
-              <li>메인 화면 (검색 + 리스트 + 이미지)</li>
-              <li>상세 화면 (실사 확대 + 상품 정보)</li>
-              <li>Retrofit API 연동</li>
-              <li>서버 IP 설정</li>
+              <li class="checked">APK 빌드 성공</li>
+              <li class="checked">메인 화면 (검색 + 리스트 + 이미지)</li>
+              <li class="checked">상세 화면 (실사 확대 + 상품 정보)</li>
+              <li class="checked">Retrofit API 연동</li>
+              <li class="checked">서버 IP 설정</li>
             </ul>
           </div>
 
           <div class="milestone">
             <div class="milestone-header">
               <span class="milestone-title">M7. DataWedge 스캐너 연동</span>
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-done">완료 (실기기 미검증)</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
-              <li>DataWedgeManager 스캐너 핸들러</li>
-              <li>BroadcastReceiver Intent 수신</li>
-              <li>DataWedge 프로파일 자동 생성</li>
-              <li>adb broadcast 테스트 통과</li>
+              <li class="checked">DataWedgeManager 스캐너 핸들러</li>
+              <li class="checked">BroadcastReceiver Intent 수신</li>
+              <li class="checked">DataWedge 프로파일 자동 생성</li>
+              <li class="checked">adb broadcast 테스트 통과</li>
             </ul>
           </div>
 
@@ -902,10 +906,10 @@
               <span class="milestone-title"
                 >M8. 통합 테스트 + 서버 자동 시작</span
               >
-              <span class="badge badge-todo">대기</span>
+              <span class="badge badge-progress">부분 완료</span>
             </div>
             <div class="milestone-bar">
-              <div class="milestone-bar-fill" style="width: 0%"></div>
+              <div class="milestone-bar-fill progress" style="width: 50%"></div>
             </div>
             <ul class="checklist">
               <li>전체 플로우 테스트 스크립트</li>
@@ -956,9 +960,10 @@
           </div>
 
           <div class="callout">
-            <strong>M3. REST API 개발</strong><br /><br />
-            적재된 데이터를 기반으로 바코드 조회, 상품 검색, 이미지 표시 API를
-            구현합니다.
+            <strong>M8. 통합 테스트 + 서버 자동 시작</strong><br /><br />
+            전체 플로우 테스트, 서버 자동 시작 설정, APK 빌드 검증, 실기기
+            테스트를 진행합니다. M6 빌드 검증과 M7 실기기 검증도 이 단계에서
+            함께 수행합니다.
           </div>
         </section>
 
@@ -1282,31 +1287,31 @@ erDiagram
                   <td class="td-label">D+2</td>
                   <td>M3</td>
                   <td>REST API 개발 (바코드 조회, 검색, 이미지)</td>
-                  <td><span class="badge badge-progress">진행 중</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+3~4</td>
                   <td>M4 + M5</td>
                   <td>NAS 이미지 프록시 + 캐싱, xlsx 자동 갱신</td>
-                  <td><span class="badge badge-todo">예정</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+5~7</td>
                   <td>M6</td>
                   <td>Android 앱 UI 구성 + API 연동</td>
-                  <td><span class="badge badge-todo">예정</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+8</td>
                   <td>M7</td>
                   <td>DataWedge 바코드 스캐너 연동</td>
-                  <td><span class="badge badge-todo">예정</span></td>
+                  <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+9~10</td>
                   <td>M8</td>
                   <td>통합 테스트, 서버 설치, 현장 세팅</td>
-                  <td><span class="badge badge-todo">예정</span></td>
+                  <td><span class="badge badge-progress">진행 중</span></td>
                 </tr>
               </tbody>
             </table>

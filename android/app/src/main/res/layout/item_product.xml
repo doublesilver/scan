@@ -2,8 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="72dp"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:padding="16dp"
     android:background="?attr/selectableItemBackground">
 
     <ImageView
@@ -13,7 +14,7 @@
         android:scaleType="centerCrop"
         android:contentDescription="썸네일"
         android:src="@drawable/ic_placeholder"
-        android:background="#f0f0f0" />
+        android:background="@color/image_background" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -27,7 +28,7 @@
             android:id="@+id/tvItemProductName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/navy"
             android:maxLines="2"
@@ -37,8 +38,8 @@
             android:id="@+id/tvItemSkuId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="#888888"
+            android:textSize="14sp"
+            android:textColor="@color/text_hint"
             android:layout_marginTop="2dp"
             android:fontFamily="monospace" />
 
@@ -46,8 +47,8 @@
             android:id="@+id/tvItemCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="#aaaaaa"
+            android:textSize="14sp"
+            android:textColor="@color/text_muted"
             android:layout_marginTop="2dp" />
     </LinearLayout>
 

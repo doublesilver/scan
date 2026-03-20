@@ -9,15 +9,11 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 실사 이미지 (전체 너비) -->
-        <ImageView
-            android:id="@+id/ivDetailImage"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vpDetailImages"
             android:layout_width="match_parent"
             android:layout_height="400dp"
-            android:background="#f0f0f0"
-            android:contentDescription="상품 실사 이미지"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_placeholder" />
+            android:background="@color/image_background" />
 
         <TextView
             android:id="@+id/tvImageCount"
@@ -27,10 +23,9 @@
             android:gravity="center"
             android:padding="4dp"
             android:textColor="@android:color/white"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:visibility="gone" />
 
-        <!-- 상품 정보 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,12 +36,11 @@
                 android:id="@+id/tvDetailProductName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/navy"
                 android:layout_marginBottom="16dp" />
 
-            <!-- 정보 테이블 -->
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -60,13 +54,13 @@
                         android:textStyle="bold"
                         android:textColor="@color/navy"
                         android:paddingEnd="16dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp" />
                     <TextView
                         android:id="@+id/tvDetailSkuId"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#333333" />
+                        android:textSize="16sp"
+                        android:textColor="@color/text_dark" />
                 </TableRow>
 
                 <TableRow android:layout_marginBottom="8dp">
@@ -77,13 +71,13 @@
                         android:textStyle="bold"
                         android:textColor="@color/navy"
                         android:paddingEnd="16dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp" />
                     <TextView
                         android:id="@+id/tvDetailCategory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#333333" />
+                        android:textSize="16sp"
+                        android:textColor="@color/text_dark" />
                 </TableRow>
 
                 <TableRow android:layout_marginBottom="8dp">
@@ -94,13 +88,13 @@
                         android:textStyle="bold"
                         android:textColor="@color/navy"
                         android:paddingEnd="16dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp" />
                     <TextView
                         android:id="@+id/tvDetailBrand"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#333333" />
+                        android:textSize="16sp"
+                        android:textColor="@color/text_dark" />
                 </TableRow>
 
                 <TableRow>
@@ -111,13 +105,13 @@
                         android:textStyle="bold"
                         android:textColor="@color/navy"
                         android:paddingEnd="16dp"
-                        android:textSize="14sp" />
+                        android:textSize="16sp" />
                     <TextView
                         android:id="@+id/tvDetailBarcodes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#333333"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_dark"
                         android:fontFamily="monospace" />
                 </TableRow>
 

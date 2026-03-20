@@ -1,24 +1,18 @@
 package com.scan.warehouse.ui
 
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import coil.load
-import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityDetailBinding
+import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.network.RetrofitClient
 
 class DetailActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_SKU_ID = "extra_sku_id"
-        const val EXTRA_PRODUCT_NAME = "extra_product_name"
-        const val EXTRA_CATEGORY = "extra_category"
-        const val EXTRA_BRAND = "extra_brand"
-        const val EXTRA_BARCODES = "extra_barcodes"
-        const val EXTRA_IMAGE_PATHS = "extra_image_paths"
-        const val EXTRA_IMAGE_TYPES = "extra_image_types"
+        const val EXTRA_DATA = "extra_data"
     }
 
     private lateinit var binding: ActivityDetailBinding
@@ -35,44 +29,31 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun bindData() {
-        val skuId = intent.getStringExtra(EXTRA_SKU_ID) ?: return
-        val productName = intent.getStringExtra(EXTRA_PRODUCT_NAME) ?: ""
-        val category = intent.getStringExtra(EXTRA_CATEGORY)
-        val brand = intent.getStringExtra(EXTRA_BRAND)
-        val barcodes = intent.getStringArrayListExtra(EXTRA_BARCODES) ?: emptyList<String>()
-        val imagePaths = intent.getStringArrayListExtra(EXTRA_IMAGE_PATHS) ?: emptyList<String>()
-        val imageTypes = intent.getStringArrayListExtra(EXTRA_IMAGE_TYPES) ?: emptyList<String>()
+        val data = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(EXTRA_DATA, ScanResponse::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(EXTRA_DATA)
+        } ?: return
 
-        binding.tvDetailProductName.text = productName
-        binding.tvDetailSkuId.text = skuId
-        binding.tvDetailCategory.text = category ?: "-"
-        binding.tvDetailBrand.text = brand ?: "-"
-        binding.tvDetailBarcodes.text = barcodes.joinToString("\n").ifEmpty { "-" }
+        binding.tvDetailProductName.text = data.productName
+        binding.tvDetailSkuId.text = data.skuId
+        binding.tvDetailCategory.text = data.category ?: "-"
+        binding.tvDetailBrand.text = data.brand ?: "-"
+        binding.tvDetailBarcodes.text = data.barcodes.joinToString("\n").ifEmpty { "-" }
 
         val baseUrl = RetrofitClient.getBaseUrl(this)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
-        // 실사 이미지 우선, 없으면 썸네일
-        val realIndex = imageTypes.indexOfFirst { it == "real" }
-        val imageIndex = if (realIndex >= 0) realIndex else 0
+        val imageUrls = data.images.map { "${normalized}api/image/${it.filePath}" }
 
-        if (imagePaths.isNotEmpty() && imageIndex < imagePaths.size) {
-            val imageUrl = "${normalized}api/image/${imagePaths[imageIndex]}"
-            binding.ivDetailImage.load(imageUrl) {
-                crossfade(true)
-                placeholder(R.drawable.ic_placeholder)
-                error(R.drawable.ic_placeholder)
+        if (imageUrls.isNotEmpty()) {
+            binding.vpDetailImages.adapter = ImagePagerAdapter(imageUrls)
+
+            if (imageUrls.size > 1) {
+                binding.tvImageCount.visibility = View.VISIBLE
+                binding.tvImageCount.text = "이미지 ${imageUrls.size}장"
             }
-        } else {
-            binding.ivDetailImage.setImageResource(R.drawable.ic_placeholder)
-        }
-
-        // 썸네일 목록 표시 (실사 이미지 외 나머지)
-        if (imagePaths.size > 1) {
-            binding.tvImageCount.visibility = View.VISIBLE
-            binding.tvImageCount.text = "이미지 ${imagePaths.size}장"
-        } else {
-            binding.tvImageCount.visibility = View.GONE
         }
     }
 

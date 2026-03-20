@@ -2,7 +2,7 @@ import logging
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 
 from app.config import settings
@@ -43,11 +43,19 @@ async def scan_barcode(barcode: str) -> ScanResponse:
         product = None
         barcodes = [barcode]
 
-    cursor = await db.execute(
-        "SELECT file_path, image_type, sort_order FROM image "
-        "WHERE barcode = ? ORDER BY sort_order, id",
-        (barcode,),
-    )
+    if sku_id:
+        cursor = await db.execute(
+            "SELECT DISTINCT i.file_path, i.image_type, i.sort_order "
+            "FROM image i JOIN barcode b ON b.barcode = i.barcode "
+            "WHERE b.sku_id = ? ORDER BY i.sort_order, i.id",
+            (sku_id,),
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT file_path, image_type, sort_order FROM image "
+            "WHERE barcode = ? ORDER BY sort_order, id",
+            (barcode,),
+        )
     images = [
         ImageItem(file_path=r["file_path"], image_type=r["image_type"])
         for r in await cursor.fetchall()
@@ -86,7 +94,8 @@ async def search_products(
             (q, limit),
         )
         rows = await cursor.fetchall()
-    except Exception:
+    except Exception as e:
+        logger.warning("FTS5 검색 실패, LIKE 폴백: %s", e)
         pattern = f"%{q}%"
         cursor = await db.execute(
             "SELECT sku_id, product_name, category, brand FROM product "
@@ -109,20 +118,29 @@ async def search_products(
 
 
 @router.get("/image/{path:path}")
-async def get_image(path: str) -> Response:
+async def get_image(path: str, request: Request) -> Response:
     """이미지 프록시 — 캐시 → mock → 기본 이미지 순으로 반환."""
-    cache_path = Path(settings.image_cache_dir) / path
+    cache_base = Path(settings.image_cache_dir).resolve()
+    cache_path = (cache_base / path).resolve()
+    if not str(cache_path).startswith(str(cache_base)):
+        raise HTTPException(status_code=400, detail="invalid path")
+
     if cache_path.exists() and cache_path.is_file():
         logger.info("image cache hit: %s", path)
         return FileResponse(str(cache_path), media_type=_guess_media_type(path))
 
-    mock_path = Path("data/mock_images") / path
+    mock_base = Path("data/mock_images").resolve()
+    mock_path = (mock_base / path).resolve()
+    if not str(mock_path).startswith(str(mock_base)):
+        raise HTTPException(status_code=400, detail="invalid path")
+
     if mock_path.exists() and mock_path.is_file():
         logger.info("image mock hit: %s", path)
         return FileResponse(str(mock_path), media_type=_guess_media_type(path))
 
     if settings.webdav_base_url:
-        image_bytes = await _fetch_from_webdav(path)
+        http_client = request.app.state.http_client
+        image_bytes = await _fetch_from_webdav(http_client, path)
         if image_bytes:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             cache_path.write_bytes(image_bytes)
@@ -136,20 +154,17 @@ async def get_image(path: str) -> Response:
     raise HTTPException(status_code=404, detail="image not found")
 
 
-async def _fetch_from_webdav(path: str) -> bytes | None:
+async def _fetch_from_webdav(client, path: str) -> bytes | None:
     """WebDAV에서 이미지 다운로드. 실패 시 None 반환."""
-    import httpx
-
     url = f"{settings.webdav_base_url.rstrip('/')}/{path}"
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            auth = None
-            if settings.webdav_username:
-                auth = (settings.webdav_username, settings.webdav_password)
-            resp = await client.get(url, auth=auth)
-            if resp.status_code == 200:
-                return resp.content
-            logger.warning("webdav %s → %d", url, resp.status_code)
+        auth = None
+        if settings.webdav_username:
+            auth = (settings.webdav_username, settings.webdav_password)
+        resp = await client.get(url, auth=auth)
+        if resp.status_code == 200:
+            return resp.content
+        logger.warning("webdav %s → %d", url, resp.status_code)
     except Exception as e:
         logger.warning("webdav 연결 실패: %s — %s", url, e)
     return None

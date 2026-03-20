@@ -6,16 +6,17 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
+import com.google.android.material.snackbar.Snackbar
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.ScanResponse
-import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
 import kotlinx.coroutines.launch
@@ -36,6 +37,14 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSearch()
         observeViewModel()
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                DataWedgeManager.scanFlow.collect { barcode ->
+                    viewModel.scanBarcode(barcode)
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -70,17 +79,28 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.error.observe(this) { error ->
             error?.let {
-                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG)
+                    .setAction("재시도") {
+                        val query = binding.etSearch.text.toString().trim()
+                        if (query.isNotBlank()) {
+                            viewModel.searchProducts(query)
+                        }
+                    }
+                    .show()
                 viewModel.clearError()
             }
         }
 
         viewModel.scanResult.observe(this) { result ->
-            result?.let { showScanResult(it) }
+            result?.let {
+                binding.layoutScanWaiting.visibility = View.GONE
+                showScanResult(it)
+            }
         }
 
         viewModel.searchResults.observe(this) { response ->
             response?.let {
+                binding.layoutScanWaiting.visibility = View.GONE
                 binding.layoutScanResult.visibility = View.GONE
                 binding.rvProducts.visibility = View.VISIBLE
                 productAdapter.submitList(it.items)
@@ -112,18 +132,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.layoutScanResult.setOnClickListener {
             val intent = Intent(this, DetailActivity::class.java).apply {
-                putExtra(DetailActivity.EXTRA_SKU_ID, result.skuId)
-                putExtra(DetailActivity.EXTRA_PRODUCT_NAME, result.productName)
-                putExtra(DetailActivity.EXTRA_CATEGORY, result.category)
-                putExtra(DetailActivity.EXTRA_BRAND, result.brand)
-                putStringArrayListExtra(
-                    DetailActivity.EXTRA_BARCODES,
-                    ArrayList(result.barcodes)
-                )
-                val imagePaths = result.images.map { it.filePath }
-                val imageTypes = result.images.map { it.imageType }
-                putStringArrayListExtra(DetailActivity.EXTRA_IMAGE_PATHS, ArrayList(imagePaths))
-                putStringArrayListExtra(DetailActivity.EXTRA_IMAGE_TYPES, ArrayList(imageTypes))
+                putExtra(DetailActivity.EXTRA_DATA, result)
             }
             startActivity(intent)
         }
@@ -132,11 +141,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         DataWedgeManager.register(this)
-        lifecycleScope.launch {
-            DataWedgeManager.scanFlow.collect { barcode ->
-                viewModel.scanBarcode(barcode)
-            }
-        }
     }
 
     override fun onPause() {

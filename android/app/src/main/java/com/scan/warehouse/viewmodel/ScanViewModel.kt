@@ -26,7 +26,13 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
+    private var lastScanTime = 0L
+
     fun scanBarcode(barcode: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastScanTime < 300) return
+        lastScanTime = now
+
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {

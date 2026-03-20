@@ -57,8 +57,9 @@ def _match_columns(headers: list[str]) -> dict[str, int | None]:
 
 def _parse_xlsx_with_lxml(file_path: str) -> tuple[list[str], list[list[str]]]:
     """inlineStr 타입 xlsx를 lxml으로 파싱하여 헤더 + 데이터 행 반환."""
-    z = zipfile.ZipFile(file_path)
-    xml_bytes = z.read("xl/worksheets/sheet1.xml")
+    with zipfile.ZipFile(file_path) as z:
+        xml_bytes = z.read("xl/worksheets/sheet1.xml")
+
     root = etree.fromstring(xml_bytes)
 
     rows = root.findall(".//s:row", NS)
@@ -83,7 +84,6 @@ def _parse_xlsx_with_lxml(file_path: str) -> tuple[list[str], list[list[str]]]:
 
     headers = _extract_row(rows[0])
     data = [_extract_row(r) for r in rows[1:]]
-    z.close()
     return headers, data
 
 
@@ -202,18 +202,14 @@ async def parse_sku_download(db, file_path: str) -> dict:
 async def _flush_product_batch(
     db, product_batch: list[tuple], barcode_batch: list[tuple]
 ) -> tuple[int, int]:
-    added = 0
-    updated = 0
-
-    for sku_id, product_name, category, brand, extra_json in product_batch:
-        cursor = await db.execute(
-            "SELECT sku_id FROM product WHERE sku_id = ?", (sku_id,)
-        )
-        existing = await cursor.fetchone()
-        if existing:
-            updated += 1
-        else:
-            added += 1
+    sku_ids = [row[0] for row in product_batch]
+    placeholders = ",".join("?" * len(sku_ids))
+    cursor = await db.execute(
+        f"SELECT COUNT(*) FROM product WHERE sku_id IN ({placeholders})", sku_ids
+    )
+    existing_count = (await cursor.fetchone())[0]
+    added = len(sku_ids) - existing_count
+    updated = existing_count
 
     await db.executemany(
         "INSERT INTO product (sku_id, product_name, category, brand, extra) "
