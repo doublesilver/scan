@@ -80,23 +80,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupManualScan() {
         binding.btnManualScan.setOnClickListener {
-            val input = EditText(this).apply {
-                hint = "바코드 번호 입력"
-                inputType = android.text.InputType.TYPE_CLASS_NUMBER
-                textSize = 20f
-                setPadding(48, 32, 48, 32)
-            }
-            AlertDialog.Builder(this)
-                .setTitle("바코드 입력")
-                .setView(input)
+            val dialogView = layoutInflater.inflate(R.layout.dialog_barcode_input, null)
+            val etBarcode = dialogView.findViewById<EditText>(R.id.etBarcodeInput)
+
+            val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
                 .setPositiveButton("스캔") { _, _ ->
-                    val barcode = input.text.toString().trim()
+                    val barcode = etBarcode.text.toString().trim()
                     if (barcode.isNotBlank()) {
                         viewModel.scanBarcode(barcode)
                     }
                 }
                 .setNegativeButton("취소", null)
-                .show()
+                .create()
+
+            dialog.show()
+            etBarcode.requestFocus()
+            dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         }
     }
 

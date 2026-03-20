@@ -156,7 +156,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/bg_info_row_alt"
-                android:padding="14dp">
+                android:padding="14dp"
+                android:layout_marginBottom="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -181,6 +182,34 @@
                     android:textSize="11sp"
                     android:textColor="@color/outline_variant"
                     android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_info_row"
+                android:padding="14dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="위치"
+                    android:textSize="11sp"
+                    android:textColor="@color/on_surface_variant"
+                    android:textAllCaps="true"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.05" />
+                <TextView
+                    android:id="@+id/tvDetailLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold"
+                    android:layout_marginTop="2dp" />
             </LinearLayout>
 
             <Button
