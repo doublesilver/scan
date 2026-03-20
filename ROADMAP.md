@@ -1,6 +1,7 @@
 # ROADMAP — Phase 1 (MVP)
 
 ## M1: 서버 프로젝트 셋업 + DB
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] `server/requirements.txt` 존재하고 `pip install -r requirements.txt` 성공
@@ -9,6 +10,7 @@
   - [x] SQLite DB에 PRODUCT, BARCODE, IMAGE 테이블이 생성됨
 
 ## M2: 데이터 이관 (xlsx 파서)
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] `codepath.xlsx` 파싱: 바코드 레코드 DB 적재 (23,642건)
@@ -17,6 +19,7 @@
   - [x] 파싱 2회 실행 시 중복 없음 (upsert: 추가=0, 갱신=11821)
 
 ## M3: REST API 개발
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] `/api/scan/8809461170008` → 200 + JSON (sku_id, product_name, barcodes, images)
@@ -26,6 +29,7 @@
   - [x] 응답 시간: DB 조회 0.9ms (목표 100ms 이내)
 
 ## M4: NAS 이미지 프록시 + 캐싱
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] `config.py`에 WebDAV base URL 설정 항목 존재
@@ -35,6 +39,7 @@
   - [x] 캐시 히트 시 서버 로그 "cache hit" 출력
 
 ## M5: xlsx 자동 갱신 (파일 감시)
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] 서버 시작 시 "xlsx 파일 감시 시작" 로그 출력 (watchdog)
@@ -43,23 +48,30 @@
   - [x] NAS 연결 후 실 데이터로 최종 검증 필요
 
 ## M6: Android 앱 — UI + API 연동
+
 - Status: [x] 완료 (빌드는 Android SDK 환경에서 확인 필요)
 - 완료 조건:
   - [x] 메인 화면 레이아웃: 검색 + RecyclerView + 상품 이미지(크게) (4개 layout 파일)
-  - [x] 상세 화면: 실사 이미지 확대 + 상품 정보 전체
+  - [x] 상세 화면: ViewPager2 이미지 슬라이드 + 상품 정보 전체
   - [x] Retrofit API 인터페이스: scan, search, image 3개 엔드포인트
-  - [x] 서버 IP 설정: SharedPreferences + SettingsActivity
+  - [x] 서버 IP 설정: SharedPreferences + SettingsActivity + URL 검증
+  - [x] ScanResponse Parcelable 적용 (Activity 간 데이터 전달)
+  - [x] Snackbar 에러 처리 (재시도 액션 포함)
+  - [x] 스캔 대기 화면 + 터치 타겟 56dp + 폰트 확대
   - [ ] `./gradlew assembleDebug` 빌드 (Android SDK 환경 필요)
 
 ## M7: Android 앱 — DataWedge 스캐너 연동
+
 - Status: [x] 완료 (실기기 테스트 대기)
 - 완료 조건:
   - [x] DataWedgeManager.kt 존재 (SharedFlow 기반)
   - [x] BroadcastReceiver `com.scan.warehouse.SCAN` Intent 수신
   - [x] DataWedge 프로파일 자동 생성 (CREATE_PROFILE + SET_CONFIG)
+  - [x] EAN-8/13 바코드 형식 검증 + 300ms debounce
   - [ ] adb broadcast 실기기/에뮬레이터 테스트 (PDA 도착 후)
 
 ## M8: 통합 테스트 + 서버 자동 시작
+
 - Status: [x] 완료
 - 완료 조건:
   - [x] 통합 테스트 스크립트: scripts/test_integration.sh
