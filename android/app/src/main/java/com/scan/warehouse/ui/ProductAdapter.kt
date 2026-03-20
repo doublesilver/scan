@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ItemProductBinding
 import com.scan.warehouse.model.SearchItem
 
@@ -32,7 +31,9 @@ class ProductAdapter(
             binding.tvItemProductName.text = item.productName
             binding.tvItemSkuId.text = item.skuId
             binding.tvItemCategory.text = item.category ?: ""
-            binding.ivItemThumbnail.setImageResource(R.drawable.ic_placeholder)
+
+            val initial = item.productName.firstOrNull()?.toString() ?: "?"
+            binding.tvItemAvatar.text = initial
 
             binding.root.setOnClickListener {
                 onItemClick(item)

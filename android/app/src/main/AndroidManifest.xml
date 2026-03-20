@@ -17,7 +17,7 @@
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.WarehouseScanner">
+            android:theme="@style/Theme.WarehouseScanner.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -32,6 +32,7 @@
         <activity
             android:name=".ui.DetailActivity"
             android:exported="false"
+            android:theme="@style/Theme.WarehouseScanner.NoActionBar"
             android:parentActivityName=".ui.MainActivity" />
 
         <activity

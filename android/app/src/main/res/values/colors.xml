@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="navy">#1a2332</color>
-    <color name="orange">#e8734a</color>
-    <color name="background">#ffffff</color>
-    <color name="surface">#f8f9fa</color>
+    <color name="navy_dark">#111820</color>
+    <color name="navy_light">#2a3a4f</color>
+    <color name="orange">#ff6b35</color>
+    <color name="orange_dark">#e8551f</color>
+    <color name="orange_ripple">#33ff6b35</color>
+    <color name="background">#f5f6f8</color>
+    <color name="surface">#ffffff</color>
+    <color name="surface_variant">#f0f1f3</color>
     <color name="text_primary">#1a2332</color>
-    <color name="text_secondary">#666666</color>
-    <color name="text_hint">#888888</color>
-    <color name="text_muted">#aaaaaa</color>
-    <color name="text_dark">#333333</color>
-    <color name="image_background">#f0f0f0</color>
+    <color name="text_secondary">#5a6474</color>
+    <color name="text_hint">#8e95a2</color>
+    <color name="text_muted">#b0b7c3</color>
+    <color name="text_dark">#2d3440</color>
+    <color name="image_background">#eef0f2</color>
+    <color name="divider">#e8eaed</color>
+    <color name="success">#2e7d32</color>
+    <color name="error">#c62828</color>
+    <color name="status_bar">#111820</color>
 </resources>

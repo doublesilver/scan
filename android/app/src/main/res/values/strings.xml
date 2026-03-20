@@ -4,10 +4,19 @@
     <string name="search_hint">상품명 또는 바코드 검색</string>
     <string name="settings_title">서버 설정</string>
     <string name="detail_title">상품 상세</string>
-    <string name="splash_title">창고 스캐너</string>
+    <string name="splash_title">물류 스캐너</string>
+    <string name="splash_subtitle">창고 바코드 관리 시스템</string>
     <string name="splash_connecting">서버 연결 확인 중…</string>
     <string name="splash_error">서버에 연결할 수 없습니다</string>
     <string name="splash_retry">재시도</string>
     <string name="splash_settings">설정</string>
     <string name="default_server_url">http://192.168.0.100:8000</string>
+    <string name="scan_waiting_title">PDA 버튼을 눌러 스캔하세요</string>
+    <string name="scan_waiting_subtitle">또는 검색창에 상품명을 입력하세요</string>
+    <string name="offline_mode">오프라인 모드</string>
+    <string name="tap_to_detail">탭하여 상세 보기</string>
+    <string name="image_type_thumbnail">썸네일</string>
+    <string name="image_type_real">실사</string>
+    <string name="tap_to_switch_image">탭하여 전환</string>
+    <string name="barcode_copied">바코드가 복사되었습니다</string>
 </resources>

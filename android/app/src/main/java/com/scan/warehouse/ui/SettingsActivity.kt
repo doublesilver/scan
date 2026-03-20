@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySettingsBinding
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.repository.ProductRepository
@@ -72,10 +73,10 @@ class SettingsActivity : AppCompatActivity() {
 
             result.onSuccess {
                 binding.tvConnectionStatus.text = "연결 성공"
-                binding.tvConnectionStatus.setTextColor(getColor(android.R.color.holo_green_dark))
+                binding.tvConnectionStatus.setTextColor(getColor(R.color.success))
             }.onFailure { e ->
                 binding.tvConnectionStatus.text = "연결 실패: ${e.message}"
-                binding.tvConnectionStatus.setTextColor(getColor(android.R.color.holo_red_dark))
+                binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
             }
         }
     }
@@ -84,9 +85,16 @@ class SettingsActivity : AppCompatActivity() {
         return when (item.itemId) {
             android.R.id.home -> {
                 finish()
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 }

@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySplashBinding
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.repository.ProductRepository
@@ -21,8 +22,6 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        supportActionBar?.hide()
 
         repository = ProductRepository(applicationContext)
 
@@ -42,7 +41,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkServer() {
-        binding.tvStatus.text = getString(com.scan.warehouse.R.string.splash_connecting)
+        binding.tvStatus.text = getString(R.string.splash_connecting)
         binding.progressBar.visibility = View.VISIBLE
         binding.layoutButtons.visibility = View.GONE
 
@@ -63,7 +62,7 @@ class SplashActivity : AppCompatActivity() {
                 Toast.makeText(this@SplashActivity, "오프라인 모드로 진입합니다", Toast.LENGTH_SHORT).show()
                 goToMain()
             } else {
-                binding.tvStatus.text = getString(com.scan.warehouse.R.string.splash_error)
+                binding.tvStatus.text = getString(R.string.splash_error)
                 binding.progressBar.visibility = View.GONE
                 binding.layoutButtons.visibility = View.VISIBLE
             }
@@ -73,5 +72,6 @@ class SplashActivity : AppCompatActivity() {
     private fun goToMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 }

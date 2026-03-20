@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/navy">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -11,31 +12,49 @@
         android:gravity="center"
         android:orientation="vertical">
 
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_barcode_scan"
+            android:contentDescription="앱 아이콘"
+            android:layout_marginBottom="20dp"
+            app:tint="@android:color/white" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/splash_title"
-            android:textColor="@color/navy"
+            android:textColor="@android:color/white"
             android:textSize="28sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/splash_subtitle"
+            android:textColor="#99FFFFFF"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="32dp"
             android:text="@string/splash_connecting"
-            android:textColor="@color/text_secondary"
+            android:textColor="#BBFFFFFF"
             android:textSize="14sp" />
 
     </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="80dp" />
+        android:layout_marginBottom="100dp"
+        android:indeterminateTint="@color/orange" />
 
     <LinearLayout
         android:id="@+id/layoutButtons"
@@ -51,21 +70,23 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRetry"
-            style="@style/Widget.MaterialComponents.Button"
+            style="@style/WarehouseButton.Secondary"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:text="@string/splash_retry" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/WarehouseButton.Outlined"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/splash_settings" />
+            android:text="@string/splash_settings"
+            android:textColor="@android:color/white"
+            app:strokeColor="@android:color/white" />
 
     </LinearLayout>
 

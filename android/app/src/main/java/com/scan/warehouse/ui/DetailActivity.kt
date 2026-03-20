@@ -1,9 +1,12 @@
 package com.scan.warehouse.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Build
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import com.scan.warehouse.R
@@ -27,8 +30,10 @@ class DetailActivity : AppCompatActivity() {
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "상품 상세"
+        binding.btnBack.setOnClickListener {
+            finish()
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
 
         bindData()
     }
@@ -53,6 +58,14 @@ class DetailActivity : AppCompatActivity() {
         }
         binding.tvDetailBarcodes.text = if (barcodeText.isNotEmpty()) barcodeText else SpannableStringBuilder("-")
 
+        val barcodeString = data.barcodes.joinToString(", ")
+        binding.tvDetailBarcodes.setOnLongClickListener {
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("barcode", barcodeString))
+            Toast.makeText(this, R.string.barcode_copied, Toast.LENGTH_SHORT).show()
+            true
+        }
+
         val baseUrl = RetrofitClient.getBaseUrl(this)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
@@ -73,6 +86,9 @@ class DetailActivity : AppCompatActivity() {
         }
 
         if (thumbnailUrl != null && realImageUrl != null) {
+            binding.tvImageTypeChip.visibility = View.VISIBLE
+            updateImageTypeChip()
+
             binding.ivDetailImage.setOnClickListener {
                 showingThumbnail = !showingThumbnail
                 val url = if (showingThumbnail) thumbnailUrl else realImageUrl
@@ -81,18 +97,23 @@ class DetailActivity : AppCompatActivity() {
                     placeholder(R.drawable.ic_placeholder)
                     error(R.drawable.ic_placeholder)
                 }
+                updateImageTypeChip()
             }
         }
-
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    private fun updateImageTypeChip() {
+        val typeText = if (showingThumbnail) {
+            getString(R.string.image_type_thumbnail)
+        } else {
+            getString(R.string.image_type_real)
         }
+        binding.tvImageTypeChip.text = "$typeText | ${getString(R.string.tap_to_switch_image)}"
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 }

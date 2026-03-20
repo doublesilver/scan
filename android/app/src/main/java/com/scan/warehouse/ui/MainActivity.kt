@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity() {
                 hint = "바코드 번호 입력"
                 inputType = android.text.InputType.TYPE_CLASS_NUMBER
                 textSize = 20f
+                setPadding(48, 32, 48, 32)
             }
             AlertDialog.Builder(this)
                 .setTitle("바코드 입력")
@@ -174,6 +175,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra(DetailActivity.EXTRA_DATA, result)
             }
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
 
@@ -196,6 +198,7 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.menu_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 true
             }
             else -> super.onOptionsItemSelected(item)
