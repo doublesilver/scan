@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     sku_download_pattern: str = "coupangmd00_sku_download_*.xlsx"
 
     # NAS 동기화
-    nas_sync_interval: int = 300
+    nas_sync_interval: int = 60
 
     # 이미지 캐시 (M4)
     image_cache_dir: str = "./data/cache"
