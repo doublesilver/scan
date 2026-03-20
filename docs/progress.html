@@ -1147,32 +1147,401 @@
           </div>
 
           <h3>요청 흐름</h3>
-          <pre class="mermaid">
-sequenceDiagram
-    participant PDA as PDA (TC60)
-    participant API as Mini PC (서버)
-    participant DB as SQLite DB
-    participant NAS as NAS (이미지)
-    PDA->>API: 바코드 스캔 전송
-    API->>DB: SKU/상품 정보 조회
-    DB-->>API: 상품명, 바코드, 이미지 경로
-    API->>NAS: 이미지 요청
-    NAS-->>API: 이미지 반환
-    API-->>PDA: 상품 정보 + 이미지
-    Note over PDA,NAS: 전체 응답 0.3 ~ 0.5초 목표
-          </pre>
+          <div style="overflow-x: auto; padding: 4px 0">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+                align-items: center;
+                gap: 0;
+                min-width: 560px;
+              "
+            >
+              <div
+                style="
+                  background: var(--navy);
+                  color: #fff;
+                  border-radius: 10px;
+                  padding: 14px 18px;
+                  text-align: center;
+                  white-space: nowrap;
+                "
+              >
+                <div style="font-weight: 700; font-size: 13px">PDA</div>
+                <div style="font-size: 11px; opacity: 0.6">TC60</div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 0 4px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  바코드 스캔 전송 &#10132;
+                </div>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  &#8592; 상품 정보 + 이미지
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--navy);
+                  color: #fff;
+                  border-radius: 10px;
+                  padding: 14px 18px;
+                  text-align: center;
+                  border: 2px solid var(--orange);
+                  white-space: nowrap;
+                "
+              >
+                <div style="font-weight: 700; font-size: 13px">Mini PC</div>
+                <div style="font-size: 11px; opacity: 0.6">FastAPI 서버</div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 0 4px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  SKU 조회 &#10132;
+                </div>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  &#8592; 상품명·경로
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--navy);
+                  color: #fff;
+                  border-radius: 10px;
+                  padding: 14px 18px;
+                  text-align: center;
+                  white-space: nowrap;
+                "
+              >
+                <div style="font-weight: 700; font-size: 13px">DB</div>
+                <div style="font-size: 11px; opacity: 0.6">SQLite</div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 0 4px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  이미지 요청 &#10132;
+                </div>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    white-space: nowrap;
+                  "
+                >
+                  &#8592; 이미지 반환
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--navy);
+                  color: #fff;
+                  border-radius: 10px;
+                  padding: 14px 18px;
+                  text-align: center;
+                  white-space: nowrap;
+                "
+              >
+                <div style="font-weight: 700; font-size: 13px">NAS</div>
+                <div style="font-size: 11px; opacity: 0.6">WebDAV</div>
+              </div>
+            </div>
+            <div
+              style="
+                margin-top: 12px;
+                background: var(--orange-dim);
+                border-radius: 8px;
+                padding: 8px 14px;
+                font-size: 12px;
+                color: var(--navy);
+                font-weight: 500;
+                text-align: center;
+                border-left: 3px solid var(--orange);
+              "
+            >
+              전체 응답 목표: 0.3 ~ 0.5초
+            </div>
+          </div>
 
           <h3>이미지 탐색 순서</h3>
-          <pre class="mermaid">
-flowchart LR
-    A["바코드 수신"] --> B{"codepath.xlsx\n경로 존재?"}
-    B -- 있음 --> C["해당 이미지 반환"]
-    B -- 없음 --> D{"img/ 폴더\n파일 존재?"}
-    D -- 있음 --> E["썸네일 반환"]
-    D -- 없음 --> F{"real_image/\n파일 존재?"}
-    F -- 있음 --> G["실사 반환"]
-    F -- 없음 --> H["기본 이미지"]
-          </pre>
+          <div style="overflow-x: auto; padding: 4px 0">
+            <div
+              style="
+                display: flex;
+                align-items: flex-start;
+                gap: 0;
+                min-width: 580px;
+              "
+            >
+              <div
+                style="
+                  background: var(--navy);
+                  color: #fff;
+                  border-radius: 10px;
+                  padding: 12px 16px;
+                  text-align: center;
+                  font-size: 13px;
+                  font-weight: 700;
+                  white-space: nowrap;
+                  flex-shrink: 0;
+                "
+              >
+                바코드 수신
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  color: var(--orange);
+                  font-size: 20px;
+                  font-weight: 700;
+                  padding: 0 6px;
+                  margin-top: 10px;
+                "
+              >
+                &#10132;
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  flex-shrink: 0;
+                "
+              >
+                <div
+                  style="
+                    background: var(--orange-pale);
+                    border: 1.5px solid var(--orange);
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 12px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="
+                      font-weight: 700;
+                      color: var(--navy);
+                      margin-bottom: 4px;
+                    "
+                  >
+                    codepath.xlsx 경로 존재?
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      justify-content: center;
+                      margin-top: 6px;
+                    "
+                  >
+                    <div
+                      style="
+                        background: var(--navy);
+                        color: #fff;
+                        border-radius: 6px;
+                        padding: 4px 10px;
+                        font-size: 11px;
+                        font-weight: 600;
+                      "
+                    >
+                      있음 &#10132; 해당 이미지 반환
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--text-muted);
+                    font-size: 11px;
+                    padding-left: 8px;
+                  "
+                >
+                  <span style="color: var(--orange); font-weight: 700"
+                    >&#8595;</span
+                  >
+                  없음
+                </div>
+                <div
+                  style="
+                    background: var(--orange-pale);
+                    border: 1.5px solid var(--orange);
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 12px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="
+                      font-weight: 700;
+                      color: var(--navy);
+                      margin-bottom: 4px;
+                    "
+                  >
+                    img/ 폴더 파일 존재?
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      justify-content: center;
+                      margin-top: 6px;
+                    "
+                  >
+                    <div
+                      style="
+                        background: var(--navy);
+                        color: #fff;
+                        border-radius: 6px;
+                        padding: 4px 10px;
+                        font-size: 11px;
+                        font-weight: 600;
+                      "
+                    >
+                      있음 &#10132; 썸네일 반환
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--text-muted);
+                    font-size: 11px;
+                    padding-left: 8px;
+                  "
+                >
+                  <span style="color: var(--orange); font-weight: 700"
+                    >&#8595;</span
+                  >
+                  없음
+                </div>
+                <div
+                  style="
+                    background: var(--orange-pale);
+                    border: 1.5px solid var(--orange);
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 12px;
+                    text-align: center;
+                  "
+                >
+                  <div
+                    style="
+                      font-weight: 700;
+                      color: var(--navy);
+                      margin-bottom: 4px;
+                    "
+                  >
+                    real_image/ 파일 존재?
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      justify-content: center;
+                      margin-top: 6px;
+                    "
+                  >
+                    <div
+                      style="
+                        background: var(--navy);
+                        color: #fff;
+                        border-radius: 6px;
+                        padding: 4px 10px;
+                        font-size: 11px;
+                        font-weight: 600;
+                      "
+                    >
+                      있음 &#10132; 실사 반환
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: var(--text-muted);
+                    font-size: 11px;
+                    padding-left: 8px;
+                  "
+                >
+                  <span style="color: var(--orange); font-weight: 700"
+                    >&#8595;</span
+                  >
+                  없음
+                </div>
+                <div
+                  style="
+                    background: var(--navy);
+                    color: #fff;
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    text-align: center;
+                  "
+                >
+                  기본 이미지
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- 06 Database -->
@@ -1186,31 +1555,242 @@ flowchart LR
             향후 기능 추가 시 기존 구조를 변경하지 않도록 설계하였습니다.
           </p>
 
-          <pre class="mermaid">
-erDiagram
-    PRODUCT {
-        text sku_id PK
-        text product_name
-        text category
-        text brand
-        text extra
-    }
-    BARCODE {
-        int id PK
-        text barcode UK
-        text sku_id FK
-        text barcode_type
-    }
-    IMAGE {
-        int id PK
-        text barcode FK
-        text file_path
-        text image_type
-        int sort_order
-    }
-    PRODUCT ||--o{ BARCODE : "1 : N"
-    BARCODE ||--o{ IMAGE : "1 : N"
-          </pre>
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 24px;
+              align-items: flex-start;
+            "
+          >
+            <div
+              style="
+                flex: 1;
+                min-width: 180px;
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: var(--orange);
+                  padding: 10px 16px;
+                  font-weight: 700;
+                  font-size: 13px;
+                  letter-spacing: 0.05em;
+                "
+              >
+                PRODUCT
+              </div>
+              <div
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                "
+              >
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="
+                      color: var(--orange);
+                      font-weight: 600;
+                      min-width: 28px;
+                    "
+                    >PK</span
+                  ><span style="font-family: var(--font-mono)">sku_id</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)"
+                    >product_name</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">category</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">brand</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">extra</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 4px;
+                padding-top: 48px;
+                flex-shrink: 0;
+              "
+            >
+              <span style="font-size: 11px; color: var(--text-muted)"
+                >1 : N</span
+              >
+              <span
+                style="color: var(--orange); font-size: 22px; font-weight: 700"
+                >&#10132;</span
+              >
+            </div>
+            <div
+              style="
+                flex: 1;
+                min-width: 180px;
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: var(--orange);
+                  padding: 10px 16px;
+                  font-weight: 700;
+                  font-size: 13px;
+                  letter-spacing: 0.05em;
+                "
+              >
+                BARCODE
+              </div>
+              <div
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                "
+              >
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="
+                      color: var(--orange);
+                      font-weight: 600;
+                      min-width: 28px;
+                    "
+                    >PK</span
+                  ><span style="font-family: var(--font-mono)">id</span
+                  ><span style="opacity: 0.5; margin-left: auto">int</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="color: #7dd3fc; font-weight: 600; min-width: 28px"
+                    >UK</span
+                  ><span style="font-family: var(--font-mono)">barcode</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="color: #86efac; font-weight: 600; min-width: 28px"
+                    >FK</span
+                  ><span style="font-family: var(--font-mono)">sku_id</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)"
+                    >barcode_type</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 4px;
+                padding-top: 48px;
+                flex-shrink: 0;
+              "
+            >
+              <span style="font-size: 11px; color: var(--text-muted)"
+                >1 : N</span
+              >
+              <span
+                style="color: var(--orange); font-size: 22px; font-weight: 700"
+                >&#10132;</span
+              >
+            </div>
+            <div
+              style="
+                flex: 1;
+                min-width: 180px;
+                background: var(--navy);
+                color: #fff;
+                border-radius: 10px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: var(--orange);
+                  padding: 10px 16px;
+                  font-weight: 700;
+                  font-size: 13px;
+                  letter-spacing: 0.05em;
+                "
+              >
+                IMAGE
+              </div>
+              <div
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 6px;
+                "
+              >
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="
+                      color: var(--orange);
+                      font-weight: 600;
+                      min-width: 28px;
+                    "
+                    >PK</span
+                  ><span style="font-family: var(--font-mono)">id</span
+                  ><span style="opacity: 0.5; margin-left: auto">int</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span
+                    style="color: #86efac; font-weight: 600; min-width: 28px"
+                    >FK</span
+                  ><span style="font-family: var(--font-mono)">barcode</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">file_path</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">image_type</span
+                  ><span style="opacity: 0.5; margin-left: auto">text</span>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 12px">
+                  <span style="min-width: 28px"></span
+                  ><span style="font-family: var(--font-mono)">sort_order</span
+                  ><span style="opacity: 0.5; margin-left: auto">int</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="table-wrap">
             <table>
