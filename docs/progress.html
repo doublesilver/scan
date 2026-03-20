@@ -3,46 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>개발 진행 현황 — 바코드 스캐너 시스템</title>
+    <title>프로젝트 현황 — PDA 바코드 스캐너</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: "base",
-        themeVariables: {
-          primaryColor: "#1a2332",
-          primaryTextColor: "#ffffff",
-          primaryBorderColor: "#e8734a",
-          lineColor: "#e8734a",
-          secondaryColor: "#f5f5f3",
-          tertiaryColor: "#fdf6f3",
-          fontFamily: "DM Sans, sans-serif",
-          fontSize: "13px",
-          noteBkgColor: "#f5f5f3",
-          noteTextColor: "#1a2332",
-          actorTextColor: "#1a2332",
-          actorBkg: "#f5f5f3",
-          signalTextColor: "#1a2332",
-          labelTextColor: "#1a2332",
-          loopTextColor: "#1a2332",
-          edgeLabelBackground: "#f5f5f3",
-          entityFillColor0: "#f5f5f3",
-          entityFillColor1: "#fdf6f3",
-          attributeBackgroundColorOdd: "#f5f5f3",
-          attributeBackgroundColorEven: "#fdf6f3",
-          nodeBkg: "#f5f5f3",
-          nodeTextColor: "#1a2332",
-          mainBkg: "#f5f5f3",
-          clusterBkg: "#f5f5f3",
-        },
-      });
-    </script>
     <style>
       *,
       *::before,
@@ -557,6 +524,288 @@
         margin-bottom: 4px;
       }
 
+      /* ─── Before/After Cards ─── */
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin: 16px 0 24px;
+      }
+      .compare-card {
+        border-radius: 8px;
+        padding: 24px;
+        border: 1px solid var(--border);
+      }
+      .compare-card.before {
+        background: #f9fafb;
+        border-color: var(--border);
+      }
+      .compare-card.after {
+        background: var(--orange-pale);
+        border-color: var(--orange);
+      }
+      .compare-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 14px;
+        font-family: var(--font-mono);
+      }
+      .compare-card.before .compare-card-title {
+        color: var(--text-faint);
+      }
+      .compare-card.after .compare-card-title {
+        color: var(--orange);
+      }
+      .compare-card ul {
+        list-style: none;
+        padding: 0;
+      }
+      .compare-card li {
+        padding: 6px 0;
+        font-size: 13.5px;
+        color: var(--text);
+        line-height: 1.6;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      }
+      .compare-card li:last-child {
+        border-bottom: none;
+      }
+
+      /* ─── Step Cards (사용 흐름) ─── */
+      .step-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin: 16px 0 24px;
+      }
+      .step-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px;
+        position: relative;
+        transition: border-color 0.15s;
+      }
+      .step-card:hover {
+        border-color: var(--orange);
+      }
+      .step-num {
+        font-family: var(--font-mono);
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--orange);
+        line-height: 1;
+        margin-bottom: 12px;
+      }
+      .step-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 6px;
+      }
+      .step-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .step-time {
+        margin-top: 10px;
+        font-size: 11px;
+        font-family: var(--font-mono);
+        color: var(--orange);
+        font-weight: 500;
+      }
+
+      /* ─── Scenario Cards ─── */
+      .scenario-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 12px;
+        transition: border-color 0.15s;
+      }
+      .scenario-card:hover {
+        border-color: var(--orange);
+      }
+      .scenario-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .scenario-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--navy);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--white);
+        font-weight: 700;
+        flex-shrink: 0;
+        font-family: var(--font-mono);
+      }
+      .scenario-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+      }
+      .scenario-body {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+        font-size: 13.5px;
+      }
+      .scenario-situation {
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .scenario-arrow {
+        color: var(--orange);
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .scenario-result {
+        color: var(--text);
+        font-weight: 500;
+        line-height: 1.6;
+      }
+
+      /* ─── Feature Grid ─── */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin: 16px 0 24px;
+      }
+      .feature-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px 24px;
+        transition: border-color 0.15s;
+      }
+      .feature-card:hover {
+        border-color: var(--orange);
+      }
+      .feature-card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 6px;
+      }
+      .feature-card-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.65;
+      }
+
+      /* ─── Data Mgmt ─── */
+      .data-mgmt-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin: 16px 0 24px;
+      }
+      .data-mgmt-box {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 24px;
+      }
+      .data-mgmt-box h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 12px;
+      }
+      .data-mgmt-box ol,
+      .data-mgmt-box ul {
+        padding-left: 18px;
+        margin: 0;
+      }
+      .data-mgmt-box li {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        line-height: 1.7;
+        margin-bottom: 4px;
+      }
+
+      /* ─── FAQ ─── */
+      .faq-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 12px;
+        transition: border-color 0.15s;
+      }
+      .faq-card:hover {
+        border-color: var(--orange);
+      }
+      .faq-q {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 8px;
+      }
+      .faq-a {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      /* ─── Deliverable List ─── */
+      .deliverable-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 16px 0 24px;
+      }
+      .deliverable-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: border-color 0.15s;
+      }
+      .deliverable-card:hover {
+        border-color: var(--orange);
+      }
+      .deliverable-card-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--navy);
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .deliverable-card-icon span {
+        color: var(--orange);
+        font-size: 18px;
+        font-weight: 700;
+        font-family: var(--font-mono);
+      }
+      .deliverable-card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 4px;
+      }
+      .deliverable-card-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
       /* ─── Responsive ─── */
       @media (max-width: 860px) {
         .sidebar {
@@ -577,18 +826,42 @@
         .progress-overview {
           grid-template-columns: repeat(2, 1fr);
         }
+        .compare-grid {
+          grid-template-columns: 1fr;
+        }
+        .step-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .scenario-body {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+        .scenario-arrow {
+          display: none;
+        }
+        .scenario-result {
+          padding-left: 0;
+          border-left: 3px solid var(--orange);
+          padding: 4px 0 4px 12px;
+        }
+        .data-mgmt-grid {
+          grid-template-columns: 1fr;
+        }
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+        .deliverable-grid {
+          grid-template-columns: 1fr 1fr;
+        }
       }
 
-      pre.mermaid {
-        background: #f5f5f3;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 16px 0;
-        overflow-x: auto;
-      }
-
-      pre.mermaid svg {
-        max-width: 100%;
+      @media (max-width: 480px) {
+        .step-grid {
+          grid-template-columns: 1fr;
+        }
+        .deliverable-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -597,45 +870,48 @@
     <nav class="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-brand-line"></div>
-        <h2>바코드 스캐너<br />시스템</h2>
-        <p>개발 진행 현황</p>
+        <h2>PDA 바코드<br />스캐너</h2>
+        <p>프로젝트 현황</p>
       </div>
       <div class="sidebar-nav">
-        <a class="nav-item" href="#overview"
-          ><span class="nav-num">00</span
-          ><span class="nav-label">전체 현황</span></a
+        <a class="nav-item" href="#summary"
+          ><span class="nav-num">01</span
+          ><span class="nav-label">프로젝트 요약</span></a
+        >
+        <a class="nav-item" href="#usage-flow"
+          ><span class="nav-num">02</span
+          ><span class="nav-label">사용 흐름</span></a
+        >
+        <a class="nav-item" href="#scenarios"
+          ><span class="nav-num">03</span
+          ><span class="nav-label">예상 시나리오</span></a
+        >
+        <a class="nav-item" href="#features"
+          ><span class="nav-num">04</span
+          ><span class="nav-label">주요 기능</span></a
+        >
+        <a class="nav-item" href="#data-mgmt"
+          ><span class="nav-num">05</span
+          ><span class="nav-label">데이터 관리</span></a
         >
         <a class="nav-item" href="#milestones"
-          ><span class="nav-num">01</span
-          ><span class="nav-label">마일스톤</span></a
+          ><span class="nav-num">06</span
+          ><span class="nav-label">개발 진행</span></a
         >
         <a class="nav-item" href="#daily"
-          ><span class="nav-num">02</span
-          ><span class="nav-label">일일 작업 로그</span></a
-        >
-        <a class="nav-item" href="#next"
-          ><span class="nav-num">03</span
-          ><span class="nav-label">다음 단계</span></a
-        >
-        <a class="nav-item" href="#blockers"
-          ><span class="nav-num">04</span
-          ><span class="nav-label">확인 필요 사항</span></a
-        >
-        <a class="nav-item" href="#architecture"
-          ><span class="nav-num">05</span
-          ><span class="nav-label">시스템 구조</span></a
-        >
-        <a class="nav-item" href="#database"
-          ><span class="nav-num">06</span
-          ><span class="nav-label">DB 설계</span></a
-        >
-        <a class="nav-item" href="#data"
           ><span class="nav-num">07</span
-          ><span class="nav-label">적재 데이터</span></a
+          ><span class="nav-label">작업 로그</span></a
         >
         <a class="nav-item" href="#schedule"
           ><span class="nav-num">08</span
-          ><span class="nav-label">개발 일정</span></a
+          ><span class="nav-label">앞으로의 일정</span></a
+        >
+        <a class="nav-item" href="#deliverables"
+          ><span class="nav-num">09</span
+          ><span class="nav-label">납품물</span></a
+        >
+        <a class="nav-item" href="#faq"
+          ><span class="nav-num">10</span><span class="nav-label">FAQ</span></a
         >
       </div>
       <div class="sidebar-footer">
@@ -647,47 +923,49 @@
 
     <!-- Mobile header -->
     <div class="mobile-header">
-      <span class="mobile-header-title">개발 진행 현황</span>
+      <span class="mobile-header-title">프로젝트 현황</span>
       <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
         <span></span><span></span><span></span>
       </button>
     </div>
     <div class="mobile-drawer" id="mobileDrawer">
-      <a class="nav-item" href="#overview" onclick="closeDrawer()"
-        ><span class="nav-num">00</span
-        ><span class="nav-label">전체 현황</span></a
+      <a class="nav-item" href="#summary" onclick="closeDrawer()"
+        ><span class="nav-num">01</span
+        ><span class="nav-label">프로젝트 요약</span></a
+      >
+      <a class="nav-item" href="#usage-flow" onclick="closeDrawer()"
+        ><span class="nav-num">02</span
+        ><span class="nav-label">사용 흐름</span></a
+      >
+      <a class="nav-item" href="#scenarios" onclick="closeDrawer()"
+        ><span class="nav-num">03</span
+        ><span class="nav-label">예상 시나리오</span></a
+      >
+      <a class="nav-item" href="#features" onclick="closeDrawer()"
+        ><span class="nav-num">04</span
+        ><span class="nav-label">주요 기능</span></a
+      >
+      <a class="nav-item" href="#data-mgmt" onclick="closeDrawer()"
+        ><span class="nav-num">05</span
+        ><span class="nav-label">데이터 관리</span></a
       >
       <a class="nav-item" href="#milestones" onclick="closeDrawer()"
-        ><span class="nav-num">01</span
-        ><span class="nav-label">마일스톤</span></a
+        ><span class="nav-num">06</span
+        ><span class="nav-label">개발 진행</span></a
       >
       <a class="nav-item" href="#daily" onclick="closeDrawer()"
-        ><span class="nav-num">02</span
-        ><span class="nav-label">일일 작업 로그</span></a
-      >
-      <a class="nav-item" href="#next" onclick="closeDrawer()"
-        ><span class="nav-num">03</span
-        ><span class="nav-label">다음 단계</span></a
-      >
-      <a class="nav-item" href="#blockers" onclick="closeDrawer()"
-        ><span class="nav-num">04</span
-        ><span class="nav-label">확인 필요 사항</span></a
-      >
-      <a class="nav-item" href="#architecture" onclick="closeDrawer()"
-        ><span class="nav-num">05</span
-        ><span class="nav-label">시스템 구조</span></a
-      >
-      <a class="nav-item" href="#database" onclick="closeDrawer()"
-        ><span class="nav-num">06</span
-        ><span class="nav-label">DB 설계</span></a
-      >
-      <a class="nav-item" href="#data" onclick="closeDrawer()"
         ><span class="nav-num">07</span
-        ><span class="nav-label">적재 데이터</span></a
+        ><span class="nav-label">작업 로그</span></a
       >
       <a class="nav-item" href="#schedule" onclick="closeDrawer()"
         ><span class="nav-num">08</span
-        ><span class="nav-label">개발 일정</span></a
+        ><span class="nav-label">앞으로의 일정</span></a
+      >
+      <a class="nav-item" href="#deliverables" onclick="closeDrawer()"
+        ><span class="nav-num">09</span><span class="nav-label">납품물</span></a
+      >
+      <a class="nav-item" href="#faq" onclick="closeDrawer()"
+        ><span class="nav-num">10</span><span class="nav-label">FAQ</span></a
       >
     </div>
 
@@ -696,22 +974,23 @@
       <!-- Hero -->
       <div class="hero">
         <div class="hero-line"></div>
-        <h1>개발 진행<br />현황</h1>
+        <h1>PDA 바코드<br />스캐너</h1>
         <div class="hero-sub">
-          바코드 스캐너 시스템 Phase 1 (MVP) 개발 진행 상황을 안내드립니다.
+          창고에서 PDA로 바코드를 스캔하면, 상품 정보와 이미지를 바로 확인할 수
+          있는 시스템입니다.
         </div>
         <div class="progress-overview">
           <div class="progress-card">
+            <div class="progress-card-num">95%</div>
+            <div class="progress-card-label">전체 진행률</div>
+          </div>
+          <div class="progress-card">
             <div class="progress-card-num">8/8</div>
-            <div class="progress-card-label">마일스톤 완료</div>
+            <div class="progress-card-label">개발 항목 완료</div>
           </div>
           <div class="progress-card">
             <div class="progress-card-num">D+2</div>
             <div class="progress-card-label">개발 경과일</div>
-          </div>
-          <div class="progress-card">
-            <div class="progress-card-num">95%</div>
-            <div class="progress-card-label">전체 진행률</div>
           </div>
           <div class="progress-card">
             <div class="progress-card-num">D+10</div>
@@ -725,363 +1004,43 @@
 
       <!-- Content -->
       <div class="content">
-        <!-- 00 Overview -->
-        <section id="overview">
-          <div class="section-head">
-            <div class="section-num">00</div>
-            <div class="section-title">전체 현황</div>
-          </div>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>마일스톤</th>
-                  <th>내용</th>
-                  <th>상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">M1</td>
-                  <td>서버 프로젝트 셋업 + DB</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">M2</td>
-                  <td>데이터 이관 (xlsx 파서)</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">M3</td>
-                  <td>REST API 개발</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">M4</td>
-                  <td>NAS 이미지 프록시 + 캐싱</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">M5</td>
-                  <td>xlsx 자동 갱신</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">M6</td>
-                  <td>Android 앱 — UI + API 연동</td>
-                  <td>
-                    <span class="badge badge-done">완료</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="td-label">M7</td>
-                  <td>Android 앱 — DataWedge 연동</td>
-                  <td>
-                    <span class="badge badge-done">완료 (실기기 미검증)</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="td-label">M8</td>
-                  <td>통합 테스트 + 서버 자동 시작</td>
-                  <td>
-                    <span class="badge badge-done">완료</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- 01 Milestones -->
-        <section id="milestones">
+        <!-- 01 프로젝트 요약 -->
+        <section id="summary">
           <div class="section-head">
             <div class="section-num">01</div>
-            <div class="section-title">마일스톤 상세</div>
+            <div class="section-title">프로젝트 요약</div>
           </div>
 
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M1. 서버 프로젝트 셋업 + DB</span>
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">requirements.txt 존재, pip install 성공</li>
-              <li class="checked">uvicorn 에러 없이 기동 (localhost:8000)</li>
-              <li class="checked">Swagger UI 200 응답</li>
-              <li class="checked">
-                PRODUCT, BARCODE, IMAGE, PARSE_LOG 테이블 생성
-              </li>
-              <li class="checked">
-                스키마 마이그레이션 체계 도입 (db_version 기반)
-              </li>
-              <li class="checked">FTS5 전문 검색 인덱스 (10만건 이상 대응)</li>
-              <li class="checked">읽기/쓰기 커넥션 분리 (WAL 모드)</li>
-              <li class="checked">
-                바코드 타입 확장 대응 (EAN-13, QR, CODE128)
-              </li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M2. 데이터 이관 (xlsx 파서)</span>
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">codepath.xlsx 11,821건 파싱 완료</li>
-              <li class="checked">sku_download.xlsx 11,821건 적재 완료</li>
-              <li class="checked">이미지 경로 상대경로 변환</li>
-              <li class="checked">헤더 자동 인식 및 upsert 검증</li>
-              <li class="checked">배치 파싱 (500건 단위, 대량 데이터 대응)</li>
-              <li class="checked">
-                파싱 이력 기록 (소요시간, 건수, 에러 추적)
-              </li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M3. REST API 개발</span>
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">/api/scan/{barcode} 상품 정보 조회</li>
-              <li class="checked">존재하지 않는 바코드 404 응답</li>
-              <li class="checked">/api/search 상품명 검색</li>
-              <li class="checked">/api/image 이미지 프록시</li>
-              <li class="checked">DB 조회 평균 100ms 이내</li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M4. NAS 이미지 프록시 + 캐싱</span>
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">WebDAV 설정 항목</li>
-              <li class="checked">썸네일(img/) 이미지 프록시</li>
-              <li class="checked">실사(real_image/) 이미지 프록시</li>
-              <li class="checked">WebDAV 미연결 시 캐시/기본 이미지 반환</li>
-              <li class="checked">캐싱 동작 확인</li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M5. xlsx 자동 갱신</span>
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">파일 감지 자동 파싱</li>
-              <li class="checked">신규 데이터 API 반영</li>
-              <li class="checked">기존 SKU 갱신 반영</li>
-              <li class="checked">갱신 이력 로그 기록</li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title"
-                >M6. Android 앱 — UI + API 연동</span
-              >
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">APK 빌드 성공</li>
-              <li class="checked">메인 화면 (검색 + 리스트 + 이미지)</li>
-              <li class="checked">상세 화면 (실사 확대 + 상품 정보)</li>
-              <li class="checked">Retrofit API 연동</li>
-              <li class="checked">서버 IP 설정</li>
-              <li class="checked">Stitch "Tactical Command" 디자인 적용</li>
-              <li class="checked">클라이언트 UI 피드백 반영</li>
-              <li class="checked">핸드폰 16케이스 테스트 통과</li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title">M7. DataWedge 스캐너 연동</span>
-              <span class="badge badge-done">완료 (실기기 미검증)</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">DataWedgeManager 스캐너 핸들러</li>
-              <li class="checked">BroadcastReceiver Intent 수신</li>
-              <li class="checked">DataWedge 프로파일 자동 생성</li>
-              <li class="checked">adb broadcast 테스트 통과</li>
-            </ul>
-          </div>
-
-          <div class="milestone">
-            <div class="milestone-header">
-              <span class="milestone-title"
-                >M8. 통합 테스트 + 서버 자동 시작</span
-              >
-              <span class="badge badge-done">완료</span>
-            </div>
-            <div class="milestone-bar">
-              <div class="milestone-bar-fill done" style="width: 100%"></div>
-            </div>
-            <ul class="checklist">
-              <li class="checked">전체 플로우 테스트 스크립트</li>
-              <li class="checked">서버 자동 시작 설정 (NSSM 서비스)</li>
-              <li class="checked">APK 빌드 + 설치 스크립트</li>
-              <li class="checked">바코드 스캔 0.5초 이내 응답</li>
-              <li class="checked">Mini PC 배포 완료 (Windows 11)</li>
-              <li class="checked">자동 백업 (매일 3시, 7일 보관)</li>
-              <li class="checked">서버 테스트 53개 통과</li>
-            </ul>
-          </div>
-        </section>
-
-        <!-- 02 Daily Log -->
-        <section id="daily">
-          <div class="section-head">
-            <div class="section-num">02</div>
-            <div class="section-title">일일 작업 로그</div>
-          </div>
-
-          <div class="log-entry">
-            <div class="log-date">2026-03-20 (D+2)</div>
-            <div class="log-content">
-              <ul>
-                <li>서버/앱 보안 및 안정성 최적화</li>
-                <li>Path Traversal 보안 취약점 차단</li>
-                <li>복수 바코드 상품 이미지 연결 버그 수정</li>
-                <li>
-                  클라이언트 UI 피드백 반영 (이미지 최대, 바코드 끝5자리 볼드,
-                  스페이스쉴드 삭제, 이미지 토글)
-                </li>
-                <li>Stitch "Tactical Command" 디자인 적용</li>
-                <li>하단 네비 제거, FAB 제거, 검색창 통합</li>
-                <li>Room DB 오프라인 캐시 + 자동 재시도</li>
-                <li>Mini PC 배포 (Windows 11, NSSM 서비스)</li>
-                <li>NAS WebDAV 이미지 실연결 완료</li>
-                <li>NAS xlsx 자동 동기화 (5분 주기)</li>
-                <li>재고 수정 API + stock/stock_log 테이블 준비</li>
-                <li>자동 백업/복구 (매일 3시, 7일 보관)</li>
-                <li>운영 가이드 문서 작성</li>
-                <li>서버 테스트 53개, 핸드폰 16케이스 전부 통과</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="log-entry">
-            <div class="log-date">2026-03-19 (D+1)</div>
-            <div class="log-content">
-              <ul>
-                <li>프로젝트 착수 — 착수금 입금 확인</li>
-                <li>
-                  기존 프로그램(scan13.exe) 분석: PySide6 + PyArmor 난독화, 소스
-                  복원 불가 확인
-                </li>
-                <li>
-                  클라이언트 데이터 분석: codepath.xlsx (11,821건),
-                  sku_download.xlsx (17컬럼) 구조 파악
-                </li>
-                <li>
-                  NAS 폴더 구조 확인: img/ (썸네일), real_image/ (실사), WebDAV
-                  마운트 방식
-                </li>
-                <li>TC60 PDA 조사: DataWedge Intent API 방식 확정</li>
-                <li>기존 프로그램 "헤더 인식 실패" 원인 분석</li>
-                <li>M1~M8 전체 구현 완료 (서버 + 앱)</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- 03 Next -->
-        <section id="next">
-          <div class="section-head">
-            <div class="section-num">03</div>
-            <div class="section-title">다음 단계</div>
-          </div>
-
-          <div class="callout">
-            <strong>PDA 실기기 테스트</strong><br /><br />
-            M1~M8 전체 구현 및 배포 완료. 남은 작업은 PDA(TC60) 실기기 DataWedge
-            스캔 테스트뿐입니다. 기기 도착 후 즉시 진행합니다.
-          </div>
-        </section>
-
-        <!-- 04 Blockers -->
-        <section id="blockers">
-          <div class="section-head">
-            <div class="section-num">04</div>
-            <div class="section-title">확인 필요 사항</div>
-          </div>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>항목</th>
-                  <th>내용</th>
-                  <th>필요 시점</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">sku_download 확인</td>
-                  <td>17컬럼 11,821건 데이터 확인 완료.</td>
-                  <td><span class="badge badge-done">해결</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">NAS 접속 정보</td>
-                  <td>chominseven.synology.me:58890 실연결 완료</td>
-                  <td><span class="badge badge-done">해결</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">Mini PC 원격</td>
-                  <td>Windows 11, NSSM 서비스 배포 완료</td>
-                  <td><span class="badge badge-done">해결</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">PDA 실기기</td>
-                  <td>TC60 택배 발송 대기 (실기기 미검증)</td>
-                  <td>실기기 도착 후</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p class="desc" style="margin-top: 20px">
-            NAS, Mini PC 연결 완료. PDA 실기기 도착만 대기 중입니다.
+          <h3>이 시스템이 뭔가요?</h3>
+          <p class="desc">
+            PDA(휴대용 스캐너)로 상품 바코드를 찍으면, 상품 이름/이미지가 바로
+            화면에 뜨는 시스템입니다. 기존 PC 프로그램(scan13)은 그대로
+            유지하고, PDA 앱을 추가로 설치합니다.
           </p>
-        </section>
 
-        <!-- 05 Architecture -->
-        <section id="architecture">
-          <div class="section-head">
-            <div class="section-num">05</div>
-            <div class="section-title">시스템 구조</div>
+          <h3>기존과 뭐가 달라지나요?</h3>
+          <div class="compare-grid">
+            <div class="compare-card before">
+              <div class="compare-card-title">Before (현재)</div>
+              <ul>
+                <li>PC 앞에 가서 조회해야 함</li>
+                <li>USB 스캐너를 PC에 연결해서 사용</li>
+                <li>이미지가 작게 표시됨</li>
+                <li>엑셀 헤더가 바뀌면 인식 실패</li>
+              </ul>
+            </div>
+            <div class="compare-card after">
+              <div class="compare-card-title">After (도입 후)</div>
+              <ul>
+                <li>PDA 들고 다니며 현장에서 바로 조회</li>
+                <li>PDA 버튼만 누르면 스캔</li>
+                <li>이미지가 화면 전체에 크게 표시</li>
+                <li>엑셀 양식 바뀌어도 자동 인식</li>
+              </ul>
+            </div>
           </div>
 
-          <p class="desc">PDA, 서버, NAS 간 데이터 흐름입니다.</p>
-
+          <h3>뭘로 구성되나요?</h3>
           <div
             style="
               display: flex;
@@ -1102,8 +1061,8 @@
                 min-width: 130px;
               "
             >
-              <div style="font-weight: 700; font-size: 14px">TC60 PDA</div>
-              <div style="font-size: 11px; opacity: 0.6">Android 스캐너 앱</div>
+              <div style="font-weight: 700; font-size: 14px">PDA</div>
+              <div style="font-size: 11px; opacity: 0.6">TC60 스캐너 앱</div>
             </div>
             <div
               style="font-size: 24px; color: var(--orange); font-weight: 700"
@@ -1121,8 +1080,8 @@
                 border: 2px solid var(--orange);
               "
             >
-              <div style="font-weight: 700; font-size: 14px">Mini PC 서버</div>
-              <div style="font-size: 11px; opacity: 0.6">FastAPI + SQLite</div>
+              <div style="font-weight: 700; font-size: 14px">Mini PC</div>
+              <div style="font-size: 11px; opacity: 0.6">데이터 서버</div>
             </div>
             <div
               style="font-size: 24px; color: var(--orange); font-weight: 700"
@@ -1141,775 +1100,457 @@
             >
               <div style="font-weight: 700; font-size: 14px">NAS</div>
               <div style="font-size: 11px; opacity: 0.6">
-                WebDAV 이미지 저장소
+                이미지/엑셀 저장소
               </div>
             </div>
           </div>
-
-          <h3>요청 흐름</h3>
-          <div style="overflow-x: auto; padding: 4px 0">
-            <div
-              style="
-                display: grid;
-                grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
-                align-items: center;
-                gap: 0;
-                min-width: 560px;
-              "
-            >
-              <div
-                style="
-                  background: var(--navy);
-                  color: #fff;
-                  border-radius: 10px;
-                  padding: 14px 18px;
-                  text-align: center;
-                  white-space: nowrap;
-                "
-              >
-                <div style="font-weight: 700; font-size: 13px">PDA</div>
-                <div style="font-size: 11px; opacity: 0.6">TC60</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  gap: 6px;
-                  padding: 0 4px;
-                "
-              >
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  바코드 스캔 전송 &#10132;
-                </div>
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  &#8592; 상품 정보 + 이미지
-                </div>
-              </div>
-              <div
-                style="
-                  background: var(--navy);
-                  color: #fff;
-                  border-radius: 10px;
-                  padding: 14px 18px;
-                  text-align: center;
-                  border: 2px solid var(--orange);
-                  white-space: nowrap;
-                "
-              >
-                <div style="font-weight: 700; font-size: 13px">Mini PC</div>
-                <div style="font-size: 11px; opacity: 0.6">FastAPI 서버</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  gap: 6px;
-                  padding: 0 4px;
-                "
-              >
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  SKU 조회 &#10132;
-                </div>
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  &#8592; 상품명·경로
-                </div>
-              </div>
-              <div
-                style="
-                  background: var(--navy);
-                  color: #fff;
-                  border-radius: 10px;
-                  padding: 14px 18px;
-                  text-align: center;
-                  white-space: nowrap;
-                "
-              >
-                <div style="font-weight: 700; font-size: 13px">DB</div>
-                <div style="font-size: 11px; opacity: 0.6">SQLite</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  gap: 6px;
-                  padding: 0 4px;
-                "
-              >
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  이미지 요청 &#10132;
-                </div>
-                <div
-                  style="
-                    font-size: 11px;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                  "
-                >
-                  &#8592; 이미지 반환
-                </div>
-              </div>
-              <div
-                style="
-                  background: var(--navy);
-                  color: #fff;
-                  border-radius: 10px;
-                  padding: 14px 18px;
-                  text-align: center;
-                  white-space: nowrap;
-                "
-              >
-                <div style="font-weight: 700; font-size: 13px">NAS</div>
-                <div style="font-size: 11px; opacity: 0.6">WebDAV</div>
-              </div>
-            </div>
-            <div
-              style="
-                margin-top: 12px;
-                background: var(--orange-dim);
-                border-radius: 8px;
-                padding: 8px 14px;
-                font-size: 12px;
-                color: var(--navy);
-                font-weight: 500;
-                text-align: center;
-                border-left: 3px solid var(--orange);
-              "
-            >
-              전체 응답 목표: 0.3 ~ 0.5초
-            </div>
+          <div class="callout">
+            <strong>기존 프로그램과 공존합니다.</strong>
+            Mini PC의 scan13 프로그램과 USB 스캐너는 그대로 사용하고, PDA 앱이
+            별도로 동작합니다. 서로 간섭하지 않습니다.
           </div>
+        </section>
 
-          <h3>이미지 탐색 순서</h3>
-          <div style="overflow-x: auto; padding: 4px 0">
-            <div
-              style="
-                display: flex;
-                align-items: flex-start;
-                gap: 0;
-                min-width: 580px;
-              "
-            >
-              <div
-                style="
-                  background: var(--navy);
-                  color: #fff;
-                  border-radius: 10px;
-                  padding: 12px 16px;
-                  text-align: center;
-                  font-size: 13px;
-                  font-weight: 700;
-                  white-space: nowrap;
-                  flex-shrink: 0;
-                "
-              >
-                바코드 수신
+        <!-- 02 사용 흐름 -->
+        <section id="usage-flow">
+          <div class="section-head">
+            <div class="section-num">02</div>
+            <div class="section-title">사용 흐름</div>
+          </div>
+          <p class="desc">실제 현장에서 PDA를 사용하는 순서입니다.</p>
+
+          <div class="step-grid">
+            <div class="step-card">
+              <div class="step-num">01</div>
+              <div class="step-title">PDA 전원 켜기</div>
+              <div class="step-desc">
+                전원 켜면 앱이 자동 실행됩니다. 별도 로그인 없음.
               </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  color: var(--orange);
-                  font-size: 20px;
-                  font-weight: 700;
-                  padding: 0 6px;
-                  margin-top: 10px;
-                "
-              >
-                &#10132;
+            </div>
+            <div class="step-card">
+              <div class="step-num">02</div>
+              <div class="step-title">바코드 스캔</div>
+              <div class="step-desc">
+                PDA 옆면 버튼을 누르면 스캐너가 작동합니다.
               </div>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  gap: 8px;
-                  flex-shrink: 0;
-                "
-              >
-                <div
-                  style="
-                    background: var(--orange-pale);
-                    border: 1.5px solid var(--orange);
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                    font-size: 12px;
-                    text-align: center;
-                  "
-                >
-                  <div
-                    style="
-                      font-weight: 700;
-                      color: var(--navy);
-                      margin-bottom: 4px;
-                    "
-                  >
-                    codepath.xlsx 경로 존재?
-                  </div>
-                  <div
-                    style="
-                      display: flex;
-                      gap: 8px;
-                      justify-content: center;
-                      margin-top: 6px;
-                    "
-                  >
-                    <div
-                      style="
-                        background: var(--navy);
-                        color: #fff;
-                        border-radius: 6px;
-                        padding: 4px 10px;
-                        font-size: 11px;
-                        font-weight: 600;
-                      "
-                    >
-                      있음 &#10132; 해당 이미지 반환
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    color: var(--text-muted);
-                    font-size: 11px;
-                    padding-left: 8px;
-                  "
-                >
-                  <span style="color: var(--orange); font-weight: 700"
-                    >&#8595;</span
-                  >
-                  없음
-                </div>
-                <div
-                  style="
-                    background: var(--orange-pale);
-                    border: 1.5px solid var(--orange);
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                    font-size: 12px;
-                    text-align: center;
-                  "
-                >
-                  <div
-                    style="
-                      font-weight: 700;
-                      color: var(--navy);
-                      margin-bottom: 4px;
-                    "
-                  >
-                    img/ 폴더 파일 존재?
-                  </div>
-                  <div
-                    style="
-                      display: flex;
-                      gap: 8px;
-                      justify-content: center;
-                      margin-top: 6px;
-                    "
-                  >
-                    <div
-                      style="
-                        background: var(--navy);
-                        color: #fff;
-                        border-radius: 6px;
-                        padding: 4px 10px;
-                        font-size: 11px;
-                        font-weight: 600;
-                      "
-                    >
-                      있음 &#10132; 썸네일 반환
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    color: var(--text-muted);
-                    font-size: 11px;
-                    padding-left: 8px;
-                  "
-                >
-                  <span style="color: var(--orange); font-weight: 700"
-                    >&#8595;</span
-                  >
-                  없음
-                </div>
-                <div
-                  style="
-                    background: var(--orange-pale);
-                    border: 1.5px solid var(--orange);
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                    font-size: 12px;
-                    text-align: center;
-                  "
-                >
-                  <div
-                    style="
-                      font-weight: 700;
-                      color: var(--navy);
-                      margin-bottom: 4px;
-                    "
-                  >
-                    real_image/ 파일 존재?
-                  </div>
-                  <div
-                    style="
-                      display: flex;
-                      gap: 8px;
-                      justify-content: center;
-                      margin-top: 6px;
-                    "
-                  >
-                    <div
-                      style="
-                        background: var(--navy);
-                        color: #fff;
-                        border-radius: 6px;
-                        padding: 4px 10px;
-                        font-size: 11px;
-                        font-weight: 600;
-                      "
-                    >
-                      있음 &#10132; 실사 반환
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    color: var(--text-muted);
-                    font-size: 11px;
-                    padding-left: 8px;
-                  "
-                >
-                  <span style="color: var(--orange); font-weight: 700"
-                    >&#8595;</span
-                  >
-                  없음
-                </div>
-                <div
-                  style="
-                    background: var(--navy);
-                    color: #fff;
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                    font-size: 13px;
-                    font-weight: 700;
-                    text-align: center;
-                  "
-                >
-                  기본 이미지
-                </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">03</div>
+              <div class="step-title">상품 정보 확인</div>
+              <div class="step-desc">
+                상품명, 바코드, 이미지가 화면에 표시됩니다.
+              </div>
+              <div class="step-time">0.3초 이내</div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">04</div>
+              <div class="step-title">이미지 확인</div>
+              <div class="step-desc">
+                이미지를 터치하면 쿠팡 사진 / 실사 사진이 전환됩니다.
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-num">05</div>
+              <div class="step-title">다음 상품 스캔</div>
+              <div class="step-desc">
+                바로 다음 상품 바코드를 스캔하면 됩니다. 뒤로가기 필요 없음.
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 06 Database -->
-        <section id="database">
+        <!-- 03 예상 시나리오 -->
+        <section id="scenarios">
+          <div class="section-head">
+            <div class="section-num">03</div>
+            <div class="section-title">예상 시나리오</div>
+          </div>
+          <p class="desc">실제 업무에서 이런 상황이 생기면 이렇게 됩니다.</p>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">1</div>
+              <div class="scenario-title">신입 직원이 상품을 찾아야 할 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                상품명만 보고는 어떤 물건인지 모르겠다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                바코드 스캔하면 상품 사진이 크게 표시되어 바로 확인 가능
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">2</div>
+              <div class="scenario-title">같은 상품인데 바코드가 다를 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                하나의 상품에 바코드가 3~5개 붙어 있다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                어떤 바코드로 스캔해도 같은 상품 정보가 표시됨
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">3</div>
+              <div class="scenario-title">WiFi가 끊기는 구간에서</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                5층 건물 이동 중 WiFi 신호가 약해진다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                이전에 조회한 상품은 인터넷 없이도 확인 가능 (자동 저장)
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">4</div>
+              <div class="scenario-title">새 상품이 입고되었을 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                쿠팡에서 새 엑셀 파일을 다운받았다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                NAS에 엑셀 파일 올리면 5분 내 자동 반영. 별도 작업 없음
+              </div>
+            </div>
+          </div>
+
+          <div class="scenario-card">
+            <div class="scenario-header">
+              <div class="scenario-icon">5</div>
+              <div class="scenario-title">서버가 꺼졌을 때</div>
+            </div>
+            <div class="scenario-body">
+              <div class="scenario-situation">
+                Mini PC가 재부팅되거나 서버가 멈췄다
+              </div>
+              <div class="scenario-arrow">&#10132;</div>
+              <div class="scenario-result">
+                앱에 안내 메시지 표시 + 이전 조회 상품은 캐시로 계속 사용.
+                서버는 PC 시작 시 자동 실행됨
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 04 주요 기능 -->
+        <section id="features">
+          <div class="section-head">
+            <div class="section-num">04</div>
+            <div class="section-title">주요 기능</div>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-card-title">바코드 스캔</div>
+              <div class="feature-card-desc">
+                PDA 옆면 버튼을 누르면 0.3초 안에 상품 정보가 표시됩니다. EAN-13
+                바코드 기본 지원, QR 코드도 대응 가능합니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">상품 검색</div>
+              <div class="feature-card-desc">
+                바코드가 없는 경우 상품명으로 직접 검색할 수 있습니다. 현재
+                11,821건 등록, 10만건까지 대응 가능합니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">이미지 확인</div>
+              <div class="feature-card-desc">
+                쿠팡 썸네일과 실사 사진을 화면 가득 크게 표시합니다. 이미지를
+                터치하면 썸네일/실사가 전환됩니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">자동 데이터 갱신</div>
+              <div class="feature-card-desc">
+                NAS에 새 엑셀 파일을 올리면 5분 이내 자동 반영됩니다. 별도
+                작업이 필요 없습니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">오프라인 지원</div>
+              <div class="feature-card-desc">
+                WiFi가 불안정해도 최근에 조회한 상품은 PDA에 자동 저장되어 계속
+                확인할 수 있습니다.
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-title">자동 백업</div>
+              <div class="feature-card-desc">
+                매일 새벽 3시에 전체 데이터를 자동 백업합니다. 최근 7일치를
+                보관하며, 문제 발생 시 즉시 복구 가능합니다.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 05 데이터 관리 -->
+        <section id="data-mgmt">
+          <div class="section-head">
+            <div class="section-num">05</div>
+            <div class="section-title">데이터 관리</div>
+          </div>
+          <p class="desc">
+            기존에 하시던 방식 그대로입니다. 추가 작업이 필요 없습니다.
+          </p>
+
+          <div class="data-mgmt-grid">
+            <div class="data-mgmt-box">
+              <h4>상품 데이터는 어떻게 관리하나요?</h4>
+              <ol>
+                <li>쿠팡 서플라이어허브에서 엑셀(xlsx) 다운로드</li>
+                <li>NAS의 기존 폴더에 저장</li>
+                <li>끝 -- 서버가 자동으로 감지해서 반영합니다</li>
+              </ol>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--text-muted);
+                  margin-top: 12px;
+                  line-height: 1.6;
+                "
+              >
+                새 상품 추가, 기존 상품 정보 변경 모두 자동 처리됩니다. 쿠팡에서
+                엑셀 양식이 바뀌어도 컬럼을 자동 인식합니다.
+              </p>
+            </div>
+            <div class="data-mgmt-box">
+              <h4>이미지는?</h4>
+              <ul style="list-style: none; padding: 0">
+                <li
+                  style="padding: 8px 0; border-bottom: 1px solid var(--border)"
+                >
+                  <strong style="color: var(--navy)">쿠팡 썸네일</strong><br />
+                  NAS의 img/ 폴더에 넣으면 자동 연결
+                </li>
+                <li style="padding: 8px 0">
+                  <strong style="color: var(--navy)">실사 사진</strong><br />
+                  NAS의 real_image/ 폴더에 넣으면 자동 연결
+                </li>
+              </ul>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--text-muted);
+                  margin-top: 12px;
+                  line-height: 1.6;
+                "
+              >
+                이미지 파일명과 바코드의 매핑은 codepath.xlsx가 관리합니다. 기존
+                방식과 동일합니다.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 06 개발 진행 상황 -->
+        <section id="milestones">
           <div class="section-head">
             <div class="section-num">06</div>
-            <div class="section-title">DB 설계</div>
+            <div class="section-title">개발 진행 상황</div>
           </div>
-
           <p class="desc">
-            향후 기능 추가 시 기존 구조를 변경하지 않도록 설계하였습니다.
+            전체 8개 항목 중 8개 완료. 진행률 95%, PDA 실기기 테스트만
+            남았습니다.
           </p>
 
-          <div
-            style="
-              display: flex;
-              flex-wrap: wrap;
-              gap: 24px;
-              align-items: flex-start;
-            "
-          >
-            <div
-              style="
-                flex: 1;
-                min-width: 180px;
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                overflow: hidden;
-              "
-            >
-              <div
-                style="
-                  background: var(--orange);
-                  padding: 10px 16px;
-                  font-weight: 700;
-                  font-size: 13px;
-                  letter-spacing: 0.05em;
-                "
-              >
-                PRODUCT
-              </div>
-              <div
-                style="
-                  padding: 12px 16px;
-                  display: flex;
-                  flex-direction: column;
-                  gap: 6px;
-                "
-              >
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="
-                      color: var(--orange);
-                      font-weight: 600;
-                      min-width: 28px;
-                    "
-                    >PK</span
-                  ><span style="font-family: var(--font-mono)">sku_id</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)"
-                    >product_name</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">category</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">brand</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">extra</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-              </div>
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M1. 서버 설치</span>
+              <span class="badge badge-done">완료</span>
             </div>
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 4px;
-                padding-top: 48px;
-                flex-shrink: 0;
-              "
-            >
-              <span style="font-size: 11px; color: var(--text-muted)"
-                >1 : N</span
-              >
-              <span
-                style="color: var(--orange); font-size: 22px; font-weight: 700"
-                >&#10132;</span
-              >
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
-            <div
-              style="
-                flex: 1;
-                min-width: 180px;
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                overflow: hidden;
-              "
-            >
-              <div
-                style="
-                  background: var(--orange);
-                  padding: 10px 16px;
-                  font-weight: 700;
-                  font-size: 13px;
-                  letter-spacing: 0.05em;
-                "
-              >
-                BARCODE
-              </div>
-              <div
-                style="
-                  padding: 12px 16px;
-                  display: flex;
-                  flex-direction: column;
-                  gap: 6px;
-                "
-              >
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="
-                      color: var(--orange);
-                      font-weight: 600;
-                      min-width: 28px;
-                    "
-                    >PK</span
-                  ><span style="font-family: var(--font-mono)">id</span
-                  ><span style="opacity: 0.5; margin-left: auto">int</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="color: #7dd3fc; font-weight: 600; min-width: 28px"
-                    >UK</span
-                  ><span style="font-family: var(--font-mono)">barcode</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="color: #86efac; font-weight: 600; min-width: 28px"
-                    >FK</span
-                  ><span style="font-family: var(--font-mono)">sku_id</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)"
-                    >barcode_type</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-              </div>
-            </div>
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 4px;
-                padding-top: 48px;
-                flex-shrink: 0;
-              "
-            >
-              <span style="font-size: 11px; color: var(--text-muted)"
-                >1 : N</span
-              >
-              <span
-                style="color: var(--orange); font-size: 22px; font-weight: 700"
-                >&#10132;</span
-              >
-            </div>
-            <div
-              style="
-                flex: 1;
-                min-width: 180px;
-                background: var(--navy);
-                color: #fff;
-                border-radius: 10px;
-                overflow: hidden;
-              "
-            >
-              <div
-                style="
-                  background: var(--orange);
-                  padding: 10px 16px;
-                  font-weight: 700;
-                  font-size: 13px;
-                  letter-spacing: 0.05em;
-                "
-              >
-                IMAGE
-              </div>
-              <div
-                style="
-                  padding: 12px 16px;
-                  display: flex;
-                  flex-direction: column;
-                  gap: 6px;
-                "
-              >
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="
-                      color: var(--orange);
-                      font-weight: 600;
-                      min-width: 28px;
-                    "
-                    >PK</span
-                  ><span style="font-family: var(--font-mono)">id</span
-                  ><span style="opacity: 0.5; margin-left: auto">int</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span
-                    style="color: #86efac; font-weight: 600; min-width: 28px"
-                    >FK</span
-                  ><span style="font-family: var(--font-mono)">barcode</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">file_path</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">image_type</span
-                  ><span style="opacity: 0.5; margin-left: auto">text</span>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 12px">
-                  <span style="min-width: 28px"></span
-                  ><span style="font-family: var(--font-mono)">sort_order</span
-                  ><span style="opacity: 0.5; margin-left: auto">int</span>
-                </div>
-              </div>
-            </div>
+            <ul class="checklist">
+              <li class="checked">Mini PC에 서버 프로그램 설치</li>
+              <li class="checked">상품/바코드/이미지 데이터 저장소 구성</li>
+              <li class="checked">PC 시작 시 서버 자동 실행</li>
+            </ul>
           </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>테이블</th>
-                  <th>건수</th>
-                  <th>역할</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">PRODUCT</td>
-                  <td>11,821건</td>
-                  <td>상품 마스터 (SKU ID, 상품명, extra JSON)</td>
-                </tr>
-                <tr>
-                  <td class="td-label">BARCODE</td>
-                  <td>11,821건</td>
-                  <td>바코드 매핑 (타입: EAN-13/QR/CODE128)</td>
-                </tr>
-                <tr>
-                  <td class="td-label">IMAGE</td>
-                  <td>11,673건</td>
-                  <td>이미지 경로 (바코드 기준, 썸네일/실사)</td>
-                </tr>
-                <tr>
-                  <td class="td-label">PRODUCT_FTS</td>
-                  <td>—</td>
-                  <td>전문 검색 인덱스 (10만건 이상 대응)</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M2. 기존 데이터 이관</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">codepath.xlsx 11,821건 읽기 완료</li>
+              <li class="checked">sku_download.xlsx 11,821건 읽기 완료</li>
+              <li class="checked">이미지 경로 자동 변환</li>
+              <li class="checked">엑셀 양식 바뀌어도 자동 인식</li>
+            </ul>
           </div>
 
-          <div class="callout">
-            <strong>확장 설계:</strong> DB 스키마 마이그레이션
-            체계(db_version)를 도입하여 향후 테이블/컬럼 추가 시 자동
-            적용됩니다. 읽기/쓰기 커넥션 분리(WAL 모드), FTS5 전문 검색, 배치
-            파싱(500건 단위)으로 10만건 이상 데이터에서도 안정적으로 동작합니다.
-            재고 입력(INVENTORY), 위치 표시(LOCATION) 등은 테이블 추가만으로
-            확장 가능합니다.
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M3. 조회 기능</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">바코드로 상품 정보 조회</li>
+              <li class="checked">상품명으로 검색</li>
+              <li class="checked">조회 속도 0.3초 이내</li>
+            </ul>
+          </div>
+
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M4. 이미지 연결</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">쿠팡 썸네일(img/) 이미지 표시</li>
+              <li class="checked">실사 사진(real_image/) 이미지 표시</li>
+              <li class="checked">NAS 연결 끊겨도 저장된 이미지 표시</li>
+            </ul>
+          </div>
+
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M5. 자동 갱신</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">NAS에 새 엑셀 올리면 5분 내 자동 반영</li>
+              <li class="checked">기존 상품 정보 변경도 자동 반영</li>
+              <li class="checked">갱신 이력 기록</li>
+            </ul>
+          </div>
+
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M6. PDA 앱 화면</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">이미지 최대 크기로 표시 (요청사항 반영)</li>
+              <li class="checked">바코드 끝 5자리 굵게 표시</li>
+              <li class="checked">"스페이스쉴드" 브랜드명 자동 제거</li>
+              <li class="checked">이미지 터치 시 썸네일/실사 전환</li>
+              <li class="checked">스크롤 없이 한 화면 구성</li>
+              <li class="checked">핸드폰 16개 항목 테스트 통과</li>
+            </ul>
+          </div>
+
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M7. 바코드 스캐너 연동</span>
+              <span class="badge badge-done">완료 (실기기 테스트 대기)</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">PDA 스캐너 버튼 연동 개발 완료</li>
+              <li class="checked">시뮬레이션 테스트 통과</li>
+              <li>PDA 실기기 도착 후 실제 스캔 테스트</li>
+            </ul>
+          </div>
+
+          <div class="milestone">
+            <div class="milestone-header">
+              <span class="milestone-title">M8. 서버 배포 + 백업</span>
+              <span class="badge badge-done">완료</span>
+            </div>
+            <div class="milestone-bar">
+              <div class="milestone-bar-fill done" style="width: 100%"></div>
+            </div>
+            <ul class="checklist">
+              <li class="checked">Mini PC에 서버 배포 (Windows 11)</li>
+              <li class="checked">PC 시작 시 서버 자동 실행</li>
+              <li class="checked">매일 새벽 3시 자동 백업 (7일 보관)</li>
+              <li class="checked">NAS 이미지 실연결 완료</li>
+              <li class="checked">서버 테스트 53개 전부 통과</li>
+            </ul>
           </div>
         </section>
 
-        <!-- 07 Data -->
-        <section id="data">
+        <!-- 07 작업 로그 -->
+        <section id="daily">
           <div class="section-head">
             <div class="section-num">07</div>
-            <div class="section-title">적재 데이터</div>
+            <div class="section-title">작업 로그</div>
           </div>
 
-          <h3>쿠팡 SKU 파일 (17개 컬럼 중 주요 항목)</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>컬럼</th>
-                  <th>활용</th>
-                  <th>예시</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">SKU ID</td>
-                  <td>상품 고유 키</td>
-                  <td>1863995</td>
-                </tr>
-                <tr>
-                  <td class="td-label">상품명</td>
-                  <td>상품 식별</td>
-                  <td>쵸미세븐 무당벌레 청소기 레드</td>
-                </tr>
-                <tr>
-                  <td class="td-label">바코드</td>
-                  <td>스캔 매칭</td>
-                  <td>8809461170008</td>
-                </tr>
-                <tr>
-                  <td class="td-label">최소구매수량</td>
-                  <td>참고 정보</td>
-                  <td>1</td>
-                </tr>
-                <tr>
-                  <td class="td-label">중량 (g)</td>
-                  <td>참고 정보</td>
-                  <td>160</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="log-entry">
+            <div class="log-date">2026-03-20 (D+2)</div>
+            <div class="log-content">
+              <ul>
+                <li>
+                  앱 디자인 완성 -- 요청사항(이미지 최대, 바코드 볼드, 이미지
+                  토글) 반영
+                </li>
+                <li>Mini PC에 서버 배포 완료</li>
+                <li>NAS 이미지 실연결 완료 (썸네일 + 실사)</li>
+                <li>엑셀 자동 갱신 (5분 주기) 설정</li>
+                <li>자동 백업 설정 (매일 새벽 3시, 7일 보관)</li>
+                <li>보안 점검 및 버그 수정</li>
+                <li>서버 테스트 53개, 앱 테스트 16개 전부 통과</li>
+                <li>운영 가이드 문서 작성</li>
+              </ul>
+            </div>
           </div>
-          <p class="desc">
-            발주 담당자 등 불필요 필드는 제외하였으며, 필요하신 필드가 있으시면
-            추가 가능합니다.
-          </p>
 
-          <div class="callout">
-            <strong>헤더 자동 인식:</strong> 기존 프로그램에서 발생하던 "SKU
-            ID/상품명/바코드 열을 찾지 못했습니다" 오류는 쿠팡에서 다운로드
-            시점에 따라 컬럼명이 달라지는 것이 원인이었습니다. 컬럼명 유사도
-            분석으로 자동 매칭하도록 대응하였습니다.
+          <div class="log-entry">
+            <div class="log-date">2026-03-19 (D+1)</div>
+            <div class="log-content">
+              <ul>
+                <li>프로젝트 착수</li>
+                <li>기존 프로그램(scan13) 분석, NAS 폴더 구조 확인</li>
+                <li>상품 데이터 11,821건 분석 및 서버 적재</li>
+                <li>PDA(TC60) 스캐너 연동 방식 확정</li>
+                <li>전체 개발 항목(M1~M8) 구현 완료</li>
+              </ul>
+            </div>
           </div>
         </section>
 
-        <!-- 08 Schedule -->
+        <!-- 08 앞으로의 일정 -->
         <section id="schedule">
           <div class="section-head">
             <div class="section-num">08</div>
-            <div class="section-title">개발 일정</div>
+            <div class="section-title">앞으로의 일정</div>
           </div>
-
-          <p class="desc">착수일 기준 D+10 개발 일정입니다.</p>
 
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>일자</th>
-                  <th>마일스톤</th>
                   <th>작업 내용</th>
                   <th>상태</th>
                 </tr>
@@ -1917,30 +1558,114 @@
               <tbody>
                 <tr>
                   <td class="td-label">D+1</td>
-                  <td>M1 + M2</td>
-                  <td>서버 셋업, DB 설계, 데이터 분석 및 적재</td>
+                  <td>서버 구축, 데이터 11,821건 적재</td>
                   <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+2</td>
-                  <td>M3~M8</td>
-                  <td>UI 개선, Mini PC 배포, NAS 실연결, 백업 자동화</td>
+                  <td>앱 디자인, 서버 배포, NAS 연결, 백업 자동화</td>
                   <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">D+3~</td>
-                  <td>-</td>
-                  <td>PDA 실기기 도착 후 DataWedge 스캔 테스트</td>
-                  <td><span class="badge badge-progress">대기</span></td>
+                  <td>PDA 도착 후 설치 및 실제 스캔 테스트</td>
+                  <td><span class="badge badge-progress">PDA 대기</span></td>
+                </tr>
+                <tr>
+                  <td class="td-label">이후</td>
+                  <td>최종 확인 후 납품</td>
+                  <td><span class="badge badge-todo">예정</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="callout">
-            <strong>참고:</strong> D+2 기준 M1~M8 전체 구현 및 배포 완료. PDA
-            실기기 도착 후 DataWedge 스캔 테스트만 남았습니다. 일정 여유
-            충분합니다.
+            <strong>현재 상태:</strong>
+            개발은 사실상 완료. PDA 실기기가 도착하면 앱 설치 후 실제 바코드
+            스캔 테스트만 진행하면 됩니다. 일정 여유 충분합니다.
+          </div>
+        </section>
+
+        <!-- 09 납품물 -->
+        <section id="deliverables">
+          <div class="section-head">
+            <div class="section-num">09</div>
+            <div class="section-title">납품물 목록</div>
+          </div>
+
+          <div class="deliverable-grid">
+            <div class="deliverable-card">
+              <div class="deliverable-card-icon"><span>A</span></div>
+              <div class="deliverable-card-title">PDA 앱</div>
+              <div class="deliverable-card-desc">APK 설치 완료 상태로 납품</div>
+            </div>
+            <div class="deliverable-card">
+              <div class="deliverable-card-icon"><span>S</span></div>
+              <div class="deliverable-card-title">서버</div>
+              <div class="deliverable-card-desc">
+                Mini PC에 설치, 자동 시작 설정 완료
+              </div>
+            </div>
+            <div class="deliverable-card">
+              <div class="deliverable-card-icon"><span>C</span></div>
+              <div class="deliverable-card-title">전체 소스코드</div>
+              <div class="deliverable-card-desc">
+                Android 앱 + 서버 전체 코드
+              </div>
+            </div>
+            <div class="deliverable-card">
+              <div class="deliverable-card-icon"><span>D</span></div>
+              <div class="deliverable-card-title">운영 가이드</div>
+              <div class="deliverable-card-desc">설치/운영/문제해결 문서</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10 FAQ -->
+        <section id="faq">
+          <div class="section-head">
+            <div class="section-num">10</div>
+            <div class="section-title">자주 묻는 질문</div>
+          </div>
+
+          <div class="faq-card">
+            <div class="faq-q">인터넷이 필요한가요?</div>
+            <div class="faq-a">
+              외부 인터넷은 필요 없습니다. 사무실 내부 WiFi만 있으면 됩니다.
+              PDA와 Mini PC가 같은 WiFi에 연결되어 있으면 동작합니다.
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <div class="faq-q">기존 프로그램(scan13)은 어떻게 되나요?</div>
+            <div class="faq-a">
+              그대로 유지됩니다. PDA 앱은 별도로 추가되는 것이고, 기존 Mini PC의
+              USB 스캐너와 scan13 프로그램은 계속 사용할 수 있습니다.
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <div class="faq-q">상품이 추가되면 어떻게 하나요?</div>
+            <div class="faq-a">
+              기존과 동일합니다. 쿠팡에서 엑셀 다운로드 후 NAS에 저장하면 끝.
+              서버가 5분마다 자동으로 확인하여 반영합니다.
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <div class="faq-q">PDA 여러 대로 동시에 사용 가능한가요?</div>
+            <div class="faq-a">
+              같은 WiFi에 연결된 PDA라면 대수 제한 없이 동시 사용 가능합니다.
+            </div>
+          </div>
+
+          <div class="faq-card">
+            <div class="faq-q">데이터가 날아가면요?</div>
+            <div class="faq-a">
+              매일 새벽 3시에 자동 백업됩니다. 최근 7일치를 보관하며, 문제 발생
+              시 명령어 한 줄로 복구할 수 있습니다.
+            </div>
           </div>
         </section>
       </div>
