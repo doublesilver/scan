@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSearch()
         setupManualScan()
-        setupBottomNav()
+        setupHeader()
         observeViewModel()
 
         lifecycleScope.launch {
@@ -49,26 +49,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupBottomNav() {
-        binding.bottomNav.selectedItemId = R.id.nav_scan
-        binding.bottomNav.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_scan -> {
-                    binding.etSearch.setText("")
-                    binding.etSearch.clearFocus()
-                    true
-                }
-                R.id.nav_search -> {
-                    binding.etSearch.requestFocus()
-                    true
-                }
-                R.id.nav_settings -> {
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                    true
-                }
-                else -> false
-            }
+    private fun setupHeader() {
+        binding.btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
 
@@ -136,13 +120,8 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.error.observe(this) { error ->
             error?.let {
-                Snackbar.make(binding.root, it, Snackbar.LENGTH_INDEFINITE)
-                    .setAction("재시도") {
-                        val query = binding.etSearch.text.toString().trim()
-                        if (query.isNotBlank()) {
-                            performSearch(query)
-                        }
-                    }
+                Snackbar.make(binding.root, it, 2000)
+                    .setAction("닫기") {}
                     .show()
                 viewModel.clearError()
             }
@@ -204,7 +183,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         DataWedgeManager.register(this)
-        binding.bottomNav.selectedItemId = R.id.nav_scan
     }
 
     override fun onPause() {

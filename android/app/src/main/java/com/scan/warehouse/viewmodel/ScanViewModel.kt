@@ -48,7 +48,12 @@ class ScanViewModel(
                 savedStateHandle[KEY_SCAN_RESULT] = response
                 _searchResults.value = null
             }.onFailure { e ->
-                _error.value = "스캔 실패: ${e.message}"
+                _error.value = when {
+                    e.message?.contains("404") == true -> "등록되지 않은 바코드입니다"
+                    e.message?.contains("timeout", true) == true -> "서버 응답이 느립니다. 다시 시도해주세요"
+                    e.message?.contains("connect", true) == true -> "서버에 연결할 수 없습니다"
+                    else -> "일시적인 오류가 발생했습니다"
+                }
             }
             _isLoading.value = false
         }
@@ -62,10 +67,17 @@ class ScanViewModel(
             val result = repository.searchProducts(query)
             _isOffline.value = repository.isOffline
             result.onSuccess { response ->
+                if (response.items.isEmpty()) {
+                    _error.value = "\"${query}\" 검색 결과가 없습니다"
+                }
                 _searchResults.value = response
                 savedStateHandle[KEY_SCAN_RESULT] = null
             }.onFailure { e ->
-                _error.value = "검색 실패: ${e.message}"
+                _error.value = when {
+                    e.message?.contains("timeout", true) == true -> "서버 응답이 느립니다. 다시 시도해주세요"
+                    e.message?.contains("connect", true) == true -> "서버에 연결할 수 없습니다"
+                    else -> "일시적인 오류가 발생했습니다"
+                }
             }
             _isLoading.value = false
         }
