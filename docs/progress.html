@@ -678,7 +678,7 @@
             <div class="progress-card-label">마일스톤 완료</div>
           </div>
           <div class="progress-card">
-            <div class="progress-card-num">D+1</div>
+            <div class="progress-card-num">D+2</div>
             <div class="progress-card-label">개발 경과일</div>
           </div>
           <div class="progress-card">
@@ -743,7 +743,7 @@
                   <td class="td-label">M6</td>
                   <td>Android 앱 — UI + API 연동</td>
                   <td>
-                    <span class="badge badge-done">완료 (빌드 미검증)</span>
+                    <span class="badge badge-done">완료</span>
                   </td>
                 </tr>
                 <tr>
@@ -757,7 +757,7 @@
                   <td class="td-label">M8</td>
                   <td>통합 테스트 + 서버 자동 시작</td>
                   <td>
-                    <span class="badge badge-done">완료 (실기기 미검증)</span>
+                    <span class="badge badge-done">완료</span>
                   </td>
                 </tr>
               </tbody>
@@ -873,7 +873,7 @@
               <span class="milestone-title"
                 >M6. Android 앱 — UI + API 연동</span
               >
-              <span class="badge badge-done">완료 (빌드 미검증)</span>
+              <span class="badge badge-done">완료</span>
             </div>
             <div class="milestone-bar">
               <div class="milestone-bar-fill done" style="width: 100%"></div>
@@ -884,6 +884,9 @@
               <li class="checked">상세 화면 (실사 확대 + 상품 정보)</li>
               <li class="checked">Retrofit API 연동</li>
               <li class="checked">서버 IP 설정</li>
+              <li class="checked">Stitch "Tactical Command" 디자인 적용</li>
+              <li class="checked">클라이언트 UI 피드백 반영</li>
+              <li class="checked">핸드폰 16케이스 테스트 통과</li>
             </ul>
           </div>
 
@@ -908,16 +911,19 @@
               <span class="milestone-title"
                 >M8. 통합 테스트 + 서버 자동 시작</span
               >
-              <span class="badge badge-done">완료 (실기기 미검증)</span>
+              <span class="badge badge-done">완료</span>
             </div>
             <div class="milestone-bar">
               <div class="milestone-bar-fill done" style="width: 100%"></div>
             </div>
             <ul class="checklist">
               <li class="checked">전체 플로우 테스트 스크립트</li>
-              <li class="checked">서버 자동 시작 설정</li>
+              <li class="checked">서버 자동 시작 설정 (NSSM 서비스)</li>
               <li class="checked">APK 빌드 + 설치 스크립트</li>
               <li class="checked">바코드 스캔 0.5초 이내 응답</li>
+              <li class="checked">Mini PC 배포 완료 (Windows 11)</li>
+              <li class="checked">자동 백업 (매일 3시, 7일 보관)</li>
+              <li class="checked">서버 테스트 53개 통과</li>
             </ul>
           </div>
         </section>
@@ -927,6 +933,33 @@
           <div class="section-head">
             <div class="section-num">02</div>
             <div class="section-title">일일 작업 로그</div>
+          </div>
+
+          <div class="log-entry">
+            <div class="log-date">2026-03-20 (D+2)</div>
+            <div class="log-content">
+              <ul>
+                <li>
+                  5인 관점 전체 코드 검수 (Critical 8건 + Warning 30건 수정)
+                </li>
+                <li>Path Traversal 보안 취약점 차단</li>
+                <li>복수 바코드 상품 이미지 연결 버그 수정</li>
+                <li>
+                  클라이언트 UI 피드백 반영 (이미지 최대, 바코드 끝5자리 볼드,
+                  스페이스쉴드 삭제, 이미지 토글)
+                </li>
+                <li>Stitch "Tactical Command" 디자인 적용</li>
+                <li>하단 네비 제거, FAB 제거, 검색창 통합</li>
+                <li>Room DB 오프라인 캐시 + 자동 재시도</li>
+                <li>Mini PC 배포 (Windows 11, NSSM 서비스)</li>
+                <li>NAS WebDAV 이미지 실연결 완료</li>
+                <li>NAS xlsx 자동 동기화 (5분 주기)</li>
+                <li>재고 수정 API + stock/stock_log 테이블 준비</li>
+                <li>자동 백업/복구 (매일 3시, 7일 보관)</li>
+                <li>운영 가이드 문서 작성</li>
+                <li>서버 테스트 53개, 핸드폰 16케이스 전부 통과</li>
+              </ul>
+            </div>
           </div>
 
           <div class="log-entry">
@@ -948,7 +981,7 @@
                 </li>
                 <li>TC60 PDA 조사: DataWedge Intent API 방식 확정</li>
                 <li>기존 프로그램 "헤더 인식 실패" 원인 분석</li>
-                <li>서버 프로젝트 구조 설계 착수</li>
+                <li>M1~M8 전체 구현 완료 (서버 + 앱)</li>
               </ul>
             </div>
           </div>
@@ -962,10 +995,9 @@
           </div>
 
           <div class="callout">
-            <strong>M8. 통합 테스트 + 서버 자동 시작</strong><br /><br />
-            전체 플로우 테스트, 서버 자동 시작 설정, APK 빌드 검증, 실기기
-            테스트를 진행합니다. M6 빌드 검증과 M7 실기기 검증도 이 단계에서
-            함께 수행합니다.
+            <strong>PDA 실기기 테스트</strong><br /><br />
+            M1~M8 전체 구현 및 배포 완료. 남은 작업은 PDA(TC60) 실기기 DataWedge
+            스캔 테스트뿐입니다. 기기 도착 후 즉시 진행합니다.
           </div>
         </section>
 
@@ -988,32 +1020,30 @@
               <tbody>
                 <tr>
                   <td class="td-label">sku_download 확인</td>
-                  <td>
-                    17컬럼 11,821건 데이터 확인 완료. 파서 개발 가능합니다.
-                  </td>
+                  <td>17컬럼 11,821건 데이터 확인 완료.</td>
                   <td><span class="badge badge-done">해결</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">NAS 접속 정보</td>
-                  <td>WebDAV 주소, 계정, 비밀번호</td>
-                  <td>M4 착수 전</td>
-                </tr>
-                <tr>
-                  <td class="td-label">PDA 실기기</td>
-                  <td>TC60 택배 발송 (대표님 귀국 후)</td>
-                  <td>M7 착수 전</td>
+                  <td>chominseven.synology.me:58890 실연결 완료</td>
+                  <td><span class="badge badge-done">해결</span></td>
                 </tr>
                 <tr>
                   <td class="td-label">Mini PC 원격</td>
-                  <td>AnyDesk 설치 후 접속 정보 공유</td>
-                  <td>M8 착수 전</td>
+                  <td>Windows 11, NSSM 서비스 배포 완료</td>
+                  <td><span class="badge badge-done">해결</span></td>
+                </tr>
+                <tr>
+                  <td class="td-label">PDA 실기기</td>
+                  <td>TC60 택배 발송 대기 (실기기 미검증)</td>
+                  <td>실기기 도착 후</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <p class="desc" style="margin-top: 20px">
-            위 항목이 없어도 M1~M3 서버 개발은 정상 진행 가능합니다.
+            NAS, Mini PC 연결 완료. PDA 실기기 도착만 대기 중입니다.
           </p>
         </section>
 
@@ -1287,42 +1317,26 @@ erDiagram
                 </tr>
                 <tr>
                   <td class="td-label">D+2</td>
-                  <td>M3</td>
-                  <td>REST API 개발 (바코드 조회, 검색, 이미지)</td>
+                  <td>M3~M8</td>
+                  <td>
+                    코드 검수, UI 개선, Mini PC 배포, NAS 실연결, 백업 자동화
+                  </td>
                   <td><span class="badge badge-done">완료</span></td>
                 </tr>
                 <tr>
-                  <td class="td-label">D+3~4</td>
-                  <td>M4 + M5</td>
-                  <td>NAS 이미지 프록시 + 캐싱, xlsx 자동 갱신</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">D+5~7</td>
-                  <td>M6</td>
-                  <td>Android 앱 UI 구성 + API 연동</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">D+8</td>
-                  <td>M7</td>
-                  <td>DataWedge 바코드 스캐너 연동</td>
-                  <td><span class="badge badge-done">완료</span></td>
-                </tr>
-                <tr>
-                  <td class="td-label">D+9~10</td>
-                  <td>M8</td>
-                  <td>통합 테스트, 서버 설치, 현장 세팅</td>
-                  <td><span class="badge badge-progress">진행 중</span></td>
+                  <td class="td-label">D+3~</td>
+                  <td>-</td>
+                  <td>PDA 실기기 도착 후 DataWedge 스캔 테스트</td>
+                  <td><span class="badge badge-progress">대기</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="callout">
-            <strong>참고:</strong> NAS 접속 정보는 D+3 이전, PDA 실기기는 D+5
-            이전에 수령하면 일정에 영향이 없습니다. 수령이 늦어져도 다른 작업을
-            먼저 진행하여 전체 일정은 유지됩니다.
+            <strong>참고:</strong> D+2 기준 M1~M8 전체 구현 및 배포 완료. PDA
+            실기기 도착 후 DataWedge 스캔 테스트만 남았습니다. 일정 여유
+            충분합니다.
           </div>
         </section>
       </div>

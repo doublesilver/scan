@@ -49,7 +49,7 @@
 
 ## M6: Android 앱 — UI + API 연동
 
-- Status: [x] 완료 (빌드는 Android SDK 환경에서 확인 필요)
+- Status: [x] 완료
 - 완료 조건:
   - [x] 메인 화면 레이아웃: 검색 + RecyclerView + 상품 이미지(크게) (4개 layout 파일)
   - [x] 상세 화면: ViewPager2 이미지 슬라이드 + 상품 정보 전체
@@ -59,6 +59,10 @@
   - [x] Snackbar 에러 처리 (재시도 액션 포함)
   - [x] 스캔 대기 화면 + 터치 타겟 56dp + 폰트 확대
   - [x] `./gradlew assembleDebug` 빌드 성공 (BUILD SUCCESSFUL)
+  - [x] Stitch "Tactical Command" 디자인 시스템 적용
+  - [x] 클라이언트 UI 피드백 반영 (이미지 최대, 바코드 끝5자리 볼드, 스페이스쉴드 삭제, 이미지 토글, 한 화면)
+  - [x] Material Design 적용 후 Stitch 디자인으로 교체
+  - [x] 하단 네비 제거, FAB 제거, 검색창 통합, 뒤로가기 처리
 
 ## M7: Android 앱 — DataWedge 스캐너 연동
 
@@ -78,3 +82,7 @@
   - [x] 서버 자동 시작: server/scanner-server.service (systemd)
   - [x] APK 빌드 + 설치: scripts/deploy_apk.sh
   - [x] 서버 응답 시간: 1.6ms (목표 0.5초 이내)
+  - [x] Mini PC 배포 완료 (Windows 11, NSSM 서비스, 자동 시작)
+  - [x] 자동 백업 설정 (매일 새벽 3시, 7일 보관)
+  - [x] 서버 테스트 53개 통과
+  - [x] 핸드폰 테스트 16케이스 통과

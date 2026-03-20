@@ -375,3 +375,47 @@ Z:\물류부\scan\img\xxx.jpg
 ```
 
 codepath.xlsx 파싱 시 `Z:\물류부\scan\` prefix를 제거하고 상대 경로만 저장.
+
+---
+
+## 14. D+2 최종 상태 요약 (2026-03-20)
+
+### Mini PC 배포
+
+- OS: Windows 11
+- 서비스: NSSM으로 Windows 서비스 등록, PC 시작 시 자동 실행
+- 모니터링 API 추가
+
+### NAS WebDAV 실연결
+
+- 주소: chominseven.synology.me:58890
+- 이미지: 썸네일(img/, 108KB) + 실사(real_image/, 2.3MB) 정상 표시
+- xlsx 자동 동기화: 5분 주기로 NAS 파일 변경 감지, 자동 파싱 적재
+- WebDAV 경로 prefix 분리 적용
+
+### 테스트 결과
+
+- 서버 API 테스트: 53개 전부 통과
+- 핸드폰 테스트: 16케이스 전부 통과
+- 전수검사: Critical 8건 + Warning 30건 수정 완료
+
+### 디자인
+
+- Stitch "Tactical Command" UI 적용
+- 클라이언트 피드백 반영: 이미지 최대, 바코드 끝5자리 볼드, 스페이스쉴드 자동 삭제, 이미지 토글, 한 화면
+- 하단 네비 제거, FAB 제거, 검색창 통합
+
+### D+2 커밋 이력 (약 20개)
+
+- 전체 코드 검수 + 보안/안정성/UI 개선
+- 전수검사 결과 반영 (Critical 8건 + Warning 30건)
+- 클라이언트 UI 피드백 반영
+- 서버 모듈화 + Mini PC 배포
+- NAS WebDAV 실연결 + 경로 prefix 분리
+- 재고 수정 API + NAS 자동 동기화 + demo.html 실데이터 연동
+- 모니터링 API + 브랜드 설정화
+- APK 빌드 파일 추가
+- 앱 버그 수정 + 수동 스캔 버튼
+- Material Design 적용 -> Stitch 디자인으로 교체
+- 하단 네비 제거 + 에러 메시지 개선
+- FAB 제거, 검색창 통합, 뒤로가기 처리
