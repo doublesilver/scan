@@ -1,9 +1,7 @@
 package com.scan.warehouse.ui
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.activity.viewModels
@@ -36,7 +34,6 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupSearch()
-        setupManualScan()
         setupHeader()
         observeViewModel()
 
@@ -75,28 +72,6 @@ class MainActivity : AppCompatActivity() {
             viewModel.scanBarcode(query)
         } else {
             viewModel.searchProducts(query)
-        }
-    }
-
-    private fun setupManualScan() {
-        binding.btnManualScan.setOnClickListener {
-            val dialogView = layoutInflater.inflate(R.layout.dialog_barcode_input, null)
-            val etBarcode = dialogView.findViewById<EditText>(R.id.etBarcodeInput)
-
-            val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                .setView(dialogView)
-                .setPositiveButton("스캔") { _, _ ->
-                    val barcode = etBarcode.text.toString().trim()
-                    if (barcode.isNotBlank()) {
-                        viewModel.scanBarcode(barcode)
-                    }
-                }
-                .setNegativeButton("취소", null)
-                .create()
-
-            dialog.show()
-            etBarcode.requestFocus()
-            dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         }
     }
 
