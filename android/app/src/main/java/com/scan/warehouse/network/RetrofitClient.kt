@@ -1,6 +1,7 @@
 package com.scan.warehouse.network
 
 import android.content.Context
+import com.scan.warehouse.R
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,7 +10,6 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val DEFAULT_BASE_URL = "http://192.168.0.100:8000"
     private const val PREF_NAME = "warehouse_settings"
     private const val KEY_SERVER_URL = "server_url"
 
@@ -31,8 +31,9 @@ object RetrofitClient {
     }
 
     fun getBaseUrl(context: Context): String {
+        val defaultUrl = context.getString(R.string.default_server_url)
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_SERVER_URL, DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
+        return prefs.getString(KEY_SERVER_URL, defaultUrl) ?: defaultUrl
     }
 
     fun saveBaseUrl(context: Context, url: String) {

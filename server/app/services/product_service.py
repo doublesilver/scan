@@ -1,8 +1,15 @@
 import logging
 
+from app.config import settings
 from app.models.schemas import ImageItem, ScanResponse, SearchItem
 
 logger = logging.getLogger(__name__)
+
+
+def _strip_brands(name: str) -> str:
+    for brand in settings.brand_filter:
+        name = name.replace(brand, "").strip()
+    return name
 
 
 async def scan_barcode(db, barcode: str) -> ScanResponse | None:
@@ -51,8 +58,7 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
     if sku_id and not product:
         return None
 
-    product_name = product["product_name"] if product else ""
-    product_name = product_name.replace("스페이스쉴드", "").strip()
+    product_name = _strip_brands(product["product_name"] if product else "")
 
     quantity = None
     if sku_id:
@@ -96,7 +102,7 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
     return [
         SearchItem(
             sku_id=r["sku_id"],
-            product_name=r["product_name"].replace("스페이스쉴드", "").strip(),
+            product_name=_strip_brands(r["product_name"]),
             category=r["category"],
             brand=r["brand"],
         )

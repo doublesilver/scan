@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     image_cache_dir: str = "./data/cache"
     image_cache_max_size_mb: int = 500
 
+    # 브랜드 필터
+    brand_filter: list[str] = ["스페이스쉴드"]
+
     # CORS
     cors_origins: list[str] = ["*"]
 

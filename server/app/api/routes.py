@@ -12,6 +12,7 @@ from app.services.image_service import get_image_data, guess_media_type
 from app.services.stock_service import get_stock as _get_stock
 from app.services.stock_service import update_stock as _update_stock
 from app.services.stock_service import get_stock_log as _get_stock_log
+from app.services.status_service import get_status as _get_status
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -63,6 +64,12 @@ async def update_stock(sku_id: str, body: StockUpdate) -> StockResponse:
 async def get_stock_log(sku_id: str, limit: int = Query(20, ge=1, le=100)) -> list[StockLogItem]:
     db = await get_read_db()
     return await _get_stock_log(db, sku_id, limit)
+
+
+@router.get("/status")
+async def status():
+    db = await get_read_db()
+    return await _get_status(db)
 
 
 @router.get("/image/{path:path}")

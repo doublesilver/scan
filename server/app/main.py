@@ -11,6 +11,7 @@ from app.config import settings
 from app.db.database import close_db, get_db
 from app.services.file_watcher import start_watcher, stop_watcher
 from app.services.nas_sync import NasSyncService
+from app.services.status_service import record_start_time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    record_start_time()
     logger.info("서버 시작 — DB 초기화")
     await get_db()
     logger.info("DB 준비 완료: %s", settings.db_path)

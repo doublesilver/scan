@@ -59,6 +59,18 @@ class TestSearchAPI:
         assert data["total"] == 0
 
 
+class TestBrandFilter:
+
+    def test_brand_filter_applied(self, client):
+        resp = client.get("/api/scan/8801234567895")
+        assert resp.status_code == 200
+        data = resp.json()
+        from app.config import settings
+        for brand in settings.brand_filter:
+            assert brand not in data["product_name"]
+        assert data["product_name"] == "브랜드필터 상품 F"
+
+
 class TestImageAPI:
 
     def test_image_valid_path(self, client, tmp_path):
