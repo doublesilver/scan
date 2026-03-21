@@ -9,6 +9,36 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+_cache_save_count = 0
+
+
+def _check_and_evict(cache_base: Path) -> None:
+    global _cache_save_count
+    _cache_save_count += 1
+    if _cache_save_count % 100 != 0:
+        return
+
+    total = sum(f.stat().st_size for f in cache_base.rglob("*") if f.is_file())
+    limit = settings.image_cache_max_size_mb * 1024 * 1024
+    if total <= limit:
+        return
+
+    target = limit - 50 * 1024 * 1024
+    files = sorted(
+        (f for f in cache_base.rglob("*") if f.is_file()),
+        key=lambda f: f.stat().st_mtime,
+    )
+    for f in files:
+        if total <= target:
+            break
+        try:
+            size = f.stat().st_size
+            f.unlink()
+            total -= size
+            logger.info("cache evict: %s", f)
+        except Exception as e:
+            logger.warning("cache evict 실패: %s — %s", f, e)
+
 
 def validate_path(base: Path, sub_path: str) -> Path:
     resolved = (base / sub_path).resolve()
@@ -48,6 +78,7 @@ async def get_image_data(
             image_bytes = await _fetch_from_webdav(http_client, path)
             if image_bytes:
                 cache_path.parent.mkdir(parents=True, exist_ok=True)
+                _check_and_evict(cache_base)
                 cache_path.write_bytes(image_bytes)
                 logger.info("image webdav fetch + cached: %s", path)
 
@@ -63,6 +94,7 @@ async def get_image_data(
         if resized:
             resized_path = validate_path(cache_base, f"resized/{width}/{path}")
             resized_path.parent.mkdir(parents=True, exist_ok=True)
+            _check_and_evict(cache_base)
             resized_path.write_bytes(resized)
             logger.info("resized + cached: %s (w=%d)", path, width)
             return resized, None, width

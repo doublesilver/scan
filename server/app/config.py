@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # 서버
+    version: str = "1.0.0"
     host: str = "0.0.0.0"
     port: int = 8000
 

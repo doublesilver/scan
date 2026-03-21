@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="물류창고 스캐너 API",
     description="PDA 바코드 스캔 → 상품 정보 + 이미지 조회",
-    version="1.0.0",
+    version=settings.version,
     lifespan=lifespan,
 )
 

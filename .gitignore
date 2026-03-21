@@ -38,6 +38,16 @@ server/data/cache/
 # APK
 *.apk
 
+# Supplier Hub
+Supplier Hub.html
+Supplier Hub_files/
+supplier_hub_skus_*.json
+
+# Keystore
+*.keystore
+*.jks
+android/gradle.properties
+
 # Internal docs (client-facing 아님)
 INTERNAL_STATUS.md
 

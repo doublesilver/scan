@@ -48,13 +48,15 @@ object RetrofitClient {
     }
 
     private fun buildRetrofit(baseUrl: String): Retrofit {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
-        }
-
         val client = OkHttpClient.Builder()
             .addInterceptor(RetryInterceptor())
-            .addInterceptor(loggingInterceptor)
+            .apply {
+                if (com.scan.warehouse.BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BASIC
+                    })
+                }
+            }
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()

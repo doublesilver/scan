@@ -79,7 +79,7 @@ async def get_status(db: aiosqlite.Connection) -> dict:
     return {
         "server": {
             "uptime": _format_uptime(),
-            "version": "1.0.0",
+            "version": settings.version,
         },
         "database": db_counts,
         "last_parse": last_parse,
