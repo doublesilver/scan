@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySplashBinding
 import com.scan.warehouse.db.AppDatabase
@@ -30,12 +31,16 @@ class SplashActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        checkServer()
+        if (BuildConfig.FLAVOR == "demo") {
+            goToMain()
+        } else {
+            checkServer()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        if (binding.layoutButtons.visibility == View.VISIBLE) {
+        if (BuildConfig.FLAVOR != "demo" && binding.layoutButtons.visibility == View.VISIBLE) {
             checkServer()
         }
     }

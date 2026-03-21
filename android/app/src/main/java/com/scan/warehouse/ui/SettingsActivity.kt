@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySettingsBinding
 import com.scan.warehouse.network.RetrofitClient
@@ -26,6 +27,15 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.title = "서버 설정"
 
         repository = ProductRepository(applicationContext)
+
+        if (BuildConfig.FLAVOR == "demo") {
+            binding.tvConnectionStatus.text = "데모 모드 - 서버 연결 불필요"
+            binding.tvConnectionStatus.visibility = View.VISIBLE
+            binding.etServerUrl.isEnabled = false
+            binding.btnSave.isEnabled = false
+            binding.btnTest.isEnabled = false
+            return
+        }
 
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
 

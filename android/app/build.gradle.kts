@@ -26,6 +26,16 @@ android {
         }
     }
 
+    flavorDimensions += "mode"
+    productFlavors {
+        create("live") { dimension = "mode" }
+        create("demo") {
+            dimension = "mode"
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

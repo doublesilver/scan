@@ -10,13 +10,13 @@ import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.network.RetrofitClient
 
-class ProductRepository(private val context: Context) {
+open class ProductRepository(private val context: Context) {
 
     private val api get() = RetrofitClient.getApiService(context)
     private val dao get() = AppDatabase.getInstance(context).productDao()
     private val gson = Gson()
 
-    suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
+    open suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
         return try {
             val response = api.scanBarcode(barcode)
             cacheProduct(barcode, response)
@@ -31,7 +31,7 @@ class ProductRepository(private val context: Context) {
         }
     }
 
-    suspend fun searchProducts(query: String, limit: Int = 20): Pair<Result<SearchResponse>, Boolean> {
+    open suspend fun searchProducts(query: String, limit: Int = 20): Pair<Result<SearchResponse>, Boolean> {
         return try {
             val response = api.searchProducts(query, limit)
             Pair(Result.success(response), false)
@@ -46,7 +46,7 @@ class ProductRepository(private val context: Context) {
         }
     }
 
-    suspend fun healthCheck(): Result<Unit> {
+    open suspend fun healthCheck(): Result<Unit> {
         return try {
             api.healthCheck()
             Result.success(Unit)
@@ -55,7 +55,7 @@ class ProductRepository(private val context: Context) {
         }
     }
 
-    fun getImageUrl(filePath: String): String {
+    open fun getImageUrl(filePath: String): String {
         val baseUrl = RetrofitClient.getBaseUrl(context)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         return "${normalized}api/image/${filePath}"

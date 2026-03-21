@@ -8,6 +8,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchResponse
+import com.scan.warehouse.BuildConfig
+import com.scan.warehouse.repository.DemoRepository
 import com.scan.warehouse.repository.ProductRepository
 import kotlinx.coroutines.launch
 
@@ -16,7 +18,11 @@ class ScanViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) {
 
-    private val repository = ProductRepository(application)
+    private val repository: ProductRepository = if (BuildConfig.FLAVOR == "demo") {
+        DemoRepository(application)
+    } else {
+        ProductRepository(application)
+    }
 
     val scanResult: LiveData<ScanResponse?> = savedStateHandle.getLiveData(KEY_SCAN_RESULT)
 
