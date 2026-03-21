@@ -57,14 +57,16 @@ class SettingsActivity : AppCompatActivity() {
                 Toast.makeText(this, "올바른 URL을 입력하세요", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            RetrofitClient.saveBaseUrl(this, url)
-            testConnection()
+            testConnection(url)
         }
     }
 
-    private fun testConnection() {
+    private fun testConnection(urlToSave: String) {
         binding.progressBarSettings.visibility = View.VISIBLE
         binding.tvConnectionStatus.visibility = View.GONE
+
+        val previousUrl = RetrofitClient.getBaseUrl(this)
+        RetrofitClient.saveBaseUrl(this, urlToSave)
 
         lifecycleScope.launch {
             val result = repository.healthCheck()
@@ -75,6 +77,7 @@ class SettingsActivity : AppCompatActivity() {
                 binding.tvConnectionStatus.text = "연결 성공"
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.success))
             }.onFailure { e ->
+                RetrofitClient.saveBaseUrl(this@SettingsActivity, previousUrl)
                 binding.tvConnectionStatus.text = "연결 실패: ${e.message}"
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
             }

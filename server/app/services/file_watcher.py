@@ -3,6 +3,7 @@
 import asyncio
 import glob
 import logging
+import time
 from pathlib import Path
 
 from watchdog.events import FileSystemEventHandler
@@ -14,16 +15,28 @@ logger = logging.getLogger(__name__)
 
 _observer: Observer | None = None
 
+_DEBOUNCE_SECONDS = 2.0
+
 
 class XlsxHandler(FileSystemEventHandler):
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         self._loop = loop
+        self._last_handled: dict[str, float] = {}
+
+    def _should_handle(self, path: str) -> bool:
+        now = time.monotonic()
+        if now - self._last_handled.get(path, 0) < _DEBOUNCE_SECONDS:
+            return False
+        self._last_handled[path] = now
+        return True
 
     def on_created(self, event) -> None:
         if event.is_directory:
             return
         path = event.src_path
         if not path.endswith(".xlsx"):
+            return
+        if not self._should_handle(path):
             return
         logger.info("파일 감지: %s", path)
         self._loop.call_soon_threadsafe(
@@ -35,6 +48,8 @@ class XlsxHandler(FileSystemEventHandler):
             return
         path = event.src_path
         if not path.endswith(".xlsx"):
+            return
+        if not self._should_handle(path):
             return
         logger.info("파일 변경 감지: %s", path)
         self._loop.call_soon_threadsafe(

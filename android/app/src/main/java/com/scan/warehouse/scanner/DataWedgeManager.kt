@@ -23,6 +23,8 @@ object DataWedgeManager {
     const val BARCODE_PATTERN = "^\\d{8,13}$"
     private val barcodeRegex = Regex(BARCODE_PATTERN)
 
+    private var isRegistered = false
+
     private val _scanFlow = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val scanFlow: SharedFlow<String> = _scanFlow.asSharedFlow()
 
@@ -37,19 +39,20 @@ object DataWedgeManager {
     }
 
     fun register(context: Context) {
+        if (isRegistered) unregister(context)
         val filter = IntentFilter(ACTION_SCAN)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             context.registerReceiver(receiver, filter)
         }
+        isRegistered = true
     }
 
     fun unregister(context: Context) {
-        try {
-            context.unregisterReceiver(receiver)
-        } catch (_: IllegalArgumentException) {
-        }
+        if (!isRegistered) return
+        try { context.unregisterReceiver(receiver) } catch (_: IllegalArgumentException) {}
+        isRegistered = false
     }
 
     fun setupProfile(context: Context) {

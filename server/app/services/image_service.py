@@ -20,6 +20,8 @@ def validate_path(base: Path, sub_path: str) -> Path:
 async def get_image_data(
     path: str, width: int | None, http_client
 ) -> tuple[bytes | None, Path | None, int | None]:
+    if ".." in path:
+        raise HTTPException(status_code=400, detail="invalid path")
     cache_base = Path(settings.image_cache_dir).resolve()
     cache_path = validate_path(cache_base, path)
 
@@ -92,8 +94,10 @@ async def _fetch_from_webdav(client, path: str) -> bytes | None:
 def resize_image(raw: bytes, width: int, path: str) -> bytes | None:
     try:
         img = Image.open(io.BytesIO(raw))
-    except (UnidentifiedImageError, Exception):
+    except UnidentifiedImageError:
         raise HTTPException(status_code=400, detail="not a valid image")
+    except Exception:
+        raise HTTPException(status_code=500, detail="image processing error")
 
     if width >= img.width:
         return None

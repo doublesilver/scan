@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 import httpx
@@ -67,5 +68,5 @@ if __name__ == "__main__":
         "app.main:app",
         host=settings.host,
         port=settings.port,
-        reload=True,
+        reload=os.getenv("DEBUG", "false").lower() == "true",
     )

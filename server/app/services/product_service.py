@@ -82,12 +82,13 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
 
 async def search_products(db, query: str, limit: int) -> list[SearchItem]:
     try:
+        safe_query = '"' + query.replace('"', '""') + '"'
         cursor = await db.execute(
             "SELECT p.sku_id, p.product_name, p.category, p.brand, "
             "(SELECT b.barcode FROM barcode b WHERE b.sku_id = p.sku_id LIMIT 1) as first_barcode "
             "FROM product_fts f JOIN product p ON f.sku_id = p.sku_id "
             "WHERE product_fts MATCH ? LIMIT ?",
-            (query, limit),
+            (safe_query, limit),
         )
         rows = await cursor.fetchall()
     except Exception as e:

@@ -42,16 +42,20 @@ class ScanViewModel(
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
-            val result = repository.scanBarcode(barcode)
-            _isOffline.value = repository.isOffline
+            val (result, offline) = repository.scanBarcode(barcode)
+            _isOffline.value = offline
             result.onSuccess { response ->
                 savedStateHandle[KEY_SCAN_RESULT] = response
                 _searchResults.value = null
             }.onFailure { e ->
-                _error.value = when {
-                    e.message?.contains("404") == true -> "등록되지 않은 바코드입니다"
-                    e.message?.contains("timeout", true) == true -> "서버 응답이 느립니다. 다시 시도해주세요"
-                    e.message?.contains("connect", true) == true -> "서버에 연결할 수 없습니다"
+                _error.value = when (e) {
+                    is retrofit2.HttpException -> when (e.code()) {
+                        404 -> "등록되지 않은 바코드입니다"
+                        in 500..599 -> "서버 오류가 발생했습니다"
+                        else -> "일시적인 오류가 발생했습니다"
+                    }
+                    is java.net.SocketTimeoutException -> "서버 응답이 느립니다"
+                    is java.net.ConnectException -> "서버에 연결할 수 없습니다"
                     else -> "일시적인 오류가 발생했습니다"
                 }
             }
@@ -64,8 +68,8 @@ class ScanViewModel(
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
-            val result = repository.searchProducts(query)
-            _isOffline.value = repository.isOffline
+            val (result, offline) = repository.searchProducts(query)
+            _isOffline.value = offline
             result.onSuccess { response ->
                 if (response.items.isEmpty()) {
                     _error.value = "\"${query}\" 검색 결과가 없습니다"
@@ -73,9 +77,13 @@ class ScanViewModel(
                 _searchResults.value = response
                 savedStateHandle[KEY_SCAN_RESULT] = null
             }.onFailure { e ->
-                _error.value = when {
-                    e.message?.contains("timeout", true) == true -> "서버 응답이 느립니다. 다시 시도해주세요"
-                    e.message?.contains("connect", true) == true -> "서버에 연결할 수 없습니다"
+                _error.value = when (e) {
+                    is retrofit2.HttpException -> when (e.code()) {
+                        in 500..599 -> "서버 오류가 발생했습니다"
+                        else -> "일시적인 오류가 발생했습니다"
+                    }
+                    is java.net.SocketTimeoutException -> "서버 응답이 느립니다"
+                    is java.net.ConnectException -> "서버에 연결할 수 없습니다"
                     else -> "일시적인 오류가 발생했습니다"
                 }
             }

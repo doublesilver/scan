@@ -16,40 +16,32 @@ class ProductRepository(private val context: Context) {
     private val dao get() = AppDatabase.getInstance(context).productDao()
     private val gson = Gson()
 
-    @Volatile
-    private var _isOffline = false
-    val isOffline: Boolean get() = _isOffline
-
-    suspend fun scanBarcode(barcode: String): Result<ScanResponse> {
+    suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
         return try {
             val response = api.scanBarcode(barcode)
-            _isOffline = false
             cacheProduct(barcode, response)
-            Result.success(response)
+            Pair(Result.success(response), false)
         } catch (e: Exception) {
             val cached = dao.getByBarcode(barcode)
             if (cached != null) {
-                _isOffline = true
-                Result.success(cached.toScanResponse())
+                Pair(Result.success(cached.toScanResponse()), true)
             } else {
-                Result.failure(e)
+                Pair(Result.failure(e), false)
             }
         }
     }
 
-    suspend fun searchProducts(query: String, limit: Int = 20): Result<SearchResponse> {
+    suspend fun searchProducts(query: String, limit: Int = 20): Pair<Result<SearchResponse>, Boolean> {
         return try {
             val response = api.searchProducts(query, limit)
-            _isOffline = false
-            Result.success(response)
+            Pair(Result.success(response), false)
         } catch (e: Exception) {
             val cached = dao.searchByName(query)
             if (cached.isNotEmpty()) {
-                _isOffline = true
                 val items = cached.map { it.toSearchItem() }
-                Result.success(SearchResponse(total = items.size, items = items))
+                Pair(Result.success(SearchResponse(total = items.size, items = items)), true)
             } else {
-                Result.failure(e)
+                Pair(Result.failure(e), false)
             }
         }
     }

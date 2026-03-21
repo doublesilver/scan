@@ -12,7 +12,7 @@ import coil.load
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityDetailBinding
 import com.scan.warehouse.model.ScanResponse
-import com.scan.warehouse.network.RetrofitClient
+import com.scan.warehouse.repository.ProductRepository
 
 class DetailActivity : AppCompatActivity() {
 
@@ -66,14 +66,13 @@ class DetailActivity : AppCompatActivity() {
             true
         }
 
-        val baseUrl = RetrofitClient.getBaseUrl(this)
-        val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+        val repository = ProductRepository(this)
 
         val thumbImg = data.images.firstOrNull { it.filePath.startsWith("img/") }
         val realImg = data.images.firstOrNull { it.filePath.startsWith("real_image/") }
 
-        thumbnailUrl = thumbImg?.let { "${normalized}api/image/${it.filePath}" }
-        realImageUrl = realImg?.let { "${normalized}api/image/${it.filePath}" }
+        thumbnailUrl = thumbImg?.let { repository.getImageUrl(it.filePath) }
+        realImageUrl = realImg?.let { repository.getImageUrl(it.filePath) }
 
         val initialUrl = thumbnailUrl ?: realImageUrl
         if (initialUrl != null) {

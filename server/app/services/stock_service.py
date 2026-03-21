@@ -35,28 +35,32 @@ async def update_stock(db, sku_id: str, data: StockUpdate) -> StockResponse | No
 
     await db.execute("BEGIN IMMEDIATE")
 
-    cursor = await db.execute(
-        "SELECT quantity FROM stock WHERE sku_id = ?", (sku_id,)
-    )
-    row = await cursor.fetchone()
-    before_qty = row["quantity"] if row else 0
+    try:
+        cursor = await db.execute(
+            "SELECT quantity FROM stock WHERE sku_id = ?", (sku_id,)
+        )
+        row = await cursor.fetchone()
+        before_qty = row["quantity"] if row else 0
 
-    await db.execute(
-        "INSERT INTO stock (sku_id, quantity, memo, updated_by, updated_at) "
-        "VALUES (?, ?, ?, ?, datetime('now')) "
-        "ON CONFLICT(sku_id) DO UPDATE SET "
-        "quantity=excluded.quantity, memo=excluded.memo, "
-        "updated_by=excluded.updated_by, updated_at=excluded.updated_at",
-        (sku_id, data.quantity, data.memo, data.updated_by),
-    )
+        await db.execute(
+            "INSERT INTO stock (sku_id, quantity, memo, updated_by, updated_at) "
+            "VALUES (?, ?, ?, ?, datetime('now')) "
+            "ON CONFLICT(sku_id) DO UPDATE SET "
+            "quantity=excluded.quantity, memo=excluded.memo, "
+            "updated_by=excluded.updated_by, updated_at=excluded.updated_at",
+            (sku_id, data.quantity, data.memo, data.updated_by),
+        )
 
-    await db.execute(
-        "INSERT INTO stock_log (sku_id, before_qty, after_qty, memo, updated_by) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (sku_id, before_qty, data.quantity, data.memo, data.updated_by),
-    )
+        await db.execute(
+            "INSERT INTO stock_log (sku_id, before_qty, after_qty, memo, updated_by) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (sku_id, before_qty, data.quantity, data.memo, data.updated_by),
+        )
 
-    await db.commit()
+        await db.commit()
+    except Exception:
+        await db.execute("ROLLBACK")
+        raise
 
     return await get_stock(db, sku_id)
 

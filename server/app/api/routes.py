@@ -73,7 +73,7 @@ async def status():
 
 
 @router.get("/image/{path:path}")
-async def get_image(path: str, request: Request, width: int | None = None) -> Response:
+async def get_image(path: str, request: Request, width: int | None = Query(None, ge=1, le=2000)) -> Response:
     http_client = request.app.state.http_client
     image_bytes, file_path, resized_width = await get_image_data(path, width, http_client)
 
