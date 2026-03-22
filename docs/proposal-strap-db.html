@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>통합 어드민 시스템 — 이은석</title>
+    <title>스트랩 통합 DB 시스템 — 이은석</title>
     <meta
       property="og:title"
-      content="통합 어드민 시스템 구축 제안서 — 이은석"
+      content="스트랩 통합 DB 시스템 구축 제안서 — 이은석"
     />
     <meta
       property="og:description"
-      content="바코드 스캐너 관리 + 스트랩 DB + BarTender 연동을 하나의 어드민 웹에서 통합 관리"
+      content="워치 스트랩 제품 데이터를 구조화된 DB로 전환. 상품명 자동 생성, 호환 모델 관리, 콘텐츠 자동화."
     />
     <meta property="og:type" content="website" />
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
@@ -22,14 +22,20 @@
     />
     <style>
       /* ─── Reset & Base ─── */
-      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
       :root {
         --navy: #1a2332;
         --navy-mid: #243044;
         --navy-light: #2e3d55;
         --orange: #e8734a;
-        --orange-dim: rgba(232,115,74,0.12);
+        --orange-dim: rgba(232, 115, 74, 0.12);
         --orange-pale: #fdf6f3;
         --white: #ffffff;
         --off-white: #f5f5f3;
@@ -41,11 +47,15 @@
         --sidebar-w: 240px;
         --content-max: 860px;
         --section-gap: 80px;
-        --font-sans: 'DM Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-        --font-mono: 'DM Mono', 'Consolas', monospace;
+        --font-sans:
+          "DM Sans", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        --font-mono: "DM Mono", "Consolas", monospace;
       }
 
-      html { scroll-behavior: smooth; font-size: 16px; }
+      html {
+        scroll-behavior: smooth;
+        font-size: 16px;
+      }
 
       body {
         font-family: var(--font-sans);
@@ -71,7 +81,7 @@
 
       .sidebar-brand {
         padding: 32px 24px 24px;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
 
       .sidebar-brand-line {
@@ -91,7 +101,7 @@
 
       .sidebar-brand p {
         font-size: 11px;
-        color: rgba(255,255,255,0.3);
+        color: rgba(255, 255, 255, 0.3);
         margin-top: 4px;
       }
 
@@ -111,11 +121,11 @@
       }
 
       .nav-item:hover {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .nav-item.active {
-        background: rgba(232,115,74,0.1);
+        background: rgba(232, 115, 74, 0.1);
       }
 
       .nav-num {
@@ -129,25 +139,25 @@
 
       .nav-label {
         font-size: 12px;
-        color: rgba(255,255,255,0.45);
+        color: rgba(255, 255, 255, 0.45);
         font-weight: 400;
         transition: color 0.15s;
       }
 
       .nav-item.active .nav-label,
       .nav-item:hover .nav-label {
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .sidebar-footer {
         padding: 20px 24px 28px;
-        border-top: 1px solid rgba(255,255,255,0.07);
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
       }
 
       .sidebar-footer a {
         display: block;
         font-size: 11px;
-        color: rgba(255,255,255,0.25);
+        color: rgba(255, 255, 255, 0.25);
         text-decoration: none;
         transition: color 0.15s;
         margin-bottom: 5px;
@@ -170,7 +180,7 @@
         align-items: center;
         padding: 0 20px;
         justify-content: space-between;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
 
       .mobile-header-title {
@@ -193,14 +203,20 @@
         display: block;
         width: 22px;
         height: 2px;
-        background: rgba(255,255,255,0.65);
+        background: rgba(255, 255, 255, 0.65);
         border-radius: 1px;
         transition: all 0.2s;
       }
 
-      .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-      .hamburger.open span:nth-child(2) { opacity: 0; }
-      .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+      .hamburger.open span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      .hamburger.open span:nth-child(2) {
+        opacity: 0;
+      }
+      .hamburger.open span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
 
       .mobile-drawer {
         display: none;
@@ -215,7 +231,9 @@
         padding: 8px 0 32px;
       }
 
-      .mobile-drawer.open { display: block; }
+      .mobile-drawer.open {
+        display: block;
+      }
 
       /* ─── Main ─── */
       .main {
@@ -232,7 +250,7 @@
       }
 
       .hero::before {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         left: 0;
@@ -242,13 +260,17 @@
       }
 
       .hero::after {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         right: 0;
         width: 50%;
         height: 100%;
-        background: radial-gradient(ellipse at top right, rgba(232,115,74,0.05) 0%, transparent 65%);
+        background: radial-gradient(
+          ellipse at top right,
+          rgba(232, 115, 74, 0.05) 0%,
+          transparent 65%
+        );
         pointer-events: none;
       }
 
@@ -273,7 +295,7 @@
       .hero-sub {
         font-size: 15px;
         font-weight: 300;
-        color: rgba(255,255,255,0.38);
+        color: rgba(255, 255, 255, 0.38);
         letter-spacing: 0.01em;
         margin-bottom: 36px;
         max-width: 460px;
@@ -284,7 +306,7 @@
 
       .hero-contact {
         font-size: 12px;
-        color: rgba(255,255,255,0.22);
+        color: rgba(255, 255, 255, 0.22);
         font-family: var(--font-mono);
         letter-spacing: 0.03em;
         position: relative;
@@ -300,18 +322,20 @@
       .hero-demo a {
         display: inline-block;
         padding: 9px 20px;
-        border: 1px solid rgba(232,115,74,0.35);
+        border: 1px solid rgba(232, 115, 74, 0.35);
         color: var(--orange);
         text-decoration: none;
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.02em;
-        transition: background 0.15s, border-color 0.15s;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
       }
 
       .hero-demo a:hover {
-        background: rgba(232,115,74,0.07);
-        border-color: rgba(232,115,74,0.6);
+        background: rgba(232, 115, 74, 0.07);
+        border-color: rgba(232, 115, 74, 0.6);
       }
 
       /* ─── Content ─── */
@@ -382,7 +406,7 @@
       }
 
       h3::before {
-        content: '';
+        content: "";
         display: block;
         width: 3px;
         height: 13px;
@@ -446,9 +470,8 @@
         color: var(--navy);
         white-space: nowrap;
         font-size: 13px;
-        border-left: 3px solid rgba(232,115,74,0.4);
+        border-left: 3px solid rgba(232, 115, 74, 0.4);
         padding-left: 10px;
-      }
       }
 
       tr.total td {
@@ -462,13 +485,17 @@
         position: relative;
       }
       .table-wrap::after {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         right: 0;
         width: 30px;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(245,245,243,0.8));
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(245, 245, 243, 0.8)
+        );
         pointer-events: none;
         opacity: 0;
         transition: opacity 0.2s;
@@ -548,18 +575,6 @@
         margin-bottom: 10px;
       }
 
-      .vs-neutral {
-        background: #f0f0ff;
-        border: 1px solid #c7c7e5;
-      }
-
-      .vs-neutral h4 {
-        color: #3333aa;
-        font-size: 12.5px;
-        font-weight: 700;
-        margin-bottom: 10px;
-      }
-
       /* ─── Architecture ─── */
       .arch {
         display: flex;
@@ -617,10 +632,10 @@
         transition: box-shadow 0.2s;
       }
       .mermaid:hover {
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       }
       .mermaid::after {
-        content: '클릭하여 크게 보기';
+        content: "클릭하여 크게 보기";
         position: absolute;
         bottom: 8px;
         right: 12px;
@@ -635,16 +650,22 @@
       }
 
       /* ─── Lightbox hint for arch / vs / gantt ─── */
-      .arch, .vs, .gantt {
+      .arch,
+      .vs,
+      .gantt {
         cursor: pointer;
         position: relative;
         transition: box-shadow 0.2s;
       }
-      .arch:hover, .vs:hover, .gantt:hover {
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      .arch:hover,
+      .vs:hover,
+      .gantt:hover {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       }
-      .arch::after, .vs::after, .gantt::after {
-        content: '클릭하여 크게 보기';
+      .arch::after,
+      .vs::after,
+      .gantt::after {
+        content: "클릭하여 크게 보기";
         position: absolute;
         bottom: 8px;
         right: 12px;
@@ -654,7 +675,9 @@
         transition: opacity 0.2s;
         pointer-events: none;
       }
-      .arch:hover::after, .vs:hover::after, .gantt:hover::after {
+      .arch:hover::after,
+      .vs:hover::after,
+      .gantt:hover::after {
         opacity: 1;
       }
 
@@ -664,7 +687,7 @@
         position: fixed;
         inset: 0;
         z-index: 10000;
-        background: rgba(0,0,0,0.85);
+        background: rgba(0, 0, 0, 0.85);
         align-items: center;
         justify-content: center;
         padding: 40px;
@@ -685,8 +708,14 @@
         animation: lbIn 0.2s ease;
       }
       @keyframes lbIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
       .lightbox-close {
         position: absolute;
@@ -704,7 +733,9 @@
         align-items: center;
         justify-content: center;
       }
-      .lightbox-close:hover { background: var(--orange); }
+      .lightbox-close:hover {
+        background: var(--orange);
+      }
 
       /* ─── Gantt ─── */
       .gantt {
@@ -771,9 +802,15 @@
         font-family: var(--font-mono);
       }
 
-      .g-srv { background: var(--navy); }
-      .g-app { background: var(--orange); }
-      .g-int { background: #3b82f6; }
+      .g-srv {
+        background: var(--navy);
+      }
+      .g-app {
+        background: var(--orange);
+      }
+      .g-int {
+        background: #3b82f6;
+      }
 
       .gantt-legend {
         display: flex;
@@ -808,8 +845,14 @@
         font-family: var(--font-mono);
       }
 
-      .tag-y { background: #dcfce7; color: #166534; }
-      .tag-c { background: #fff7ed; color: #9a3412; }
+      .tag-y {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .tag-c {
+        background: #fff7ed;
+        color: #9a3412;
+      }
 
       /* ─── Code ─── */
       code {
@@ -822,9 +865,19 @@
       }
 
       /* ─── Lists ─── */
-      ul, ol { margin: 8px 0 8px 20px; }
-      li { margin: 5px 0; line-height: 1.65; font-size: 13.5px; }
-      p { margin: 8px 0; font-size: 13.5px; }
+      ul,
+      ol {
+        margin: 8px 0 8px 20px;
+      }
+      li {
+        margin: 5px 0;
+        line-height: 1.65;
+        font-size: 13.5px;
+      }
+      p {
+        margin: 8px 0;
+        font-size: 13.5px;
+      }
 
       /* ─── Scroll progress bar ─── */
       #scroll-progress {
@@ -854,7 +907,9 @@
         justify-content: center;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.2s, transform 0.2s;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
         z-index: 500;
       }
 
@@ -882,8 +937,8 @@
         display: flex;
         gap: 0;
         margin-bottom: 36px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         width: fit-content;
         position: relative;
         z-index: 1;
@@ -892,7 +947,7 @@
       .hero-stat {
         padding: 16px 28px;
         text-align: center;
-        border-right: 1px solid rgba(255,255,255,0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .hero-stat:last-child {
@@ -911,7 +966,7 @@
 
       .hero-stat-label {
         font-size: 11px;
-        color: rgba(255,255,255,0.38);
+        color: rgba(255, 255, 255, 0.38);
         letter-spacing: 0.04em;
         margin-top: 4px;
         display: block;
@@ -922,7 +977,7 @@
         display: inline-block;
         margin-left: 16px;
         font-size: 12px;
-        color: rgba(255,255,255,0.28);
+        color: rgba(255, 255, 255, 0.28);
         text-decoration: none;
         letter-spacing: 0.02em;
         transition: color 0.15s;
@@ -931,18 +986,21 @@
       }
 
       .hero-pdf:hover {
-        color: rgba(255,255,255,0.55);
+        color: rgba(255, 255, 255, 0.55);
       }
 
       /* ─── Section hover border ─── */
       section {
         border-left: 3px solid transparent;
         padding-left: 0;
-        transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.2s;
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          border-color 0.2s;
       }
 
       section:hover {
-        border-left-color: rgba(232,115,74,0.35);
+        border-left-color: rgba(232, 115, 74, 0.35);
       }
 
       /* ─── Table row hover ─── */
@@ -966,18 +1024,20 @@
       }
 
       .site-footer p {
-        color: rgba(255,255,255,0.28);
+        color: rgba(255, 255, 255, 0.28);
         font-size: 13px;
         margin: 4px 0;
       }
 
       .site-footer a {
-        color: rgba(255,255,255,0.4);
+        color: rgba(255, 255, 255, 0.4);
         text-decoration: none;
         transition: color 0.15s;
       }
 
-      .site-footer a:hover { color: var(--orange); }
+      .site-footer a:hover {
+        color: var(--orange);
+      }
 
       .footer-body {
         display: flex;
@@ -986,19 +1046,19 @@
         gap: 40px;
         margin-bottom: 28px;
         padding-bottom: 24px;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
 
       .footer-name {
         font-size: 15px;
         font-weight: 600;
-        color: rgba(255,255,255,0.75);
+        color: rgba(255, 255, 255, 0.75);
         margin-bottom: 4px;
       }
 
       .footer-tagline {
         font-size: 12px;
-        color: rgba(255,255,255,0.28);
+        color: rgba(255, 255, 255, 0.28);
       }
 
       .footer-right {
@@ -1008,7 +1068,7 @@
       .footer-right a {
         display: block;
         font-size: 13px;
-        color: rgba(255,255,255,0.35);
+        color: rgba(255, 255, 255, 0.35);
         text-decoration: none;
         margin-bottom: 4px;
         font-family: var(--font-mono);
@@ -1016,17 +1076,20 @@
         transition: color 0.15s;
       }
 
-      .footer-right a:hover { color: var(--orange); }
+      .footer-right a:hover {
+        color: var(--orange);
+      }
 
       .footer-note {
         font-size: 12px;
-        color: rgba(255,255,255,0.18);
+        color: rgba(255, 255, 255, 0.18);
         text-align: center;
       }
 
       /* ─── Mobile ─── */
-      /* 이관 대상 카드 (모바일 전용) */
-      .migration-cards { display: none; }
+      .migration-cards {
+        display: none;
+      }
 
       .migration-card {
         background: var(--white);
@@ -1057,13 +1120,39 @@
         margin-bottom: 2px;
       }
 
-      @media (max-width: 900px) {
-        .migration-table { display: none; }
-        .migration-cards { display: block; }
+      /* ─── Arch desc list ─── */
+      .arch-desc {
+        margin: 16px 0 0;
+        list-style: none;
+        padding: 0;
+      }
+      .arch-desc li {
+        font-size: 13px;
+        color: var(--text-muted);
+        padding: 8px 0 8px 16px;
+        border-left: 2px solid var(--border);
+        margin-bottom: 6px;
+        line-height: 1.65;
+      }
+      .arch-desc li strong {
+        color: var(--navy);
+        font-weight: 600;
+      }
 
-        /* 3컬럼 이상 테이블 → 모바일 카드형 전환 */
-        table { border: none; }
-        table thead { display: none; }
+      @media (max-width: 900px) {
+        .migration-table {
+          display: none;
+        }
+        .migration-cards {
+          display: block;
+        }
+
+        table {
+          border: none;
+        }
+        table thead {
+          display: none;
+        }
         table tbody tr {
           display: block;
           background: var(--white);
@@ -1072,7 +1161,9 @@
           padding: 12px 14px;
           margin-bottom: 8px;
         }
-        table tbody tr:nth-child(even) td { background: none; }
+        table tbody tr:nth-child(even) td {
+          background: none;
+        }
         table tbody tr.total {
           border-top: none;
           background: #f4f6f9;
@@ -1097,15 +1188,21 @@
           padding-bottom: 6px;
           border-bottom: 1px solid var(--border);
           margin-bottom: 6px;
-          padding-left: 0;
-          border-left: 3px solid rgba(232,115,74,0.4);
           padding-left: 10px;
+          border-left: 3px solid rgba(232, 115, 74, 0.4);
         }
-        table tbody td.td-label::before { display: none; }
-        /* 2컬럼 단순 테이블은 유지 */
-        .table-wrap table { border: none; }
-        .sidebar { display: none; }
-        .mobile-header { display: flex; }
+        table tbody td.td-label::before {
+          display: none;
+        }
+        .table-wrap table {
+          border: none;
+        }
+        .sidebar {
+          display: none;
+        }
+        .mobile-header {
+          display: flex;
+        }
 
         .main {
           margin-left: 0;
@@ -1150,23 +1247,43 @@
           border-left: none !important;
         }
 
-        .section-num { font-size: 28px; }
-        .section-title { font-size: 18px; }
+        .section-num {
+          font-size: 28px;
+        }
+        .section-title {
+          font-size: 18px;
+        }
 
-        .vs { grid-template-columns: 1fr; }
+        .vs {
+          grid-template-columns: 1fr;
+        }
 
         .arch {
           flex-wrap: wrap;
           gap: 10px;
         }
 
-        .arch-node { min-width: 120px; }
-        .arch-arrow { display: none; }
+        .arch-node {
+          min-width: 120px;
+        }
+        .arch-arrow {
+          display: none;
+        }
 
-        .gantt-label { width: 120px; font-size: 11px; }
-        .gantt-header { margin-left: 120px; }
-        .gantt-legend { margin-left: 120px; }
-        .gantt-bar { font-size: 10px; padding: 0 4px; }
+        .gantt-label {
+          width: 120px;
+          font-size: 11px;
+        }
+        .gantt-header {
+          margin-left: 120px;
+        }
+        .gantt-legend {
+          margin-left: 120px;
+        }
+        .gantt-bar {
+          font-size: 10px;
+          padding: 0 4px;
+        }
 
         #back-to-top {
           bottom: 20px;
@@ -1188,7 +1305,7 @@
     <nav class="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-brand-line"></div>
-        <h2>통합 어드민 시스템</h2>
+        <h2>스트랩 통합 DB 시스템</h2>
         <p>이은석</p>
       </div>
       <div class="sidebar-nav">
@@ -1202,7 +1319,7 @@
         >
         <a class="nav-item" href="#s03"
           ><span class="nav-num">03</span
-          ><span class="nav-label">통합 ERD</span></
+          ><span class="nav-label">데이터 구조</span></a
         >
         <a class="nav-item" href="#s04"
           ><span class="nav-num">04</span
@@ -1228,7 +1345,7 @@
 
     <!-- ─── Mobile header ─── -->
     <div class="mobile-header">
-      <span class="mobile-header-title">통합 어드민 시스템 제안서</span>
+      <span class="mobile-header-title">스트랩 DB 시스템 제안서</span>
       <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
         <span></span><span></span><span></span>
       </button>
@@ -1245,7 +1362,7 @@
       >
       <a class="nav-item" href="#s03" onclick="closeDrawer()"
         ><span class="nav-num">03</span
-        ><span class="nav-label">통합 ERD</span></
+        ><span class="nav-label">데이터 구조</span></a
       >
       <a class="nav-item" href="#s04" onclick="closeDrawer()"
         ><span class="nav-num">04</span
@@ -1298,28 +1415,26 @@
       <!-- Hero -->
       <div class="hero">
         <div class="hero-line"></div>
-        <h1>통합 어드민 시스템</h1>
+        <h1>스트랩 통합 DB 시스템</h1>
         <div class="hero-sub">
-          바코드 스캐너 · 스트랩 DB · BarTender 라벨 인쇄를 하나의 관리 화면에서
+          제품 데이터 관리 · 상품명 자동 생성 · 콘텐츠 자동화
         </div>
         <div class="hero-stats" id="heroStats">
           <div class="hero-stat">
-            <span class="hero-stat-num" data-target="3" data-suffix="개"
+            <span class="hero-stat-num" data-target="176" data-suffix="개+"
               >0</span
             >
-            <span class="hero-stat-label"
-              >통합 모듈 3개 (스캐너 + 스트랩 + 인쇄)</span
-            >
-          </div>
-          <div class="hero-stat">
-            <span class="hero-stat-num" data-target="176" data-suffix="개"
-              >0</span
-            >
-            <span class="hero-stat-label">스트랩 176개 제품</span>
+            <span class="hero-stat-label">제품 176개+</span>
           </div>
           <div class="hero-stat">
             <span class="hero-stat-num" data-static="14+">14+</span>
             <span class="hero-stat-label">호환 기종 14+</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num" data-target="10" data-suffix="종"
+              >0</span
+            >
+            <span class="hero-stat-label">재질 10종</span>
           </div>
         </div>
         <div class="hero-contact">
@@ -1351,9 +1466,16 @@
           </ul>
 
           <h3>현재 관리 방식</h3>
-          <ul>
-            <li>구글시트 3개 탭으로 관리</li>
-          </ul>
+          <p
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 8px;
+            "
+          >
+            현재 구글시트 3개 탭으로 관리 중입니다. 아래 수치는 확인된 일부이며,
+            실제로는 더 많을 수 있습니다.
+          </p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -1376,7 +1498,7 @@
                   <td>60개</td>
                 </tr>
                 <tr class="total">
-                  <td>합계 176개, 컬럼 29개</td>
+                  <td>합계 176개+, 컬럼 29개</td>
                   <td></td>
                 </tr>
               </tbody>
@@ -1440,130 +1562,119 @@
             <div class="section-title">시스템 구성</div>
           </div>
 
+          <div class="callout callout-blue">
+            지금 쓰시는 구글시트는 그대로 사용하시면 됩니다. 시트에 입력하면
+            DB에 자동 반영되고, 웹 화면에서도 바로 관리할 수 있습니다.
+          </div>
+
           <!-- prettier-ignore -->
           <div class="mermaid">
 flowchart TB
-    subgraph clients["클라이언트"]
-        PDA["TC60 PDA\nAndroid 스캐너"]
-        ADMIN["어드민 웹\nReact SPA"]
-        BT["BarTender\n라벨 인쇄"]
-    end
-    subgraph server["Mini PC FastAPI"]
-        API["API Gateway"]
-        SCAN["스캔 모듈"]
-        STRAP["스트랩 모듈"]
-        PRINT["인쇄 모듈"]
-    end
-    subgraph storage["저장소"]
-        DB1[("스캐너 DB")]
-        DB2[("스트랩 DB")]
-        NAS["NAS WebDAV"]
-    end
-    PDA -->|WiFi| API
-    ADMIN -->|HTTP| API
-    API --> SCAN
-    API --> STRAP
-    API --> PRINT
-    SCAN --> DB1
-    SCAN --> NAS
-    STRAP --> DB2
-    PRINT --> BT
+subgraph input["데이터 입력"]
+GS["구글시트\n기존 방식 그대로"]
+WEB["웹 관리 화면\n신규"]
+end
+subgraph server["스트랩 DB 서버"]
+API["API 서버"]
+SYNC["시트 동기화"]
+GEN["상품명 자동 생성"]
+end
+subgraph storage["저장소"]
+DB[("스트랩 DB")]
+end
+GS -->|자동 동기화| SYNC
+SYNC --> DB
+WEB --> API
+API --> DB
+API --> GEN
+GEN --> DB
           </div>
+
+          <ul class="arch-desc">
+            <li>
+              <strong>구글시트</strong> — 지금처럼 시트에 제품 정보를 입력하면
+              됩니다
+            </li>
+            <li>
+              <strong>스트랩 DB 서버</strong> — 시트 데이터를 정리해서 저장하고,
+              상품명을 자동으로 만들어주는 서버입니다
+            </li>
+            <li>
+              <strong>웹 관리 화면</strong> — PC나 모바일 브라우저에서 제품을
+              검색하고 관리할 수 있는 화면입니다
+            </li>
+          </ul>
         </section>
 
         <!-- 03 -->
         <section id="s03">
           <div class="section-head">
             <div class="section-num">03</div>
-            <div class="section-title">통합 ERD</div>
+            <div class="section-title">데이터 구조</div>
           </div>
 
           <!-- prettier-ignore -->
           <div class="mermaid">
 erDiagram
-    product ||--o{ barcode : has
-    barcode ||--o{ image : has
-    product ||--o| stock : has
-    product ||--o{ stock_log : has
-    strap_product ||--|| strap_attribute : has
-    strap_product ||--o{ strap_sku : has
-    strap_sku ||--o{ strap_sku_model : compatible
-    watch_model ||--o{ strap_sku_model : compatible
-    strap_sku ||--o{ strap_price : has
-    strap_sku ||--|| strap_content : generates
+strap_product ||--|| strap_attribute : has
+strap_product ||--o{ strap_sku : has
+strap_sku ||--o{ sku_watch_model : compatible
+watch_model ||--o{ sku_watch_model : compatible
+strap_sku ||--o{ strap_price : has
+strap_sku ||--|| strap_content : generates
           </div>
 
-          <h3>스캐너 DB (기존)</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>테이블</th>
-                  <th>역할</th>
+                  <th>쉬운 설명</th>
+                  <th>예시</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">product</td>
-                  <td>상품 마스터 (SKU ID, 상품명, 카테고리)</td>
+                  <td class="td-label">제품 마스터</td>
+                  <td>스트랩 제품의 기본 정보</td>
+                  <td>"모노 스포츠루프", 브랜드 "스페이스쉴드"</td>
                 </tr>
                 <tr>
-                  <td class="td-label">barcode</td>
-                  <td>바코드 매핑 (1:N)</td>
+                  <td class="td-label">속성</td>
+                  <td>제품의 물리적 특성</td>
+                  <td>재질: 실리콘, 체결: 버클, 폭: 20mm</td>
                 </tr>
                 <tr>
-                  <td class="td-label">image</td>
-                  <td>상품 이미지 경로</td>
+                  <td class="td-label">SKU</td>
+                  <td>
+                    실제 판매되는 개별 상품 단위 (Stock Keeping Unit —
+                    색상·사이즈별로 구분되는 판매 단위)
+                  </td>
+                  <td>모노 스포츠루프 - 블랙 - S사이즈</td>
                 </tr>
                 <tr>
-                  <td class="td-label">stock / stock_log</td>
-                  <td>재고 수량 + 변경 이력</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <h3>스트랩 DB (신규)</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>테이블</th>
-                  <th>역할</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">strap_product</td>
-                  <td>스트랩 제품 마스터</td>
+                  <td class="td-label">호환 모델</td>
+                  <td>어떤 시계에 맞는지</td>
+                  <td>갤럭시워치6, 가민 포러너 245</td>
                 </tr>
                 <tr>
-                  <td class="td-label">strap_attribute</td>
-                  <td>재질, 커넥터, 체결방식 등 속성</td>
+                  <td class="td-label">가격</td>
+                  <td>채널별 판매가격</td>
+                  <td>쿠팡 19,900원, 네이버 21,000원</td>
                 </tr>
                 <tr>
-                  <td class="td-label">strap_sku</td>
-                  <td>SKU (컬러, 사이즈, 바코드)</td>
-                </tr>
-                <tr>
-                  <td class="td-label">watch_model</td>
-                  <td>호환 기종 (M:N)</td>
-                </tr>
-                <tr>
-                  <td class="td-label">strap_price</td>
-                  <td>채널별 가격</td>
-                </tr>
-                <tr>
-                  <td class="td-label">strap_content</td>
-                  <td>자동 생성 상품명/옵션명</td>
+                  <td class="td-label">콘텐츠</td>
+                  <td>자동 생성된 상품명/옵션명</td>
+                  <td>"스페이스쉴드 실리콘 버클 갤럭시워치 스포츠 밴드"</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="callout">
-            두 DB를 별도 파일로 분리하여 기존 스캐너 시스템에 영향 없이 확장.
-            PDA 스캔 시 양쪽 DB를 자동 탐색.
+            하나의 스트랩이 여러 시계에 맞을 수 있고, 하나의 시계에 여러
+            스트랩이 맞을 수 있습니다. 이 관계를 자동으로 관리해서 기종이
+            추가되어도 시트처럼 컬럼을 늘릴 필요가 없습니다.
           </div>
         </section>
 
@@ -1574,20 +1685,30 @@ erDiagram
             <div class="section-title">핵심 기능</div>
           </div>
 
-          <h3>SKU 조회 시스템</h3>
+          <h3>SKU 조회</h3>
           <ul>
-            <li>바코드/제품명 입력 → 제품정보+이미지+속성 즉시 출력</li>
+            <li>
+              바코드나 제품명을 입력하면 해당 제품의 모든 정보가 한 화면에
+              표시됩니다
+            </li>
             <li>기존 PDA 스캐너 시스템과 연동 가능</li>
           </ul>
 
           <h3>다차원 필터링</h3>
           <ul>
-            <li>재질별, 커넥터별, 호환 모델별, 가격대별</li>
-            <li>복합 조건 지원 (예: 실리콘 + 갤럭시워치 + 20mm)</li>
+            <li>
+              예를 들어 '실리콘 재질이면서 갤럭시워치에 맞는 20mm 스트랩'을
+              한번에 찾을 수 있습니다
+            </li>
+            <li>재질별, 커넥터별, 호환 모델별, 가격대별 복합 조건 지원</li>
           </ul>
 
           <h3>상품명/옵션명 자동 생성</h3>
           <ul>
+            <li>
+              규칙만 한번 정해두면 신규 제품 등록 시 상품명이 자동으로
+              만들어집니다
+            </li>
             <li>규칙: "스페이스쉴드 + 재질 + 체결 + 모델 + 특징"</li>
             <li>네이버/쿠팡 글자수 제한 자동 대응</li>
             <li>내부코드 병행 관리</li>
@@ -1595,21 +1716,11 @@ erDiagram
 
           <h3>구글시트 양방향 동기화</h3>
           <ul>
-            <li>DB ↔ 시트 자동 반영</li>
+            <li>
+              구글시트에서 수정하면 DB에 자동 반영, DB에서 수정하면 시트에 자동
+              반영됩니다
+            </li>
             <li>충돌 시 DB 우선 + 알림</li>
-          </ul>
-
-          <h3>BarTender 라벨 인쇄</h3>
-          <ul>
-            <li>PDA 스캔 → 인쇄 버튼 → BarTender로 라벨 자동 인쇄</li>
-            <li>라벨 손상/부족 시 현장에서 즉시 재인쇄</li>
-            <li>인쇄 이력 자동 기록</li>
-          </ul>
-
-          <h3>통합 대시보드</h3>
-          <ul>
-            <li>스캐너 서버 상태 + 스트랩 DB 현황 한 화면</li>
-            <li>NAS 동기화 상태, 최근 스캔 이력, 재고 알림</li>
           </ul>
         </section>
 
@@ -1619,6 +1730,18 @@ erDiagram
             <div class="section-num">05</div>
             <div class="section-title">데이터 이관</div>
           </div>
+
+          <p
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 16px;
+            "
+          >
+            현재 구글시트의 데이터를 DB로 옮기는 작업입니다. 아래 수치는 확인된
+            시트 기준이며, 실제 데이터는 더 많을 수 있습니다. 이관 범위는 착수
+            전 협의합니다.
+          </p>
 
           <div class="table-wrap migration-table">
             <table>
@@ -1647,7 +1770,7 @@ erDiagram
                 </tr>
                 <tr class="total">
                   <td>합계</td>
-                  <td>176개</td>
+                  <td>176개+</td>
                   <td></td>
                 </tr>
               </tbody>
@@ -1677,10 +1800,17 @@ erDiagram
             </div>
           </div>
 
+          <!-- prettier-ignore -->
           <div class="mermaid">
-            sequenceDiagram participant G as 구글시트 participant P as 파서
-            participant D as DB G->>P: 데이터 추출 P->>P: 속성 분리 P->>D:
-            마스터 생성 P->>D: SKU 연결 D-->>G: 결과 리포트
+sequenceDiagram
+participant G as 구글시트
+participant P as 파서
+participant D as DB
+G->>P: 데이터 추출
+P->>P: 속성 분리
+P->>D: 마스터 생성
+P->>D: SKU 연결
+D-->>G: 결과 리포트
           </div>
 
           <div class="callout callout-gray">
@@ -1696,7 +1826,6 @@ erDiagram
           </div>
 
           <p class="desc">착수일 기준 15 영업일</p>
-
           <div class="table-wrap">
             <table>
               <thead>
@@ -1754,29 +1883,29 @@ erDiagram
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">설계 (통합 ERD + API + 데이터 구조)</td>
+                  <td class="td-label">설계 (ERD + API + 데이터 구조)</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
                     800,000
                   </td>
                 </tr>
                 <tr>
                   <td class="td-label">
-                    백엔드 (스트랩 DB + API + 시트연동 + BarTender)
+                    백엔드 (DB + API + 시트연동 + 마이그레이션)
                   </td>
+                  <td style="text-align: right; font-family: var(--font-mono)">
+                    1,500,000
+                  </td>
+                </tr>
+                <tr>
+                  <td class="td-label">웹 관리 화면 (조회/필터/CRUD)</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
                     2,000,000
                   </td>
                 </tr>
                 <tr>
-                  <td class="td-label">통합 어드민 웹 UI</td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    3,500,000
-                  </td>
-                </tr>
-                <tr>
                   <td class="td-label">자동화 + 테스트 + 배포</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
-                    1,500,000
+                    1,700,000
                   </td>
                 </tr>
                 <tr class="total">
@@ -1788,11 +1917,19 @@ erDiagram
                       font-size: 15px;
                     "
                   >
-                    7,800,000원 (VAT 별도)
+                    6,000,000원 (VAT 별도)
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div
+            class="callout callout-gray"
+            style="margin-top: 12px; font-size: 13px"
+          >
+            추후 바코드 스캐너 관리 웹(scan13 대체)과 통합하실 경우, 공통 UI를
+            재사용하여 별도 구축 대비 약 30% 비용 절감이 가능합니다.
           </div>
 
           <h3>결제 조건</h3>
@@ -1917,7 +2054,7 @@ erDiagram
 
       // Hero stats counter animation
       function animateCounter(el) {
-        if (el.dataset.static) return; // static value, no animation
+        if (el.dataset.static) return;
         const target = parseInt(el.dataset.target, 10);
         const suffix = el.dataset.suffix || "";
         const format = el.dataset.format;
@@ -1967,7 +2104,6 @@ erDiagram
 
       function openLightbox(el, opts) {
         lbBody.innerHTML = el.outerHTML;
-        // strip the ::after pseudo and cursor from cloned element so it doesn't show hint inside lightbox
         const cloned = lbBody.firstElementChild;
         if (cloned) {
           cloned.style.cursor = "default";
