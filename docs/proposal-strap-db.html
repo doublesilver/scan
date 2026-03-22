@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>스트랩 통합 DB 시스템 — 이은석</title>
+    <title>통합 어드민 시스템 — 이은석</title>
     <meta
       property="og:title"
-      content="스트랩 통합 DB 시스템 구축 제안서 — 이은석"
+      content="통합 어드민 시스템 구축 제안서 — 이은석"
     />
     <meta
       property="og:description"
-      content="속성 기반 제품 데이터 관리 및 콘텐츠 자동화 시스템. 176개 제품, 14개+ 호환 기종을 구조화된 DB로 전환."
+      content="바코드 스캐너 관리 + 스트랩 DB + BarTender 연동을 하나의 어드민 웹에서 통합 관리"
     />
     <meta property="og:type" content="website" />
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
@@ -1188,7 +1188,7 @@
     <nav class="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-brand-line"></div>
-        <h2>스트랩 통합 DB 시스템</h2>
+        <h2>통합 어드민 시스템</h2>
         <p>이은석</p>
       </div>
       <div class="sidebar-nav">
@@ -1202,7 +1202,7 @@
         >
         <a class="nav-item" href="#s03"
           ><span class="nav-num">03</span
-          ><span class="nav-label">데이터 구조</span></a
+          ><span class="nav-label">통합 ERD</span></
         >
         <a class="nav-item" href="#s04"
           ><span class="nav-num">04</span
@@ -1228,7 +1228,7 @@
 
     <!-- ─── Mobile header ─── -->
     <div class="mobile-header">
-      <span class="mobile-header-title">스트랩 통합 DB 시스템 제안서</span>
+      <span class="mobile-header-title">통합 어드민 시스템 제안서</span>
       <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
         <span></span><span></span><span></span>
       </button>
@@ -1245,7 +1245,7 @@
       >
       <a class="nav-item" href="#s03" onclick="closeDrawer()"
         ><span class="nav-num">03</span
-        ><span class="nav-label">데이터 구조</span></a
+        ><span class="nav-label">통합 ERD</span></
       >
       <a class="nav-item" href="#s04" onclick="closeDrawer()"
         ><span class="nav-num">04</span
@@ -1298,24 +1298,28 @@
       <!-- Hero -->
       <div class="hero">
         <div class="hero-line"></div>
-        <h1>스트랩 통합 DB 시스템</h1>
-        <div class="hero-sub">속성 기반 제품 데이터 관리 및 콘텐츠 자동화</div>
+        <h1>통합 어드민 시스템</h1>
+        <div class="hero-sub">
+          바코드 스캐너 · 스트랩 DB · BarTender 라벨 인쇄를 하나의 관리 화면에서
+        </div>
         <div class="hero-stats" id="heroStats">
+          <div class="hero-stat">
+            <span class="hero-stat-num" data-target="3" data-suffix="개"
+              >0</span
+            >
+            <span class="hero-stat-label"
+              >통합 모듈 3개 (스캐너 + 스트랩 + 인쇄)</span
+            >
+          </div>
           <div class="hero-stat">
             <span class="hero-stat-num" data-target="176" data-suffix="개"
               >0</span
             >
-            <span class="hero-stat-label">제품 176개</span>
+            <span class="hero-stat-label">스트랩 176개 제품</span>
           </div>
           <div class="hero-stat">
             <span class="hero-stat-num" data-static="14+">14+</span>
             <span class="hero-stat-label">호환 기종 14+</span>
-          </div>
-          <div class="hero-stat">
-            <span class="hero-stat-num" data-target="10" data-suffix="종"
-              >0</span
-            >
-            <span class="hero-stat-label">재질 10종</span>
           </div>
         </div>
         <div class="hero-contact">
@@ -1436,33 +1440,34 @@
             <div class="section-title">시스템 구성</div>
           </div>
 
-          <div class="arch">
-            <div class="arch-node">
-              <div class="label">구글시트</div>
-              <div class="sub">기존 입력</div>
-            </div>
-            <div class="arch-arrow">→</div>
-            <div class="arch-node">
-              <div class="label">스트랩 DB 서버</div>
-              <div class="sub">정규화 저장, API</div>
-            </div>
-            <div class="arch-arrow">→</div>
-            <div class="arch-node">
-              <div class="label">웹 관리 UI</div>
-              <div class="sub">조회, 편집, 콘텐츠</div>
-            </div>
-          </div>
-
-          <div class="callout callout-blue">
-            구글시트는 입력 채널로 계속 사용합니다. DB가 주 데이터 소스가 되며,
-            양방향 동기화합니다.
-          </div>
-
+          <!-- prettier-ignore -->
           <div class="mermaid">
-            sequenceDiagram participant G as 구글시트 participant S as DB 서버
-            participant W as 웹 UI participant C as 콘텐츠 G->>S: 변경 감지
-            S->>S: 정규화 저장 W->>S: 조회/필터 S-->>W: 데이터 반환 W->>C:
-            상품명 생성 S-->>G: 역동기화
+flowchart TB
+    subgraph clients["클라이언트"]
+        PDA["TC60 PDA\nAndroid 스캐너"]
+        ADMIN["어드민 웹\nReact SPA"]
+        BT["BarTender\n라벨 인쇄"]
+    end
+    subgraph server["Mini PC FastAPI"]
+        API["API Gateway"]
+        SCAN["스캔 모듈"]
+        STRAP["스트랩 모듈"]
+        PRINT["인쇄 모듈"]
+    end
+    subgraph storage["저장소"]
+        DB1[("스캐너 DB")]
+        DB2[("스트랩 DB")]
+        NAS["NAS WebDAV"]
+    end
+    PDA -->|WiFi| API
+    ADMIN -->|HTTP| API
+    API --> SCAN
+    API --> STRAP
+    API --> PRINT
+    SCAN --> DB1
+    SCAN --> NAS
+    STRAP --> DB2
+    PRINT --> BT
           </div>
         </section>
 
@@ -1470,61 +1475,95 @@
         <section id="s03">
           <div class="section-head">
             <div class="section-num">03</div>
-            <div class="section-title">데이터 구조</div>
+            <div class="section-title">통합 ERD</div>
           </div>
 
+          <!-- prettier-ignore -->
           <div class="mermaid">
-            erDiagram PRODUCT ||--o{ SKU : has PRODUCT ||--o{ ATTRIBUTE : has
-            SKU }o--o{ COMPATIBLE_MODEL : supports SKU ||--o{ PRICE : has SKU
-            ||--o{ CONTENT : generates
+erDiagram
+    product ||--o{ barcode : has
+    barcode ||--o{ image : has
+    product ||--o| stock : has
+    product ||--o{ stock_log : has
+    strap_product ||--|| strap_attribute : has
+    strap_product ||--o{ strap_sku : has
+    strap_sku ||--o{ strap_sku_model : compatible
+    watch_model ||--o{ strap_sku_model : compatible
+    strap_sku ||--o{ strap_price : has
+    strap_sku ||--|| strap_content : generates
           </div>
 
+          <h3>스캐너 DB (기존)</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>테이블</th>
-                  <th>주요 필드</th>
-                  <th>관계</th>
+                  <th>역할</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">제품 마스터</td>
-                  <td>ID, 제품명, 브랜드, 제품군, 상태</td>
-                  <td>1:N → SKU, 속성</td>
+                  <td class="td-label">product</td>
+                  <td>상품 마스터 (SKU ID, 상품명, 카테고리)</td>
                 </tr>
                 <tr>
-                  <td class="td-label">속성</td>
-                  <td>재질, 커넥터, 체결방식, 폭, 길이</td>
-                  <td>N:1 → 제품</td>
+                  <td class="td-label">barcode</td>
+                  <td>바코드 매핑 (1:N)</td>
                 </tr>
                 <tr>
-                  <td class="td-label">SKU</td>
-                  <td>ID, 컬러, 사이즈, 바코드, 재고</td>
-                  <td>N:1 → 제품</td>
+                  <td class="td-label">image</td>
+                  <td>상품 이미지 경로</td>
                 </tr>
                 <tr>
-                  <td class="td-label">호환 모델</td>
-                  <td>모델명, 워치사이즈</td>
-                  <td>M:N ↔ SKU</td>
-                </tr>
-                <tr>
-                  <td class="td-label">가격</td>
-                  <td>공급가, 도매가, 판매가, 채널별</td>
-                  <td>N:1 → SKU</td>
-                </tr>
-                <tr>
-                  <td class="td-label">콘텐츠</td>
-                  <td>자동 상품명, 옵션명, 키워드</td>
-                  <td>N:1 → SKU</td>
+                  <td class="td-label">stock / stock_log</td>
+                  <td>재고 수량 + 변경 이력</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="callout callout-blue">
-            M:N 관계를 통해 기종 추가 시 컬럼이 아닌 행만 추가하면 됩니다.
+          <h3>스트랩 DB (신규)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>테이블</th>
+                  <th>역할</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-label">strap_product</td>
+                  <td>스트랩 제품 마스터</td>
+                </tr>
+                <tr>
+                  <td class="td-label">strap_attribute</td>
+                  <td>재질, 커넥터, 체결방식 등 속성</td>
+                </tr>
+                <tr>
+                  <td class="td-label">strap_sku</td>
+                  <td>SKU (컬러, 사이즈, 바코드)</td>
+                </tr>
+                <tr>
+                  <td class="td-label">watch_model</td>
+                  <td>호환 기종 (M:N)</td>
+                </tr>
+                <tr>
+                  <td class="td-label">strap_price</td>
+                  <td>채널별 가격</td>
+                </tr>
+                <tr>
+                  <td class="td-label">strap_content</td>
+                  <td>자동 생성 상품명/옵션명</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout">
+            두 DB를 별도 파일로 분리하여 기존 스캐너 시스템에 영향 없이 확장.
+            PDA 스캔 시 양쪽 DB를 자동 탐색.
           </div>
         </section>
 
@@ -1558,6 +1597,19 @@
           <ul>
             <li>DB ↔ 시트 자동 반영</li>
             <li>충돌 시 DB 우선 + 알림</li>
+          </ul>
+
+          <h3>BarTender 라벨 인쇄</h3>
+          <ul>
+            <li>PDA 스캔 → 인쇄 버튼 → BarTender로 라벨 자동 인쇄</li>
+            <li>라벨 손상/부족 시 현장에서 즉시 재인쇄</li>
+            <li>인쇄 이력 자동 기록</li>
+          </ul>
+
+          <h3>통합 대시보드</h3>
+          <ul>
+            <li>스캐너 서버 상태 + 스트랩 DB 현황 한 화면</li>
+            <li>NAS 동기화 상태, 최근 스캔 이력, 재고 알림</li>
           </ul>
         </section>
 
@@ -1702,29 +1754,29 @@
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">설계 (ERD + API + 데이터 구조)</td>
+                  <td class="td-label">설계 (통합 ERD + API + 데이터 구조)</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
                     800,000
                   </td>
                 </tr>
                 <tr>
                   <td class="td-label">
-                    백엔드 (DB + API + 시트연동 + 마이그레이션)
+                    백엔드 (스트랩 DB + API + 시트연동 + BarTender)
                   </td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    1,500,000
-                  </td>
-                </tr>
-                <tr>
-                  <td class="td-label">웹 UI (관리화면 + 조회/필터 + CRUD)</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
                     2,000,000
                   </td>
                 </tr>
                 <tr>
+                  <td class="td-label">통합 어드민 웹 UI</td>
+                  <td style="text-align: right; font-family: var(--font-mono)">
+                    3,500,000
+                  </td>
+                </tr>
+                <tr>
                   <td class="td-label">자동화 + 테스트 + 배포</td>
                   <td style="text-align: right; font-family: var(--font-mono)">
-                    1,700,000
+                    1,500,000
                   </td>
                 </tr>
                 <tr class="total">
@@ -1736,7 +1788,7 @@
                       font-size: 15px;
                     "
                   >
-                    6,000,000원 (VAT 별도)
+                    7,800,000원 (VAT 별도)
                   </td>
                 </tr>
               </tbody>
