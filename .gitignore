@@ -1,5 +1,9 @@
-# Chat exports
-kakao_chat_extract/
+# Chat exports — 대용량 파일만 제외
+kakao_chat_extract/scan13/
+kakao_chat_extract/*.zip
+kakao_chat_extract/*.m4a
+kakao_chat_extract/KakaoTalk_Chats_*/*.mp4
+kakao_chat_extract/KakaoTalk_Chats_*/*.jpg
 *.zip
 
 # OS
