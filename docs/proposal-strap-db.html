@@ -1,1342 +1,1225 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>스트랩 통합 DB 시스템 제안서</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-
-  :root {
-    --navy: #1a2332;
-    --navy-light: #243045;
-    --navy-mid: #2d3d55;
-    --orange: #e8734a;
-    --orange-dim: rgba(232,115,74,0.12);
-    --orange-border: rgba(232,115,74,0.3);
-    --white: #ffffff;
-    --white-80: rgba(255,255,255,0.80);
-    --white-50: rgba(255,255,255,0.50);
-    --white-25: rgba(255,255,255,0.25);
-    --white-10: rgba(255,255,255,0.10);
-    --white-06: rgba(255,255,255,0.06);
-    --slide-count: 11;
-    --transition: 0.38s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  *, *::before, *::after {
-    margin: 0; padding: 0; box-sizing: border-box;
-  }
-
-  html, body {
-    width: 100%; height: 100%; overflow: hidden;
-    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-    background: var(--navy);
-    color: var(--white);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── SLIDE CONTAINER ── */
-  #slider {
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    position: relative;
-  }
-
-  #track {
-    display: flex;
-    width: calc(100vw * var(--slide-count));
-    height: 100vh;
-    transition: transform var(--transition);
-    will-change: transform;
-  }
-
-  .slide {
-    width: 100vw;
-    height: 100vh;
-    flex-shrink: 0;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    background: var(--navy);
-  }
-
-  /* ── COVER SLIDE ── */
-  .slide-cover {
-    background: var(--navy);
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0 10vw;
-  }
-
-  .cover-bg {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .cover-bg::before {
-    content: '';
-    position: absolute;
-    right: -5vw;
-    top: -10vh;
-    width: 55vw;
-    height: 120vh;
-    background: linear-gradient(135deg, transparent 30%, rgba(232,115,74,0.04) 60%, rgba(232,115,74,0.08) 100%);
-    transform: skewX(-8deg);
-  }
-
-  .cover-bg::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--orange);
-  }
-
-  .cover-grid-line {
-    position: absolute;
-    top: 0; right: 18vw;
-    width: 1px;
-    height: 100%;
-    background: var(--white-06);
-  }
-
-  .cover-content {
-    position: relative;
-    z-index: 1;
-  }
-
-  .cover-accent {
-    width: 48px;
-    height: 3px;
-    background: var(--orange);
-    margin-bottom: 40px;
-  }
-
-  .cover-title {
-    font-size: clamp(48px, 5.5vw, 80px);
-    font-weight: 900;
-    color: var(--white);
-    letter-spacing: -2px;
-    line-height: 1.15;
-    margin-bottom: 28px;
-  }
-
-  .cover-subtitle {
-    font-size: clamp(14px, 1.4vw, 20px);
-    font-weight: 300;
-    color: var(--white-50);
-    letter-spacing: 0.3px;
-    line-height: 1.6;
-    margin-bottom: 72px;
-  }
-
-  .cover-contact {
-    font-size: clamp(12px, 1vw, 15px);
-    color: var(--white-25);
-    font-weight: 400;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── CONTENT SLIDE LAYOUT ── */
-  .slide-content {
-    flex-direction: row;
-  }
-
-  .slide-left {
-    width: 26vw;
-    min-width: 260px;
-    background: var(--navy-light);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 60px 48px;
-    position: relative;
-    flex-shrink: 0;
-    border-right: 1px solid var(--white-06);
-  }
-
-  .slide-left::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--orange);
-  }
-
-  .section-num {
-    font-size: clamp(72px, 7vw, 110px);
-    font-weight: 900;
-    color: var(--orange);
-    line-height: 1;
-    letter-spacing: -4px;
-    margin-bottom: 20px;
-    opacity: 0.9;
-  }
-
-  .section-title {
-    font-size: clamp(18px, 1.8vw, 26px);
-    font-weight: 700;
-    color: var(--white);
-    line-height: 1.4;
-    letter-spacing: -0.5px;
-  }
-
-  .section-desc {
-    margin-top: 20px;
-    font-size: clamp(11px, 0.85vw, 14px);
-    color: var(--white-50);
-    line-height: 1.7;
-    font-weight: 300;
-  }
-
-  .slide-right {
-    flex: 1;
-    overflow-y: auto;
-    padding: 52px 5vw 52px 4vw;
-    scrollbar-width: thin;
-    scrollbar-color: var(--white-10) transparent;
-  }
-
-  .slide-right::-webkit-scrollbar { width: 4px; }
-  .slide-right::-webkit-scrollbar-track { background: transparent; }
-  .slide-right::-webkit-scrollbar-thumb { background: var(--white-10); border-radius: 2px; }
-
-  /* ── FULL-WIDTH SLIDE ── */
-  .slide-full {
-    flex-direction: column;
-    padding: 60px 7vw;
-    overflow-y: auto;
-  }
-
-  /* ── TYPOGRAPHY ── */
-  h3 {
-    font-size: clamp(13px, 1.1vw, 17px);
-    font-weight: 700;
-    color: var(--white-80);
-    margin: 36px 0 14px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--white-10);
-    letter-spacing: -0.3px;
-  }
-
-  h3:first-child { margin-top: 0; }
-
-  h3::before {
-    content: '';
-    display: inline-block;
-    width: 3px;
-    height: 14px;
-    background: var(--orange);
-    margin-right: 10px;
-    vertical-align: middle;
-    position: relative;
-    top: -1px;
-  }
-
-  p, .desc-text {
-    font-size: clamp(12px, 0.9vw, 14px);
-    color: var(--white-50);
-    line-height: 1.75;
-    margin: 6px 0;
-  }
-
-  code {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.88em;
-    background: var(--white-06);
-    color: var(--orange);
-    padding: 1px 6px;
-    border-radius: 3px;
-  }
-
-  /* ── TABLES ── */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0 20px;
-    font-size: clamp(11px, 0.88vw, 14px);
-  }
-
-  thead th {
-    background: var(--navy-mid);
-    color: var(--white-80);
-    font-weight: 600;
-    padding: 12px 18px;
-    text-align: left;
-    font-size: clamp(10px, 0.82vw, 13px);
-    letter-spacing: 0.3px;
-    border-bottom: 2px solid var(--orange);
-  }
-
-  td {
-    padding: 11px 18px;
-    border-bottom: 1px solid var(--white-06);
-    vertical-align: top;
-    color: var(--white-80);
-    line-height: 1.6;
-  }
-
-  tr:hover td { background: var(--white-06); }
-
-  .td-label {
-    font-weight: 600;
-    color: var(--white);
-    white-space: nowrap;
-    font-size: clamp(11px, 0.82vw, 13px);
-  }
-
-  tr.total-row td {
-    font-weight: 700;
-    color: var(--white);
-    background: var(--navy-mid);
-    border-top: 1px solid var(--white-25);
-  }
-
-  td[style*="text-align:right"] {
-    text-align: right !important;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── CALLOUT ── */
-  .callout {
-    border-left: 3px solid var(--orange);
-    background: var(--orange-dim);
-    padding: 16px 20px;
-    margin: 14px 0;
-    font-size: clamp(11px, 0.88vw, 14px);
-    line-height: 1.75;
-    color: var(--white-80);
-    border-radius: 0 4px 4px 0;
-  }
-
-  .callout strong { color: var(--white); }
-
-  .callout-blue {
-    border-left-color: #3b82f6;
-    background: rgba(59,130,246,0.1);
-  }
-
-  .callout-gray {
-    border-left-color: rgba(255,255,255,0.2);
-    background: var(--white-06);
-  }
-
-  /* ── VS COLUMNS ── */
-  .vs {
-    display: flex;
-    gap: 16px;
-    margin: 14px 0;
-  }
-
-  .vs-col {
-    flex: 1;
-    padding: 20px 22px;
-    border-radius: 6px;
-    font-size: clamp(11px, 0.85vw, 13px);
-  }
-
-  .vs-col h4 {
-    font-size: clamp(12px, 0.9vw, 14px);
-    margin: 0 0 12px;
-    font-weight: 700;
-  }
-
-  .vs-col ul { margin: 0 0 0 16px; }
-  .vs-col li { margin: 5px 0; color: var(--white-80); line-height: 1.6; }
-
-  .vs-before {
-    background: rgba(180,60,60,0.12);
-    border: 1px solid rgba(200,80,80,0.2);
-  }
-
-  .vs-before h4 { color: #f87171; }
-
-  .vs-after {
-    background: rgba(40,160,100,0.1);
-    border: 1px solid rgba(40,160,100,0.2);
-  }
-
-  .vs-after h4 { color: #4ade80; }
-
-  .vs-col-blue {
-    background: rgba(59,130,246,0.08);
-    border: 1px solid rgba(59,130,246,0.2);
-  }
-
-  .vs-col-blue h4 { color: #60a5fa; }
-
-  /* ── ARCH NODES ── */
-  .arch {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin: 20px 0;
-  }
-
-  .arch-node {
-    flex: 1;
-    text-align: center;
-    padding: 28px 16px;
-    background: var(--navy-mid);
-    border: 1px solid var(--white-10);
-    border-radius: 8px;
-  }
-
-  .arch-node .label {
-    font-weight: 700;
-    font-size: clamp(13px, 1vw, 16px);
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-
-  .arch-node .sub {
-    color: var(--white-50);
-    font-size: clamp(10px, 0.75vw, 12px);
-    line-height: 1.6;
-  }
-
-  .arch-arrow {
-    padding: 0 16px;
-    color: var(--white-25);
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-
-  .arch-node-box {
-    flex: 1;
-    text-align: center;
-    padding: 24px 16px;
-    background: var(--navy-mid);
-    border: 1px solid var(--white-10);
-    border-radius: 8px;
-  }
-
-  .arch-node-box .label {
-    font-weight: 700;
-    font-size: clamp(13px, 1vw, 16px);
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-
-  .arch-node-box .sub {
-    color: var(--white-50);
-    font-size: clamp(10px, 0.75vw, 12px);
-    line-height: 1.6;
-  }
-
-  /* ── MERMAID ── */
-  .mermaid {
-    margin: 20px auto;
-    text-align: center;
-    background: var(--navy-light);
-    border-radius: 8px;
-    padding: 24px;
-    border: 1px solid var(--white-06);
-  }
-
-  .mermaid svg {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* ── GANTT ── */
-  .gantt { margin: 16px 0; }
-
-  .gantt-row {
-    display: flex;
-    align-items: center;
-    margin: 4px 0;
-  }
-
-  .gantt-label {
-    width: 200px;
-    text-align: right;
-    padding-right: 16px;
-    font-size: clamp(10px, 0.82vw, 13px);
-    color: var(--white-50);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .gantt-track {
-    flex: 1;
-    height: 28px;
-    position: relative;
-    background: var(--white-06);
-    border-radius: 3px;
-  }
-
-  .gantt-bar {
-    position: absolute;
-    top: 3px;
-    height: 22px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    color: var(--white);
-    font-size: clamp(9px, 0.75vw, 11px);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .g-srv { background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.15); }
-  .g-app { background: var(--orange); opacity: 0.9; }
-  .g-int { background: #3b82f6; opacity: 0.9; }
-
-  .gantt-days {
-    display: flex;
-    flex: 1;
-    font-size: clamp(9px, 0.72vw, 11px);
-    color: var(--white-25);
-    margin-bottom: 2px;
-  }
-
-  .gantt-days span {
-    flex: 1;
-    text-align: center;
-    border-left: 1px solid var(--white-06);
-    padding: 3px 0;
-  }
-
-  .gantt-legend {
-    display: flex;
-    gap: 20px;
-    font-size: clamp(10px, 0.78vw, 12px);
-    color: var(--white-50);
-    margin-top: 12px;
-  }
-
-  .gantt-legend span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  /* ── TAG ── */
-  .tag {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 3px;
-    font-size: clamp(9px, 0.72vw, 11px);
-    font-weight: 600;
-  }
-
-  .tag-y { background: rgba(40,160,100,0.18); color: #4ade80; }
-  .tag-c { background: var(--orange-dim); color: var(--orange); }
-
-  /* ── MODULE GRID ── */
-  .module-grid {
-    display: flex;
-    gap: 14px;
-    margin: 16px 0;
-  }
-
-  .module-box {
-    flex: 1;
-    border: 1px solid var(--white-10);
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    position: relative;
-    background: var(--navy-mid);
-  }
-
-  .module-box.active {
-    border-color: var(--orange-border);
-    background: var(--orange-dim);
-  }
-
-  .module-box .m-title {
-    font-weight: 700;
-    font-size: clamp(12px, 0.9vw, 14px);
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-
-  .module-box.active .m-title { color: var(--orange); }
-
-  .module-box .m-desc {
-    font-size: clamp(10px, 0.75vw, 12px);
-    color: var(--white-50);
-    line-height: 1.5;
-  }
-
-  .m-badge {
-    position: absolute;
-    top: -9px;
-    right: 12px;
-    font-size: clamp(8px, 0.68vw, 10px);
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 3px;
-  }
-
-  .m-now { background: var(--orange); color: #fff; }
-  .m-next { background: var(--white-10); color: var(--white-50); }
-
-  /* ── PRICE HIGHLIGHT ── */
-  .price-total {
-    font-size: clamp(22px, 2.2vw, 32px);
-    font-weight: 900;
-    color: var(--orange);
-    letter-spacing: -1px;
-  }
-
-  .price-note {
-    font-size: clamp(11px, 0.82vw, 13px);
-    color: var(--white-50);
-    margin-left: 8px;
-  }
-
-  /* ── FOOTER SLIDE ── */
-  .foot {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid var(--white-10);
-    font-size: clamp(11px, 0.85vw, 14px);
-    color: var(--white-50);
-    text-align: center;
-    line-height: 1.8;
-  }
-
-  /* ── NAVIGATION UI ── */
-  #nav-dots {
-    position: fixed;
-    right: 24px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 100;
-  }
-
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--white-25);
-    cursor: pointer;
-    transition: all 0.25s ease;
-    border: none;
-  }
-
-  .dot.active {
-    background: var(--orange);
-    transform: scale(1.4);
-  }
-
-  .dot:hover:not(.active) {
-    background: var(--white-50);
-  }
-
-  #slide-counter {
-    position: fixed;
-    bottom: 28px;
-    right: 36px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--white-25);
-    letter-spacing: 2px;
-    z-index: 100;
-    font-variant-numeric: tabular-nums;
-  }
-
-  #nav-hint {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 11px;
-    color: var(--white-25);
-    letter-spacing: 1px;
-    z-index: 100;
-    transition: opacity 0.5s;
-  }
-
-  /* Click zones */
-  #nav-prev, #nav-next {
-    position: fixed;
-    top: 0;
-    width: 8vw;
-    height: 100vh;
-    z-index: 50;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-  }
-
-  #nav-prev { left: 0; }
-  #nav-next { right: 0; }
-
-  /* ── SLIDE-IN ANIMATIONS ── */
-  .slide-left-panel, .slide-right {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-  }
-
-  .slide.is-active .slide-left-panel,
-  .slide.is-active .slide-right,
-  .slide.is-active .cover-content {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .slide.is-active .slide-right {
-    transition-delay: 0.08s;
-  }
-
-  .cover-content {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.55s ease, transform 0.55s ease;
-  }
-
-  /* ── SLIDE LABEL (sub-slide indicator) ── */
-  .slide-sub-label {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    font-size: 10px;
-    color: var(--white-25);
-    letter-spacing: 2px;
-    font-weight: 600;
-  }
-
-  /* ── UTILITY ── */
-  ul, ol { margin: 6px 0 6px 18px; }
-  li { margin: 4px 0; font-size: clamp(11px, 0.88vw, 14px); color: var(--white-80); line-height: 1.65; }
-
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-    margin-top: 4px;
-  }
-
-  .highlight-box {
-    background: var(--navy-mid);
-    border: 1px solid var(--white-10);
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin: 12px 0;
-  }
-
-  .highlight-box .num {
-    font-size: clamp(28px, 2.8vw, 42px);
-    font-weight: 900;
-    color: var(--orange);
-    line-height: 1;
-    letter-spacing: -2px;
-  }
-
-  .highlight-box .label {
-    font-size: clamp(11px, 0.85vw, 13px);
-    color: var(--white-50);
-    margin-top: 4px;
-  }
-
-  .metric-row {
-    display: flex;
-    gap: 16px;
-    margin: 16px 0;
-  }
-
-  .metric-box {
-    flex: 1;
-    background: var(--navy-mid);
-    border: 1px solid var(--white-10);
-    border-radius: 8px;
-    padding: 20px 22px;
-    text-align: center;
-  }
-
-  .metric-box .val {
-    font-size: clamp(20px, 2vw, 30px);
-    font-weight: 900;
-    color: var(--orange);
-    letter-spacing: -1px;
-  }
-
-  .metric-box .lbl {
-    font-size: clamp(10px, 0.78vw, 12px);
-    color: var(--white-50);
-    margin-top: 4px;
-  }
-
-  /* Mermaid dark theme overrides */
-  .mermaid .label { color: #e2e8f0 !important; }
-</style>
-</head>
-<body>
-
-<div id="slider">
-<div id="track">
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 0 — COVER
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-cover" data-index="0">
-    <div class="cover-bg"></div>
-    <div class="cover-grid-line"></div>
-    <div class="cover-content">
-      <div class="cover-accent"></div>
-      <h1 class="cover-title">스트랩 통합<br>DB 시스템</h1>
-      <div class="cover-subtitle">속성 기반 제품 데이터 관리 및 콘텐츠 자동화 시스템 구축 제안서</div>
-      <div class="cover-contact">이은석 &nbsp;·&nbsp; 주식회사 쵸미앤세븐</div>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 1 — 01 현황 이해 (1/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="1">
-    <div class="slide-sub-label">01 — 1 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">01</div>
-      <div class="section-title">현황 이해</div>
-      <div class="section-desc">스마트워치 스트랩 시장의 선도적 위치와 데이터 관리 현황을 파악합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>사업 현황</h3>
-      <ul>
-        <li>대한민국 워치 스트랩 시장에서 거의 모든 종류를 판매</li>
-        <li>재질 10종 이상 (메탈, 실리콘, 패브릭, 가죽, 나일론, TPU, PC, 포우레더, 비즈, 마그네틱)</li>
-        <li>호환 기종 14개+ (갤럭시워치, 가민, 어메이즈핏, 보이스캐디 등)</li>
-        <li>제품명/옵션명을 자체 내부 팀에서 직접 정의</li>
-      </ul>
-
-      <h3>현재 데이터 관리</h3>
-      <ul>
-        <li>구글시트 3개 탭으로 관리 중</li>
-      </ul>
-      <div class="metric-row">
-        <div class="metric-box">
-          <div class="val">60개</div>
-          <div class="lbl">20mm 일반형</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>스트랩 통합 DB 시스템 구축 제안서</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "dark",
+        themeVariables: {
+          darkMode: true,
+          background: "#243045",
+          primaryColor: "#243045",
+          primaryTextColor: "#e2e8f0",
+          primaryBorderColor: "#e8734a",
+          lineColor: "#e8734a",
+          secondaryColor: "#1a2332",
+          tertiaryColor: "#2a3a52",
+          fontFamily: "Noto Sans KR",
+          fontSize: "13px",
+          actorTextColor: "#e2e8f0",
+          actorBorder: "#e8734a",
+          actorBkg: "#1a2332",
+          actorLineColor: "#e8734a",
+          signalColor: "#e2e8f0",
+          signalTextColor: "#e2e8f0",
+          sequenceNumberColor: "#e8734a",
+          noteBkgColor: "#2a3a52",
+          noteTextColor: "#e2e8f0",
+          noteBorderColor: "#e8734a",
+          entityBorder: "#e8734a",
+          entityBkg: "#1a2332",
+          attributeBackgroundColorEven: "#243045",
+          attributeBackgroundColorOdd: "#1e2d40",
+        },
+        sequence: { actorMargin: 60, messageMargin: 30 },
+        flowchart: { curve: "basis", padding: 12 },
+        er: { fontSize: 12 },
+      });
+    </script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --navy: #1a2332;
+        --navy-light: #243045;
+        --navy-lighter: #2a3a52;
+        --orange: #e8734a;
+        --white: #ffffff;
+        --gray-50: #f8f9fa;
+        --gray-100: #f1f3f5;
+        --gray-200: #e9ecef;
+        --gray-text: #6b7280;
+        --text-dark: #1a2332;
+      }
+
+      @page {
+        size: landscape;
+        margin: 0;
+      }
+
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        color: var(--text-dark);
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        background: var(--white);
+        line-height: 1.5;
+      }
+
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        page-break-after: always;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+      }
+
+      /* ── 표지 ── */
+      .slide-cover {
+        background: var(--navy);
+        color: var(--white);
+        display: flex;
+        align-items: center;
+        padding: 0;
+      }
+
+      .cover-left {
+        width: 55%;
+        padding: 6vh 5vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .cover-orange-line {
+        width: 60px;
+        height: 4px;
+        background: var(--orange);
+        margin-bottom: 3vh;
+      }
+
+      .cover-title {
+        font-size: clamp(28px, 3.5vw, 42px);
+        font-weight: 900;
+        letter-spacing: -1px;
+        line-height: 1.2;
+        margin-bottom: 1.5vh;
+      }
+
+      .cover-subtitle {
+        font-size: clamp(14px, 1.4vw, 18px);
+        font-weight: 300;
+        color: #b0bec5;
+        margin-bottom: 5vh;
+        line-height: 1.6;
+      }
+
+      .cover-contact {
+        font-size: clamp(12px, 1.1vw, 15px);
+        color: #90a4ae;
+        line-height: 2;
+      }
+
+      .cover-contact strong {
+        color: var(--white);
+        font-weight: 600;
+      }
+
+      .cover-right {
+        width: 45%;
+        padding: 6vh 4vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2vh;
+      }
+
+      .cover-box {
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 2vh 2vw;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .cover-box-label {
+        font-size: clamp(11px, 1vw, 13px);
+        color: #90a4ae;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .cover-box-value {
+        font-size: clamp(13px, 1.2vw, 16px);
+        font-weight: 600;
+        color: var(--orange);
+      }
+
+      /* ── 일반 슬라이드 ── */
+      .slide-panel {
+        width: 22vw;
+        min-width: 22vw;
+        background: var(--navy);
+        color: var(--white);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 5vh 2.5vw;
+      }
+
+      .section-number {
+        font-size: clamp(48px, 6vw, 80px);
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.08);
+        line-height: 1;
+        margin-bottom: 2vh;
+      }
+
+      .section-title {
+        font-size: clamp(18px, 2vw, 26px);
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -0.5px;
+      }
+
+      .section-desc {
+        font-size: clamp(11px, 0.9vw, 13px);
+        color: #90a4ae;
+        margin-top: 1.5vh;
+        line-height: 1.6;
+      }
+
+      .slide-content {
+        flex: 1;
+        padding: 3.5vh 3vw;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .content-2col {
+        display: flex;
+        gap: 2.5vw;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .col {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* ── 표 ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(10px, 0.85vw, 12px);
+        margin-bottom: 1.5vh;
+      }
+
+      table th {
+        background: var(--navy);
+        color: var(--white);
+        font-weight: 600;
+        padding: 0.8vh 1vw;
+        text-align: left;
+        font-size: clamp(10px, 0.8vw, 12px);
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+      }
+
+      table td {
+        padding: 0.7vh 1vw;
+        border-bottom: 1px solid var(--gray-200);
+        vertical-align: top;
+        line-height: 1.5;
+      }
+
+      table tr:nth-child(even) td {
+        background: var(--gray-50);
+      }
+
+      table th:first-child {
+        border-radius: 4px 0 0 0;
+      }
+      table th:last-child {
+        border-radius: 0 4px 0 0;
+      }
+
+      /* ── Callout 박스 ── */
+      .callout {
+        background: var(--gray-50);
+        border-left: 3px solid var(--orange);
+        padding: 1.2vh 1.2vw;
+        margin-bottom: 1.5vh;
+        font-size: clamp(10px, 0.85vw, 12px);
+        border-radius: 0 6px 6px 0;
+        line-height: 1.6;
+      }
+
+      .callout-title {
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 0.3vh;
+        font-size: clamp(11px, 0.9vw, 13px);
+      }
+
+      /* ── 강조 박스 ── */
+      .highlight-box {
+        border: 2px solid var(--orange);
+        border-radius: 8px;
+        padding: 1.5vh 1.2vw;
+        margin-bottom: 1.5vh;
+        background: #fff8f5;
+      }
+
+      .highlight-box-title {
+        font-weight: 700;
+        color: var(--orange);
+        font-size: clamp(11px, 0.95vw, 14px);
+        margin-bottom: 0.5vh;
+      }
+
+      /* ── 비교 박스 ── */
+      .compare-row {
+        display: flex;
+        gap: 1vw;
+        margin-bottom: 1.5vh;
+      }
+
+      .compare-box {
+        flex: 1;
+        padding: 1.5vh 1.2vw;
+        border-radius: 8px;
+        font-size: clamp(10px, 0.85vw, 12px);
+        line-height: 1.6;
+      }
+
+      .compare-before {
+        background: var(--gray-100);
+        border: 1px solid var(--gray-200);
+      }
+
+      .compare-after {
+        background: #fff8f5;
+        border: 2px solid var(--orange);
+      }
+
+      .compare-label {
+        font-weight: 700;
+        font-size: clamp(11px, 0.9vw, 13px);
+        margin-bottom: 0.5vh;
+      }
+
+      .compare-before .compare-label {
+        color: var(--gray-text);
+      }
+      .compare-after .compare-label {
+        color: var(--orange);
+      }
+
+      /* ── 소제목 ── */
+      .sub-title {
+        font-size: clamp(12px, 1.1vw, 15px);
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 1vh;
+        padding-bottom: 0.5vh;
+        border-bottom: 2px solid var(--orange);
+        display: inline-block;
+      }
+
+      .sub-title-sm {
+        font-size: clamp(11px, 0.9vw, 13px);
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 0.8vh;
+      }
+
+      /* ── 메트릭 박스 ── */
+      .metric-row {
+        display: flex;
+        gap: 0.8vw;
+        margin-bottom: 1.5vh;
+      }
+
+      .metric-box {
+        flex: 1;
+        background: var(--navy);
+        color: var(--white);
+        border-radius: 6px;
+        padding: 1vh 0.8vw;
+        text-align: center;
+      }
+
+      .metric-box.accent {
+        background: var(--orange);
+      }
+
+      .metric-value {
+        font-size: clamp(14px, 1.4vw, 20px);
+        font-weight: 900;
+      }
+
+      .metric-label {
+        font-size: clamp(8px, 0.65vw, 10px);
+        opacity: 0.8;
+        margin-top: 0.2vh;
+      }
+
+      /* ── 간트 차트 ── */
+      .gantt-table {
+        width: 100%;
+      }
+      .gantt-table th,
+      .gantt-table td {
+        text-align: center;
+        padding: 0.6vh 0.3vw;
+        font-size: clamp(9px, 0.75vw, 11px);
+      }
+      .gantt-table td.gantt-label {
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+        width: 14%;
+      }
+      .gantt-bar {
+        height: 22px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-size: clamp(8px, 0.7vw, 10px);
+        font-weight: 600;
+      }
+      .bar-navy {
+        background: var(--navy);
+      }
+      .bar-orange {
+        background: var(--orange);
+      }
+      .bar-blue {
+        background: #4a7fb5;
+      }
+
+      /* ── Mermaid ── */
+      .mermaid {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1vh 0;
+      }
+
+      .mermaid svg {
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      /* ── 아키텍처 노드 ── */
+      .arch-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5vw;
+        margin-bottom: 2vh;
+      }
+
+      .arch-node {
+        background: var(--navy);
+        color: var(--white);
+        border-radius: 10px;
+        padding: 2vh 2vw;
+        text-align: center;
+        min-width: 14vw;
+      }
+
+      .arch-node-title {
+        font-weight: 700;
+        font-size: clamp(13px, 1.1vw, 16px);
+        margin-bottom: 0.3vh;
+      }
+
+      .arch-node-desc {
+        font-size: clamp(10px, 0.8vw, 12px);
+        opacity: 0.7;
+      }
+
+      .arch-arrow {
+        font-size: clamp(18px, 2vw, 28px);
+        color: var(--orange);
+        font-weight: 700;
+      }
+
+      /* ── 화면 구성 ── */
+      .screen-box {
+        border: 2px solid var(--navy);
+        border-radius: 10px;
+        padding: 1.5vh 1.2vw;
+        margin-bottom: 1vh;
+        background: var(--gray-50);
+      }
+
+      .screen-title {
+        font-weight: 700;
+        color: var(--navy);
+        font-size: clamp(11px, 0.9vw, 13px);
+        margin-bottom: 0.5vh;
+      }
+
+      .screen-desc {
+        font-size: clamp(9px, 0.75vw, 11px);
+        color: var(--gray-text);
+        line-height: 1.5;
+      }
+
+      /* ── 비용 ── */
+      .cost-total {
+        background: var(--navy);
+        color: var(--white);
+        padding: 1.5vh 1.5vw;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5vh;
+      }
+
+      .cost-total-label {
+        font-size: clamp(13px, 1.1vw, 16px);
+        font-weight: 600;
+      }
+
+      .cost-total-value {
+        font-size: clamp(22px, 2.2vw, 30px);
+        font-weight: 900;
+        color: var(--orange);
+      }
+
+      /* ── 하단 연락처 바 ── */
+      .footer-bar {
+        position: absolute;
+        bottom: 0;
+        left: 22vw;
+        right: 0;
+        background: var(--navy);
+        color: #90a4ae;
+        padding: 1vh 3vw;
+        font-size: clamp(9px, 0.75vw, 11px);
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .footer-bar strong {
+        color: var(--white);
+      }
+
+      /* ── 인쇄 ── */
+      @media print {
+        body {
+          background: white;
+        }
+        .slide {
+          page-break-after: always;
+        }
+      }
+
+      /* ── 방안 비교 ── */
+      .plan-compare {
+        display: flex;
+        gap: 1vw;
+        margin-bottom: 1.5vh;
+      }
+
+      .plan-box {
+        flex: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--gray-200);
+      }
+
+      .plan-box-header {
+        background: var(--navy);
+        color: var(--white);
+        padding: 0.8vh 1vw;
+        font-weight: 700;
+        font-size: clamp(11px, 0.9vw, 13px);
+      }
+
+      .plan-box.recommended .plan-box-header {
+        background: var(--orange);
+      }
+
+      .plan-box-body {
+        padding: 1.2vh 1vw;
+        font-size: clamp(9px, 0.8vw, 11px);
+        line-height: 1.6;
+        background: var(--white);
+      }
+
+      /* ── 리스트 ── */
+      ul.clean-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.5vh 0;
+      }
+
+      ul.clean-list li {
+        padding: 0.4vh 0;
+        font-size: clamp(10px, 0.85vw, 12px);
+        padding-left: 1.2vw;
+        position: relative;
+        line-height: 1.5;
+      }
+
+      ul.clean-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.9vh;
+        width: 5px;
+        height: 5px;
+        background: var(--orange);
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============================== 표지 ============================== -->
+    <div class="slide slide-cover">
+      <div class="cover-left">
+        <div class="cover-orange-line"></div>
+        <div class="cover-title">스트랩 통합 DB 시스템</div>
+        <div class="cover-subtitle">
+          속성 기반 제품 데이터 관리 및 콘텐츠 자동화 시스템 구축 제안서
         </div>
-        <div class="metric-box">
-          <div class="val">56개</div>
-          <div class="lbl">갤럭시 울트라</div>
-        </div>
-        <div class="metric-box">
-          <div class="val">60개</div>
-          <div class="lbl">티렉스 라인업</div>
+        <div class="cover-contact">
+          <strong>이은석</strong><br />
+          korea5410@gmail.com<br />
+          010-7769-4682
         </div>
       </div>
-      <p>총 약 176개 제품, 컬럼 29개</p>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 2 — 01 현황 이해 (2/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="2">
-    <div class="slide-sub-label">01 — 2 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">01</div>
-      <div class="section-title">현황 이해</div>
-    </div>
-    <div class="slide-right">
-      <h3>핵심 문제</h3>
-      <div class="callout">
-        <strong>제품과 기종이 늘어날수록 시트 컬럼이 무한 확장되어 관리 한계에 도달</strong>
-      </div>
-
-      <h3>현행 vs 구축 후</h3>
-      <table>
-        <thead><tr><th>구분</th><th>현행 (구글시트)</th><th>구축 후 (스트랩 DB)</th></tr></thead>
-        <tr><td class="td-label">제품 구분</td><td>유사 외형 제품 혼선</td><td>속성 기반 자동 분류</td></tr>
-        <tr><td class="td-label">기종 추가</td><td>컬럼 수동 추가</td><td>호환모델 테이블에 행 추가</td></tr>
-        <tr><td class="td-label">가격 관리</td><td>시트 내 수기 입력</td><td>채널별 가격 테이블 분리</td></tr>
-        <tr><td class="td-label">상품명 생성</td><td>수동 조합</td><td>규칙 기반 자동 생성</td></tr>
-        <tr><td class="td-label">콘텐츠 제작</td><td>시트에서 복붙</td><td>DB에서 자동 연결</td></tr>
-        <tr><td class="td-label">확장성</td><td>수백 개 한계</td><td>10,000 SKU 이상 대응</td></tr>
-      </table>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 3 — 02 시스템 구성
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="3">
-    <div class="slide-sub-label">02</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">02</div>
-      <div class="section-title">시스템 구성</div>
-      <div class="section-desc">구글시트를 입력 채널로 유지하면서 DB 중심으로 전환합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>아키텍처</h3>
-      <div class="arch">
-        <div class="arch-node">
-          <div class="label">구글시트</div>
-          <div class="sub">기존 입력<br>동기화</div>
+      <div class="cover-right">
+        <div class="cover-box">
+          <span class="cover-box-label">대상</span>
+          <span class="cover-box-value">주식회사 쵸미앤세븐</span>
         </div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-node">
-          <div class="label">스트랩 DB 서버</div>
-          <div class="sub">정규화 저장<br>API</div>
+        <div class="cover-box">
+          <span class="cover-box-label">제품군</span>
+          <span class="cover-box-value">워치 스트랩 전 종류</span>
         </div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-node">
-          <div class="label">웹 관리 UI</div>
-          <div class="sub">조회, 편집<br>콘텐츠</div>
+        <div class="cover-box">
+          <span class="cover-box-label">재질</span>
+          <span class="cover-box-value">10종+</span>
         </div>
-      </div>
-
-      <div class="callout callout-blue">
-        구글시트는 입력 채널로 계속 사용합니다. DB가 주 데이터 소스가 되며, 구글시트와 양방향 동기화합니다.
-      </div>
-
-      <h3>데이터 흐름</h3>
-      <div class="mermaid">
-sequenceDiagram
-    participant G as 구글시트
-    participant S as 스트랩 DB 서버
-    participant W as 웹 관리 UI
-    participant C as 콘텐츠 생성
-
-    G->>S: 시트 변경 감지 (동기화)
-    S->>S: 속성 분리 + 정규화 저장
-    W->>S: 제품 조회 / 필터링
-    S-->>W: 구조화된 데이터 반환
-    W->>C: 상품명/옵션명 자동 생성
-    S-->>G: DB 변경 → 시트 역동기화
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 4 — 03 데이터 구조 (1/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="4">
-    <div class="slide-sub-label">03 — 1 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">03</div>
-      <div class="section-title">데이터 구조</div>
-      <div class="section-desc">6개 테이블로 스트랩 제품의 속성 관계를 정규화합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>ERD</h3>
-      <div class="mermaid">
-erDiagram
-    PRODUCT ||--o{ SKU : has
-    PRODUCT ||--o{ ATTRIBUTE : has
-    SKU }o--o{ COMPATIBLE_MODEL : supports
-    SKU ||--o{ PRICE : has
-    SKU ||--o{ CONTENT : generates
-    PRODUCT {
-        string product_id PK
-        string product_name
-        string brand
-        string category
-        string status
-    }
-    SKU {
-        string sku_id PK
-        string product_id FK
-        string color
-        string size
-        string barcode
-        string thumbnail
-    }
-    COMPATIBLE_MODEL {
-        string model_id PK
-        string model_name
-        string watch_size
-    }
-      </div>
-
-      <h3>테이블 요약</h3>
-      <div class="metric-row">
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">제품 마스터</div>
-        </div>
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">속성</div>
-        </div>
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">SKU</div>
-        </div>
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">호환 모델</div>
-        </div>
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">가격</div>
-        </div>
-        <div class="metric-box">
-          <div class="val" style="font-size: clamp(13px, 1.1vw, 16px);">콘텐츠</div>
+        <div class="cover-box">
+          <span class="cover-box-label">SKU 대응</span>
+          <span class="cover-box-value">10,000+ 대응</span>
         </div>
       </div>
     </div>
-  </div>
 
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 5 — 03 데이터 구조 (2/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="5">
-    <div class="slide-sub-label">03 — 2 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">03</div>
-      <div class="section-title">데이터 구조</div>
-    </div>
-    <div class="slide-right">
-      <h3>테이블 상세</h3>
-      <table>
-        <thead><tr><th>테이블</th><th>주요 필드</th><th>관계</th></tr></thead>
-        <tr><td class="td-label">제품 마스터</td><td>제품ID, 제품명, 브랜드, 제품군, 출시상태</td><td>1:N → SKU, 속성</td></tr>
-        <tr><td class="td-label">속성</td><td>재질, 커넥터타입, 체결방식, 두께, 폭, 길이</td><td>N:1 → 제품</td></tr>
-        <tr><td class="td-label">SKU</td><td>SKU ID, 컬러, 사이즈, 바코드, 썸네일, 재고</td><td>N:1 → 제품</td></tr>
-        <tr><td class="td-label">호환 모델</td><td>모델명, 워치사이즈(20mm/22mm 등)</td><td>M:N ↔ SKU</td></tr>
-        <tr><td class="td-label">가격</td><td>공급가, 도매가, 판매가, 채널별 가격</td><td>N:1 → SKU</td></tr>
-        <tr><td class="td-label">콘텐츠</td><td>자동생성 상품명, 옵션명, 키워드</td><td>N:1 → SKU</td></tr>
-      </table>
-
-      <div class="callout callout-blue">
-        M:N 관계를 통해 하나의 SKU가 여러 기종을 지원하고, 하나의 기종에 여러 SKU가 연결됩니다. 기종 추가 시 컬럼이 아닌 행만 추가하면 됩니다.
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 6 — 04 핵심 기능 (1/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="6">
-    <div class="slide-sub-label">04 — 1 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">04</div>
-      <div class="section-title">핵심 기능</div>
-      <div class="section-desc">제품 조회부터 콘텐츠 자동 생성까지 핵심 기능을 제공합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>SKU 조회 시스템</h3>
-      <ul>
-        <li>SKU ID 또는 바코드 입력 시 제품정보 + 이미지 + 속성 즉시 출력</li>
-        <li>기존 PDA 스캐너 시스템과 연동 가능</li>
-      </ul>
-
-      <h3>다차원 필터링</h3>
-      <ul>
-        <li>재질별, 커넥터별, 호환 모델별, 가격대별, 출시상태별</li>
-        <li>복합 조건 필터 지원 (예: 실리콘 + 갤럭시워치 + 20mm)</li>
-      </ul>
-
-      <h3>CRUD 관리</h3>
-      <ul>
-        <li>제품/SKU/호환모델 추가, 수정, 삭제</li>
-        <li>변경 이력 자동 기록</li>
-      </ul>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 7 — 04 핵심 기능 (2/2)
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="7">
-    <div class="slide-sub-label">04 — 2 / 2</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">04</div>
-      <div class="section-title">핵심 기능</div>
-    </div>
-    <div class="slide-right">
-      <h3>상품명 자동 생성</h3>
-      <ul>
-        <li>규칙: "스페이스쉴드 + 재질 + 체결방식 + 호환모델 + 특징"</li>
-        <li>예시: "스페이스쉴드 실리콘 버클 갤럭시워치 스포츠 밴드"</li>
-      </ul>
-
-      <h3>옵션명 자동 생성</h3>
-      <ul>
-        <li>네이버/쿠팡 글자수 제한 자동 대응</li>
-        <li>내부 코드 병행 관리 (예: ACS10207)</li>
-      </ul>
-
-      <h3>구글시트 양방향 동기화</h3>
-      <ul>
-        <li>DB 변경 → 시트 자동 반영</li>
-        <li>시트 변경 → DB 자동 반영</li>
-        <li>충돌 시 DB 우선 + 알림</li>
-      </ul>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 8 — 05 데이터 이관
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="8">
-    <div class="slide-sub-label">05</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">05</div>
-      <div class="section-title">데이터 이관</div>
-      <div class="section-desc">기존 구글시트 3개 탭을 정규화된 DB로 자동 마이그레이션합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>이관 대상</h3>
-      <table>
-        <thead><tr><th>탭</th><th>제품 수</th><th>대상 기종</th></tr></thead>
-        <tr><td class="td-label">20mm 일반형</td><td>약 60개</td><td>갤럭시워치, 가민, 어메이즈핏 등 14개</td></tr>
-        <tr><td class="td-label">갤럭시 울트라</td><td>약 56개</td><td>갤럭시워치 울트라 전용</td></tr>
-        <tr><td class="td-label">티렉스 라인업</td><td>약 60개</td><td>어메이즈핏 T-Rex 전용</td></tr>
-        <tr class="total-row"><td colspan="2">합계</td><td>약 176개</td></tr>
-      </table>
-
-      <h3>마이그레이션 프로세스</h3>
-      <div class="mermaid">
-sequenceDiagram
-    participant G as 구글시트 3탭
-    participant P as 파서
-    participant D as 스트랩 DB
-
-    G->>P: 데이터 추출
-    P->>P: 속성 분리 + 정규화
-    P->>P: 중복 제거 + 검증
-    P->>D: 제품 마스터 생성
-    P->>D: SKU + 호환모델 M:N 연결
-    P->>D: 가격/콘텐츠 데이터 적재
-    D-->>G: 이관 결과 리포트
-      </div>
-
-      <p>이관 후에도 구글시트 병행 사용 가능</p>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 9 — 06 개발 일정
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="9">
-    <div class="slide-sub-label">06</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">06</div>
-      <div class="section-title">개발 일정</div>
-      <div class="section-desc">착수일 기준 15 영업일, 단계별 병렬 진행합니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>단계별 일정</h3>
-      <table>
-        <thead><tr><th>단계</th><th>기간</th><th>주요 작업</th></tr></thead>
-        <tr><td class="td-label">1. 설계</td><td>3일</td><td>ERD 확정, API 설계, 데이터 구조 정의</td></tr>
-        <tr><td class="td-label">2. 백엔드</td><td>5일</td><td>DB 구축, API 개발, 구글시트 연동, 마이그레이션</td></tr>
-        <tr><td class="td-label">3. 웹 UI</td><td>5일</td><td>관리 화면, 조회/검색/필터, CRUD</td></tr>
-        <tr><td class="td-label">4. 자동화 + 테스트</td><td>2일</td><td>상품명/옵션명 생성, 테스트, 배포</td></tr>
-      </table>
-
-      <p>산출물: DB 설계 ERD, API 문서, 웹 관리 UI, 운영 가이드</p>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
-       SLIDE 10 — 07 비용
-  ════════════════════════════════════════════ -->
-  <div class="slide slide-content" data-index="10">
-    <div class="slide-sub-label">07</div>
-    <div class="slide-left slide-left-panel">
-      <div class="section-num">07</div>
-      <div class="section-title">비용</div>
-      <div class="section-desc">프로젝트 비용과 결제 조건입니다.</div>
-    </div>
-    <div class="slide-right">
-      <h3>개발 비용</h3>
-      <table>
-        <thead><tr><th>항목</th><th style="text-align:right;">금액</th></tr></thead>
-        <tr><td class="td-label">설계 (ERD + API + 데이터 구조)</td><td style="text-align:right;">80만원</td></tr>
-        <tr><td class="td-label">백엔드 (DB + API + 시트연동 + 마이그레이션)</td><td style="text-align:right;">150만원</td></tr>
-        <tr><td class="td-label">웹 UI (관리화면 + 조회/필터 + CRUD)</td><td style="text-align:right;">200만원</td></tr>
-        <tr><td class="td-label">자동화 + 테스트 + 배포</td><td style="text-align:right;">170만원</td></tr>
-        <tr class="total-row">
-          <td>합계</td>
-          <td style="text-align:right;"><span class="price-total">600만원</span><span class="price-note">(VAT 별도)</span></td>
-        </tr>
-      </table>
-
-      <div class="two-col">
-        <div>
-          <h3>결제 조건</h3>
-          <table>
-            <thead><tr><th>시점</th><th>비율</th></tr></thead>
-            <tr><td class="td-label">계약 시</td><td>50%</td></tr>
-            <tr><td class="td-label">인수 완료</td><td>50%</td></tr>
-          </table>
-
-          <h3>하자 보수</h3>
-          <table>
-            <thead><tr><th>항목</th><th>내용</th></tr></thead>
-            <tr><td class="td-label">기간</td><td>납품 후 3개월</td></tr>
-            <tr><td class="td-label">범위</td><td>본 제안서에 명시된 기능의 오류 수정</td></tr>
-          </table>
-        </div>
-        <div>
-          <h3>납품 산출물</h3>
-          <ul style="margin-top: 8px;">
-            <li>DB 설계 ERD</li>
-            <li>API 문서</li>
-            <li>웹 관리 UI</li>
-            <li>데이터 이관 리포트</li>
-            <li>운영 가이드</li>
-          </ul>
+    <!-- ============================== 01 현황 이해 (1/2) ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">01</div>
+        <div class="section-title">현황 이해</div>
+        <div class="section-desc">
+          사업 현황과<br />현재 관리 방식을<br />안내드립니다.
         </div>
       </div>
+      <div class="slide-content">
+        <div class="content-2col">
+          <div class="col">
+            <div class="sub-title">사업 현황</div>
+            <table>
+              <tr>
+                <th>구분</th>
+                <th>내용</th>
+              </tr>
+              <tr>
+                <td>시장</td>
+                <td>대한민국 워치 스트랩 시장에서 거의 모든 종류 판매</td>
+              </tr>
+              <tr>
+                <td>재질</td>
+                <td>
+                  메탈, 실리콘, 패브릭, 가죽, 나일론, TPU, PC, 포우레더, 비즈,
+                  마그네틱 (10종+)
+                </td>
+              </tr>
+              <tr>
+                <td>호환 기종</td>
+                <td>갤럭시워치, 가민, 어메이즈핏, 보이스캐디 등 (14개+)</td>
+              </tr>
+              <tr>
+                <td>제품명/옵션명</td>
+                <td>자체 내부 팀에서 직접 정의</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <div class="sub-title">현재 관리 방식</div>
+            <table>
+              <tr>
+                <th>탭</th>
+                <th>제품 수</th>
+                <th>컬럼</th>
+              </tr>
+              <tr>
+                <td>20mm 일반형</td>
+                <td>60개</td>
+                <td rowspan="3" style="vertical-align: middle">29개</td>
+              </tr>
+              <tr>
+                <td>갤럭시 울트라</td>
+                <td>56개</td>
+              </tr>
+              <tr>
+                <td>티렉스</td>
+                <td>60개</td>
+              </tr>
+            </table>
 
-      <div class="foot">
-        <p>본 제안서에 대한 문의 사항이 있으시면 편하신 시간에 연락 부탁드립니다.</p>
-        <p>이은석 &nbsp;·&nbsp; korea5410@gmail.com &nbsp;·&nbsp; 010-7769-4682</p>
+            <div class="highlight-box">
+              <div class="highlight-box-title">핵심 문제</div>
+              <p
+                style="
+                  font-size: clamp(10px, 0.85vw, 12px);
+                  line-height: 1.7;
+                  margin-top: 0.5vh;
+                "
+              >
+                총 <strong>176개 제품, 컬럼 29개</strong>를 구글시트 3개 탭으로
+                관리 중입니다.<br />
+                제품과 기종이 늘어날수록 시트 컬럼이 무한 확장 →
+                <strong>관리 한계</strong>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-</div><!-- #track -->
-</div><!-- #slider -->
+    <!-- ============================== 01 현황 이해 (2/2) ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">01</div>
+        <div class="section-title">현황 이해</div>
+        <div class="section-desc">현행 방식과<br />구축 후 비교입니다.</div>
+      </div>
+      <div class="slide-content">
+        <div class="sub-title">현행 vs 구축 후</div>
+        <table>
+          <tr>
+            <th>구분</th>
+            <th>현행 (구글시트)</th>
+            <th>구축 후 (스트랩 DB)</th>
+          </tr>
+          <tr>
+            <td>제품 구분</td>
+            <td>유사 외형 혼선</td>
+            <td>속성 기반 자동 분류</td>
+          </tr>
+          <tr>
+            <td>기종 추가</td>
+            <td>컬럼 수동 추가</td>
+            <td>호환모델 테이블에 행 추가</td>
+          </tr>
+          <tr>
+            <td>가격 관리</td>
+            <td>시트 수기 입력</td>
+            <td>채널별 가격 테이블 분리</td>
+          </tr>
+          <tr>
+            <td>상품명</td>
+            <td>수동 조합</td>
+            <td>규칙 기반 자동 생성</td>
+          </tr>
+          <tr>
+            <td>콘텐츠</td>
+            <td>복붙</td>
+            <td>DB 자동 연결</td>
+          </tr>
+          <tr>
+            <td>확장성</td>
+            <td>수백 개 한계</td>
+            <td>10,000+ SKU 대응</td>
+          </tr>
+        </table>
+      </div>
+    </div>
 
+    <!-- ============================== 02 시스템 구성 ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">02</div>
+        <div class="section-title">시스템 구성</div>
+        <div class="section-desc">
+          구글시트, DB 서버,<br />웹 UI 간의<br />데이터 흐름입니다.
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="arch-row">
+          <div class="arch-node">
+            <div class="arch-node-title">구글시트</div>
+            <div class="arch-node-desc">기존 입력 채널</div>
+          </div>
+          <div class="arch-arrow">&#10132;</div>
+          <div class="arch-node">
+            <div class="arch-node-title">DB 서버</div>
+            <div class="arch-node-desc">정규화 저장</div>
+          </div>
+          <div class="arch-arrow">&#10132;</div>
+          <div class="arch-node">
+            <div class="arch-node-title">웹 관리 UI</div>
+            <div class="arch-node-desc">조회/편집</div>
+          </div>
+        </div>
 
-<!-- ── NAVIGATION UI ── -->
-<div id="nav-dots"></div>
+        <div class="callout" style="max-width: 50vw; margin: 0 auto 2vh auto">
+          <div class="callout-title">구글시트는 입력 채널로 계속 사용</div>
+          DB가 주 데이터 소스, 양방향 동기화.
+        </div>
 
-<div id="slide-counter">01 / 11</div>
+        <div style="max-width: 55vw; margin: 0 auto">
+          <div class="sub-title">데이터 흐름</div>
+          <div class="mermaid">
+            sequenceDiagram participant G as 구글시트 participant S as DB 서버
+            participant W as 웹 UI participant C as 콘텐츠 G->>S: 변경 감지
+            S->>S: 정규화 저장 W->>S: 조회/필터 S-->>W: 데이터 반환 W->>C:
+            상품명 생성 S-->>G: 역동기화
+          </div>
+        </div>
+      </div>
+    </div>
 
-<div id="nav-hint">← → arrow keys &nbsp;·&nbsp; scroll &nbsp;·&nbsp; click sides</div>
+    <!-- ============================== 03 데이터 구조 (1/2) ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">03</div>
+        <div class="section-title">데이터 구조</div>
+        <div class="section-desc">
+          정규화된 DB 구조와<br />ERD를<br />안내드립니다.
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="sub-title">ERD</div>
+        <div class="mermaid">
+          erDiagram PRODUCT ||--o{ SKU : has PRODUCT ||--o{ ATTRIBUTE : has SKU
+          }o--o{ COMPATIBLE_MODEL : supports SKU ||--o{ PRICE : has SKU ||--o{
+          CONTENT : generates
+        </div>
+      </div>
+    </div>
 
-<button id="nav-prev" aria-label="Previous slide" onclick="navigate(-1)"></button>
-<button id="nav-next" aria-label="Next slide" onclick="navigate(1)"></button>
+    <!-- ============================== 03 데이터 구조 (2/2) ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">03</div>
+        <div class="section-title">데이터 구조</div>
+        <div class="section-desc">테이블별 주요<br />필드와 관계입니다.</div>
+      </div>
+      <div class="slide-content">
+        <div class="sub-title">테이블 상세</div>
+        <table>
+          <tr>
+            <th>테이블</th>
+            <th>주요 필드</th>
+            <th>관계</th>
+          </tr>
+          <tr>
+            <td>제품 마스터</td>
+            <td>ID, 제품명, 브랜드, 제품군, 상태</td>
+            <td>1:N → SKU</td>
+          </tr>
+          <tr>
+            <td>속성</td>
+            <td>재질, 커넥터, 체결방식, 폭, 길이</td>
+            <td>N:1 → 제품</td>
+          </tr>
+          <tr>
+            <td>SKU</td>
+            <td>ID, 컬러, 사이즈, 바코드, 재고</td>
+            <td>N:1 → 제품</td>
+          </tr>
+          <tr>
+            <td>호환 모델</td>
+            <td>모델명, 워치사이즈</td>
+            <td>M:N ↔ SKU</td>
+          </tr>
+          <tr>
+            <td>가격</td>
+            <td>공급가, 도매가, 판매가, 채널별</td>
+            <td>N:1 → SKU</td>
+          </tr>
+          <tr>
+            <td>콘텐츠</td>
+            <td>자동 상품명, 옵션명, 키워드</td>
+            <td>N:1 → SKU</td>
+          </tr>
+        </table>
 
+        <div class="callout">
+          <div class="callout-title">
+            M:N 관계로 기종 추가 시 컬럼이 아닌 행만 추가
+          </div>
+          기종이 늘어나도 시트 구조 변경 없이 호환 모델 테이블에 행만
+          추가합니다.
+        </div>
+      </div>
+    </div>
 
-<script>
-  // ── STATE ──
-  const TOTAL = 11; // 0..10
-  let current = 0;
-  let isAnimating = false;
+    <!-- ============================== 04 핵심 기능 ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">04</div>
+        <div class="section-title">핵심 기능</div>
+        <div class="section-desc">
+          조회, 필터링,<br />자동화 기능을<br />안내드립니다.
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="content-2col">
+          <div class="col">
+            <div class="sub-title">조회 / 관리</div>
+            <table>
+              <tr>
+                <th>기능</th>
+                <th>설명</th>
+              </tr>
+              <tr>
+                <td>SKU 조회</td>
+                <td>바코드/제품명 → 즉시 출력, PDA 연동 가능</td>
+              </tr>
+              <tr>
+                <td>다차원 필터링</td>
+                <td>재질, 커넥터, 기종, 가격대, 복합조건</td>
+              </tr>
+              <tr>
+                <td>CRUD</td>
+                <td>추가/수정/삭제 + 변경 이력 기록</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <div class="sub-title">자동화</div>
+            <table>
+              <tr>
+                <th>기능</th>
+                <th>설명</th>
+              </tr>
+              <tr>
+                <td>상품명 자동</td>
+                <td>"스페이스쉴드 + 재질 + 체결 + 모델 + 특징"</td>
+              </tr>
+              <tr>
+                <td>옵션명 자동</td>
+                <td>네이버/쿠팡 글자수 대응, 내부코드 병행</td>
+              </tr>
+              <tr>
+                <td>구글시트 동기화</td>
+                <td>양방향 동기화</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  const track = document.getElementById('track');
-  const counter = document.getElementById('slide-counter');
-  const hint = document.getElementById('nav-hint');
-  const slides = Array.from(document.querySelectorAll('.slide'));
+    <!-- ============================== 05 데이터 이관 ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">05</div>
+        <div class="section-title">데이터 이관</div>
+        <div class="section-desc">
+          기존 구글시트<br />데이터를 DB로<br />이관하는 절차입니다.
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="content-2col">
+          <div class="col">
+            <div class="sub-title">이관 대상</div>
+            <table>
+              <tr>
+                <th>탭</th>
+                <th>제품 수</th>
+                <th>대상 기종</th>
+              </tr>
+              <tr>
+                <td>20mm 일반형</td>
+                <td>60개</td>
+                <td>갤럭시워치 등 14개</td>
+              </tr>
+              <tr>
+                <td>갤럭시 울트라</td>
+                <td>56개</td>
+                <td>울트라 전용</td>
+              </tr>
+              <tr>
+                <td>티렉스</td>
+                <td>60개</td>
+                <td>T-Rex 전용</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <div class="sub-title">마이그레이션 흐름</div>
+            <div class="mermaid">
+              sequenceDiagram participant G as 구글시트 participant P as 파서
+              participant D as DB G->>P: 데이터 추출 P->>P: 속성 분리 P->>D:
+              마스터 생성 P->>D: SKU 연결 D-->>G: 결과 리포트
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  // ── DOTS ──
-  const dotsContainer = document.getElementById('nav-dots');
-  for (let i = 0; i < TOTAL; i++) {
-    const dot = document.createElement('button');
-    dot.className = 'dot' + (i === 0 ? ' active' : '');
-    dot.setAttribute('aria-label', `Slide ${i + 1}`);
-    dot.addEventListener('click', () => goTo(i));
-    dotsContainer.appendChild(dot);
-  }
+    <!-- ============================== 06 개발 일정 ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">06</div>
+        <div class="section-title">개발 일정</div>
+        <div class="section-desc">
+          총 15일<br />개발 일정을<br />안내드립니다.
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="sub-title">일정 계획</div>
+        <table style="max-width: 60vw; margin-bottom: 2.5vh">
+          <tr>
+            <th>단계</th>
+            <th>기간</th>
+            <th>작업</th>
+          </tr>
+          <tr>
+            <td>설계</td>
+            <td>3일</td>
+            <td>ERD, API 설계</td>
+          </tr>
+          <tr>
+            <td>백엔드</td>
+            <td>5일</td>
+            <td>DB, API, 시트 연동</td>
+          </tr>
+          <tr>
+            <td>웹 UI</td>
+            <td>5일</td>
+            <td>관리 화면, CRUD</td>
+          </tr>
+          <tr>
+            <td>자동화+배포</td>
+            <td>2일</td>
+            <td>상품명 생성, 테스트</td>
+          </tr>
+        </table>
 
-  function getDots() {
-    return Array.from(dotsContainer.querySelectorAll('.dot'));
-  }
+        <div class="sub-title">간트 차트</div>
+        <table class="gantt-table">
+          <tr>
+            <th style="width: 16%; text-align: left">작업</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+            <th>7</th>
+            <th>8</th>
+            <th>9</th>
+            <th>10</th>
+            <th>11</th>
+            <th>12</th>
+            <th>13</th>
+            <th>14</th>
+            <th>15</th>
+          </tr>
+          <tr>
+            <td class="gantt-label">설계</td>
+            <td colspan="3">
+              <div class="gantt-bar bar-navy">설계 (3일)</div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="gantt-label">백엔드</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td colspan="5">
+              <div class="gantt-bar bar-navy">백엔드 (5일)</div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="gantt-label">웹 UI</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td colspan="5">
+              <div class="gantt-bar bar-orange">웹 UI (5일)</div>
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="gantt-label">자동화+배포</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td colspan="2">
+              <div class="gantt-bar bar-blue">자동화+배포 (2일)</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
 
-  // ── RENDER ──
-  function render(idx) {
-    track.style.transform = `translateX(-${idx * 100}vw)`;
-    counter.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(TOTAL).padStart(2, '0');
+    <!-- ============================== 07 비용 ============================== -->
+    <div class="slide">
+      <div class="slide-panel">
+        <div class="section-number">07</div>
+        <div class="section-title">비용</div>
+        <div class="section-desc">
+          개발 비용과<br />결제 조건,<br />하자보수입니다.
+        </div>
+      </div>
+      <div class="slide-content" style="padding-bottom: 5vh">
+        <div class="content-2col">
+          <div class="col">
+            <div class="sub-title">개발 비용</div>
+            <table>
+              <tr>
+                <th>항목</th>
+                <th style="text-align: right">금액</th>
+              </tr>
+              <tr>
+                <td>설계</td>
+                <td style="text-align: right; font-weight: 600">800,000원</td>
+              </tr>
+              <tr>
+                <td>백엔드</td>
+                <td style="text-align: right; font-weight: 600">1,500,000원</td>
+              </tr>
+              <tr>
+                <td>웹 UI</td>
+                <td style="text-align: right; font-weight: 600">2,000,000원</td>
+              </tr>
+              <tr>
+                <td>자동화+배포</td>
+                <td style="text-align: right; font-weight: 600">1,700,000원</td>
+              </tr>
+            </table>
 
-    getDots().forEach((d, i) => {
-      d.classList.toggle('active', i === idx);
-    });
+            <div class="cost-total">
+              <div class="cost-total-label">합계 (VAT 별도)</div>
+              <div class="cost-total-value">6,000,000원</div>
+            </div>
 
-    slides.forEach((s, i) => {
-      s.classList.toggle('is-active', i === idx);
-    });
-  }
+            <div class="sub-title">결제 조건</div>
+            <table>
+              <tr>
+                <th>시점</th>
+                <th>비율</th>
+                <th style="text-align: right">금액</th>
+              </tr>
+              <tr>
+                <td>계약 시</td>
+                <td>50%</td>
+                <td style="text-align: right; font-weight: 600">3,000,000원</td>
+              </tr>
+              <tr>
+                <td>인수 완료 시</td>
+                <td>50%</td>
+                <td style="text-align: right; font-weight: 600">3,000,000원</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <div class="sub-title">하자 보수</div>
+            <table>
+              <tr>
+                <th>항목</th>
+                <th>내용</th>
+              </tr>
+              <tr>
+                <td>기간</td>
+                <td>인수 완료일로부터 3개월</td>
+              </tr>
+              <tr>
+                <td>범위</td>
+                <td>구현된 기능의 오류 수정</td>
+              </tr>
+              <tr>
+                <td>제외</td>
+                <td>환경 변경, 신규 기능 추가</td>
+              </tr>
+              <tr>
+                <td>비용</td>
+                <td>하자보수 기간 내 별도 비용 청구하지 않습니다</td>
+              </tr>
+            </table>
+          </div>
+        </div>
 
-  function goTo(idx) {
-    if (isAnimating || idx === current) return;
-    isAnimating = true;
-    current = Math.max(0, Math.min(TOTAL - 1, idx));
-    render(current);
-    setTimeout(() => { isAnimating = false; }, 420);
-  }
-
-  function navigate(dir) {
-    goTo(current + dir);
-  }
-
-  // ── KEYBOARD ──
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
-    else if (e.key === 'Home') goTo(0);
-    else if (e.key === 'End') goTo(TOTAL - 1);
-  });
-
-  // ── MOUSE WHEEL (debounced) ──
-  let wheelTimer = null;
-  document.addEventListener('wheel', (e) => {
-    if (wheelTimer) return;
-    navigate(e.deltaY > 0 ? 1 : -1);
-    wheelTimer = setTimeout(() => { wheelTimer = null; }, 600);
-  }, { passive: true });
-
-  // ── TOUCH SWIPE ──
-  let touchStartX = 0;
-  document.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
-  }, { passive: true });
-  document.addEventListener('touchend', (e) => {
-    const dx = touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 50) navigate(dx > 0 ? 1 : -1);
-  }, { passive: true });
-
-  // ── HINT FADE ──
-  setTimeout(() => { hint.style.opacity = '0'; }, 4000);
-
-  // ── INIT ──
-  render(0);
-
-  // ── MERMAID ──
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
-    themeVariables: {
-      background: '#243045',
-      primaryColor: '#2d3d55',
-      primaryTextColor: '#e2e8f0',
-      primaryBorderColor: 'rgba(255,255,255,0.15)',
-      lineColor: 'rgba(255,255,255,0.3)',
-      secondaryColor: '#1a2332',
-      tertiaryColor: '#2d3d55',
-      edgeLabelBackground: '#1a2332',
-      noteBkgColor: '#2d3d55',
-      noteTextColor: '#e2e8f0',
-      actorBkg: '#2d3d55',
-      actorBorder: 'rgba(255,255,255,0.2)',
-      actorTextColor: '#e2e8f0',
-      actorLineColor: 'rgba(255,255,255,0.2)',
-      activationBkgColor: '#e8734a',
-      activationBorderColor: '#e8734a',
-      sequenceNumberColor: '#1a2332',
-      signalColor: '#e8734a',
-      signalTextColor: '#e2e8f0',
-    },
-    flowchart: {
-      htmlLabels: true,
-      curve: 'linear'
-    },
-    fontSize: 14
-  });
-</script>
-</body>
+        <div class="footer-bar">
+          <span
+            ><strong>이은석</strong> &middot; korea5410@gmail.com &middot;
+            010-7769-4682</span
+          >
+          <span>스트랩 통합 DB 시스템 구축 제안서</span>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
