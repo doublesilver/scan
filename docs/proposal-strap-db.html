@@ -10,7 +10,7 @@
     />
     <meta
       property="og:description"
-      content="워치 스트랩 제품 데이터를 구조화된 DB로 전환. 상품명 자동 생성, 호환 모델 관리, 콘텐츠 자동화."
+      content="596개 제품, 509개 이미지 실데이터 검증 완료. 제품 카탈로그·런칭 매트릭스·제품 계보·파이프라인 4개 뷰."
     />
     <meta property="og:type" content="website" />
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
@@ -298,7 +298,7 @@
         color: rgba(255, 255, 255, 0.38);
         letter-spacing: 0.01em;
         margin-bottom: 36px;
-        max-width: 460px;
+        max-width: 480px;
         line-height: 1.65;
         position: relative;
         z-index: 1;
@@ -349,6 +349,11 @@
         border-bottom: 1px solid var(--border);
         opacity: 0;
         transform: translateY(18px);
+        border-left: 3px solid transparent;
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease,
+          border-color 0.2s;
       }
 
       section.visible {
@@ -358,6 +363,10 @@
 
       section:last-of-type {
         border-bottom: none;
+      }
+
+      section:hover {
+        border-left-color: rgba(232, 115, 74, 0.35);
       }
 
       /* ─── Section header ─── */
@@ -419,6 +428,7 @@
       .table-wrap {
         overflow-x: auto;
         margin: 12px 0 20px;
+        position: relative;
       }
 
       table {
@@ -462,7 +472,7 @@
       }
 
       tbody tr:hover td {
-        background: #eef2f7;
+        background: #f0f4f8 !important;
       }
 
       .td-label {
@@ -480,10 +490,6 @@
         border-top: 2px solid var(--navy);
       }
 
-      /* Mobile table scroll hint */
-      .table-wrap {
-        position: relative;
-      }
       .table-wrap::after {
         content: "";
         position: absolute;
@@ -529,12 +535,40 @@
         background: #f9fafb;
       }
 
+      .callout-green {
+        border-left-color: #16a34a;
+        background: #f0fdf4;
+      }
+
       /* ─── VS comparison ─── */
       .vs {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 14px;
         margin: 16px 0;
+        cursor: pointer;
+        position: relative;
+        transition: box-shadow 0.2s;
+      }
+
+      .vs:hover {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .vs::after {
+        content: "클릭하여 크게 보기";
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 10px;
+        color: var(--text-faint);
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .vs:hover::after {
+        opacity: 1;
       }
 
       .vs-col {
@@ -575,11 +609,34 @@
         margin-bottom: 10px;
       }
 
-      /* ─── Architecture ─── */
+      /* ─── Architecture nodes ─── */
       .arch {
         display: flex;
         align-items: stretch;
         margin: 24px 0;
+        cursor: pointer;
+        position: relative;
+        transition: box-shadow 0.2s;
+      }
+
+      .arch:hover {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .arch::after {
+        content: "클릭하여 크게 보기";
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 10px;
+        color: var(--text-faint);
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .arch:hover::after {
+        opacity: 1;
       }
 
       .arch-node {
@@ -649,38 +706,6 @@
         opacity: 1;
       }
 
-      /* ─── Lightbox hint for arch / vs / gantt ─── */
-      .arch,
-      .vs,
-      .gantt {
-        cursor: pointer;
-        position: relative;
-        transition: box-shadow 0.2s;
-      }
-      .arch:hover,
-      .vs:hover,
-      .gantt:hover {
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      }
-      .arch::after,
-      .vs::after,
-      .gantt::after {
-        content: "클릭하여 크게 보기";
-        position: absolute;
-        bottom: 8px;
-        right: 12px;
-        font-size: 10px;
-        color: var(--text-faint);
-        opacity: 0;
-        transition: opacity 0.2s;
-        pointer-events: none;
-      }
-      .arch:hover::after,
-      .vs:hover::after,
-      .gantt:hover::after {
-        opacity: 1;
-      }
-
       /* ─── Lightbox ─── */
       .lightbox {
         display: none;
@@ -740,6 +765,29 @@
       /* ─── Gantt ─── */
       .gantt {
         margin: 20px 0;
+        cursor: pointer;
+        position: relative;
+        transition: box-shadow 0.2s;
+      }
+
+      .gantt:hover {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .gantt::after {
+        content: "클릭하여 크게 보기";
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 10px;
+        color: var(--text-faint);
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .gantt:hover::after {
+        opacity: 1;
       }
 
       .gantt-header {
@@ -802,15 +850,10 @@
         font-family: var(--font-mono);
       }
 
-      .g-srv {
-        background: var(--navy);
-      }
-      .g-app {
-        background: var(--orange);
-      }
-      .g-int {
-        background: #3b82f6;
-      }
+      .g-p1 { background: var(--navy); }
+      .g-p2 { background: var(--orange); }
+      .g-p3 { background: #3b82f6; }
+      .g-p4 { background: #16a34a; }
 
       .gantt-legend {
         display: flex;
@@ -819,6 +862,7 @@
         color: var(--text-muted);
         margin-top: 12px;
         margin-left: 190px;
+        flex-wrap: wrap;
       }
 
       .gantt-legend span {
@@ -833,6 +877,201 @@
         border-radius: 2px;
         display: inline-block;
         flex-shrink: 0;
+      }
+
+      /* ─── Feature cards ─── */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin: 20px 0;
+      }
+
+      .feature-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        padding: 22px 22px 18px;
+      }
+
+      .feature-card-num {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--orange);
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+
+      .feature-card h4 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 10px;
+        letter-spacing: -0.01em;
+      }
+
+      .feature-card p {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      .feature-card ul {
+        margin: 10px 0 0 16px;
+      }
+
+      .feature-card li {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 4px 0;
+        line-height: 1.65;
+      }
+
+      /* ─── Stat strip ─── */
+      .stat-strip {
+        display: flex;
+        gap: 0;
+        margin: 20px 0;
+        border: 1px solid var(--border);
+        background: var(--white);
+        overflow: hidden;
+      }
+
+      .stat-item {
+        flex: 1;
+        padding: 18px 20px;
+        border-right: 1px solid var(--border);
+        text-align: center;
+      }
+
+      .stat-item:last-child {
+        border-right: none;
+      }
+
+      .stat-num {
+        font-family: var(--font-mono);
+        font-size: 26px;
+        font-weight: 500;
+        color: var(--navy);
+        line-height: 1.2;
+        display: block;
+        letter-spacing: -0.02em;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--text-faint);
+        margin-top: 4px;
+        display: block;
+        letter-spacing: 0.02em;
+      }
+
+      /* ─── Quote block ─── */
+      .quote-block {
+        background: var(--navy);
+        padding: 22px 26px;
+        margin: 20px 0;
+        position: relative;
+      }
+
+      .quote-block::before {
+        content: "\201C";
+        font-size: 48px;
+        color: var(--orange);
+        line-height: 1;
+        font-weight: 700;
+        position: absolute;
+        top: 12px;
+        left: 18px;
+        opacity: 0.5;
+      }
+
+      .quote-block p {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 500;
+        line-height: 1.6;
+        padding-left: 28px;
+        margin: 0;
+      }
+
+      .quote-block cite {
+        display: block;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.3);
+        font-style: normal;
+        margin-top: 10px;
+        padding-left: 28px;
+        font-family: var(--font-mono);
+      }
+
+      /* ─── Cost comparison ─── */
+      .cost-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin: 20px 0;
+      }
+
+      .cost-col {
+        padding: 20px 22px;
+        border: 1px solid var(--border);
+        background: var(--white);
+      }
+
+      .cost-col.highlight {
+        border-color: var(--orange);
+        background: var(--orange-pale);
+      }
+
+      .cost-col-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-faint);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      .cost-col.highlight .cost-col-label {
+        color: var(--orange);
+      }
+
+      .cost-col-total {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--navy);
+        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+      }
+
+      .cost-col-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+      }
+
+      .cost-col-lines {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        line-height: 1.9;
+      }
+
+      .cost-save {
+        background: var(--navy);
+        color: var(--white);
+        padding: 12px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        margin-top: 4px;
+        letter-spacing: 0.01em;
+      }
+
+      .cost-save span {
+        color: var(--orange);
       }
 
       /* ─── Tag ─── */
@@ -852,6 +1091,10 @@
       .tag-c {
         background: #fff7ed;
         color: #9a3412;
+      }
+      .tag-b {
+        background: #dbeafe;
+        color: #1d4ed8;
       }
 
       /* ─── Code ─── */
@@ -972,44 +1215,23 @@
         display: block;
       }
 
-      /* ─── Hero PDF link ─── */
-      .hero-pdf {
-        display: inline-block;
-        margin-left: 16px;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.28);
-        text-decoration: none;
-        letter-spacing: 0.02em;
-        transition: color 0.15s;
-        vertical-align: middle;
-        font-family: var(--font-mono);
+      /* ─── Arch desc list ─── */
+      .arch-desc {
+        margin: 16px 0 0;
+        list-style: none;
+        padding: 0;
       }
-
-      .hero-pdf:hover {
-        color: rgba(255, 255, 255, 0.55);
+      .arch-desc li {
+        font-size: 13px;
+        color: var(--text-muted);
+        padding: 8px 0 8px 16px;
+        border-left: 2px solid var(--border);
+        margin-bottom: 6px;
+        line-height: 1.65;
       }
-
-      /* ─── Section hover border ─── */
-      section {
-        border-left: 3px solid transparent;
-        padding-left: 0;
-        transition:
-          opacity 0.5s ease,
-          transform 0.5s ease,
-          border-color 0.2s;
-      }
-
-      section:hover {
-        border-left-color: rgba(232, 115, 74, 0.35);
-      }
-
-      /* ─── Table row hover ─── */
-      tbody tr {
-        transition: background 0.15s;
-      }
-
-      tbody tr:hover td {
-        background: #f0f4f8 !important;
+      .arch-desc li strong {
+        color: var(--navy);
+        font-weight: 600;
       }
 
       /* ─── Footer ─── */
@@ -1087,66 +1309,7 @@
       }
 
       /* ─── Mobile ─── */
-      .migration-cards {
-        display: none;
-      }
-
-      .migration-card {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 10px;
-      }
-      .migration-card-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--navy);
-        border-left: 3px solid var(--orange);
-        padding-left: 10px;
-        margin-bottom: 12px;
-      }
-      .migration-card-row {
-        font-size: 13px;
-        color: var(--text);
-        line-height: 1.7;
-        margin-bottom: 6px;
-      }
-      .migration-card-row span {
-        display: block;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-muted);
-        margin-bottom: 2px;
-      }
-
-      /* ─── Arch desc list ─── */
-      .arch-desc {
-        margin: 16px 0 0;
-        list-style: none;
-        padding: 0;
-      }
-      .arch-desc li {
-        font-size: 13px;
-        color: var(--text-muted);
-        padding: 8px 0 8px 16px;
-        border-left: 2px solid var(--border);
-        margin-bottom: 6px;
-        line-height: 1.65;
-      }
-      .arch-desc li strong {
-        color: var(--navy);
-        font-weight: 600;
-      }
-
       @media (max-width: 900px) {
-        .migration-table {
-          display: none;
-        }
-        .migration-cards {
-          display: block;
-        }
-
         table {
           border: none;
         }
@@ -1197,6 +1360,7 @@
         .table-wrap table {
           border: none;
         }
+
         .sidebar {
           display: none;
         }
@@ -1254,8 +1418,23 @@
           font-size: 18px;
         }
 
-        .vs {
+        .vs,
+        .cost-compare {
           grid-template-columns: 1fr;
+        }
+
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-strip {
+          flex-wrap: wrap;
+        }
+
+        .stat-item {
+          flex: 1 1 40%;
+          border-right: none;
+          border-bottom: 1px solid var(--border);
         }
 
         .arch {
@@ -1309,37 +1488,14 @@
         <p>이은석</p>
       </div>
       <div class="sidebar-nav">
-        <a class="nav-item" href="#s01"
-          ><span class="nav-num">01</span
-          ><span class="nav-label">현황 이해</span></a
-        >
-        <a class="nav-item" href="#s02"
-          ><span class="nav-num">02</span
-          ><span class="nav-label">시스템 구성</span></a
-        >
-        <a class="nav-item" href="#s03"
-          ><span class="nav-num">03</span
-          ><span class="nav-label">데이터 구조</span></a
-        >
-        <a class="nav-item" href="#s04"
-          ><span class="nav-num">04</span
-          ><span class="nav-label">핵심 기능</span></a
-        >
-        <a class="nav-item" href="#s05"
-          ><span class="nav-num">05</span
-          ><span class="nav-label">데이터 이관</span></a
-        >
-        <a class="nav-item" href="#s06"
-          ><span class="nav-num">06</span
-          ><span class="nav-label">개발 일정</span></a
-        >
-        <a class="nav-item" href="#s07"
-          ><span class="nav-num">07</span><span class="nav-label">비용</span></a
-        >
-        <a class="nav-item" href="#s08"
-          ><span class="nav-num">08</span
-          ><span class="nav-label">착수 전 확인</span></a
-        >
+        <a class="nav-item" href="#s01"><span class="nav-num">01</span><span class="nav-label">프로젝트 개요</span></a>
+        <a class="nav-item" href="#s02"><span class="nav-num">02</span><span class="nav-label">데모 검증 결과</span></a>
+        <a class="nav-item" href="#s03"><span class="nav-num">03</span><span class="nav-label">핵심 기능 4가지</span></a>
+        <a class="nav-item" href="#s04"><span class="nav-num">04</span><span class="nav-label">통합 제안</span></a>
+        <a class="nav-item" href="#s05"><span class="nav-num">05</span><span class="nav-label">데이터 구조</span></a>
+        <a class="nav-item" href="#s06"><span class="nav-num">06</span><span class="nav-label">개발 일정</span></a>
+        <a class="nav-item" href="#s07"><span class="nav-num">07</span><span class="nav-label">비용</span></a>
+        <a class="nav-item" href="#s08"><span class="nav-num">08</span><span class="nav-label">착수 전 확인</span></a>
       </div>
       <div class="sidebar-footer">
         <a href="mailto:korea5410@gmail.com">korea5410@gmail.com</a>
@@ -1356,65 +1512,17 @@
     </div>
 
     <div class="mobile-drawer" id="mobileDrawer">
-      <a class="nav-item" href="#s01" onclick="closeDrawer()"
-        ><span class="nav-num">01</span
-        ><span class="nav-label">현황 이해</span></a
-      >
-      <a class="nav-item" href="#s02" onclick="closeDrawer()"
-        ><span class="nav-num">02</span
-        ><span class="nav-label">시스템 구성</span></a
-      >
-      <a class="nav-item" href="#s03" onclick="closeDrawer()"
-        ><span class="nav-num">03</span
-        ><span class="nav-label">데이터 구조</span></a
-      >
-      <a class="nav-item" href="#s04" onclick="closeDrawer()"
-        ><span class="nav-num">04</span
-        ><span class="nav-label">핵심 기능</span></a
-      >
-      <a class="nav-item" href="#s05" onclick="closeDrawer()"
-        ><span class="nav-num">05</span
-        ><span class="nav-label">데이터 이관</span></a
-      >
-      <a class="nav-item" href="#s06" onclick="closeDrawer()"
-        ><span class="nav-num">06</span
-        ><span class="nav-label">개발 일정</span></a
-      >
-      <a class="nav-item" href="#s07" onclick="closeDrawer()"
-        ><span class="nav-num">07</span><span class="nav-label">비용</span></a
-      >
-      <a class="nav-item" href="#s08" onclick="closeDrawer()"
-        ><span class="nav-num">08</span
-        ><span class="nav-label">착수 전 확인</span></a
-      >
-      <div
-        style="
-          padding: 20px 24px;
-          border-top: 1px solid rgba(255, 255, 255, 0.07);
-          margin-top: 8px;
-        "
-      >
-        <a
-          href="mailto:korea5410@gmail.com"
-          style="
-            display: block;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.32);
-            text-decoration: none;
-            margin-bottom: 4px;
-          "
-          >korea5410@gmail.com</a
-        >
-        <a
-          href="tel:01077694682"
-          style="
-            display: block;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.32);
-            text-decoration: none;
-          "
-          >010-7769-4682</a
-        >
+      <a class="nav-item" href="#s01" onclick="closeDrawer()"><span class="nav-num">01</span><span class="nav-label">프로젝트 개요</span></a>
+      <a class="nav-item" href="#s02" onclick="closeDrawer()"><span class="nav-num">02</span><span class="nav-label">데모 검증 결과</span></a>
+      <a class="nav-item" href="#s03" onclick="closeDrawer()"><span class="nav-num">03</span><span class="nav-label">핵심 기능 4가지</span></a>
+      <a class="nav-item" href="#s04" onclick="closeDrawer()"><span class="nav-num">04</span><span class="nav-label">통합 제안</span></a>
+      <a class="nav-item" href="#s05" onclick="closeDrawer()"><span class="nav-num">05</span><span class="nav-label">데이터 구조</span></a>
+      <a class="nav-item" href="#s06" onclick="closeDrawer()"><span class="nav-num">06</span><span class="nav-label">개발 일정</span></a>
+      <a class="nav-item" href="#s07" onclick="closeDrawer()"><span class="nav-num">07</span><span class="nav-label">비용</span></a>
+      <a class="nav-item" href="#s08" onclick="closeDrawer()"><span class="nav-num">08</span><span class="nav-label">착수 전 확인</span></a>
+      <div style="padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.07); margin-top: 8px;">
+        <a href="mailto:korea5410@gmail.com" style="display:block;font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none;margin-bottom:4px;">korea5410@gmail.com</a>
+        <a href="tel:01077694682" style="display:block;font-size:12px;color:rgba(255,255,255,0.32);text-decoration:none;">010-7769-4682</a>
       </div>
     </div>
 
@@ -1425,209 +1533,378 @@
         <div class="hero-line"></div>
         <h1>스트랩 통합 DB 시스템</h1>
         <div class="hero-sub">
-          제품 데이터 관리 · 상품명 자동 생성 · 콘텐츠 자동화
+          쵸미앤세븐 · 스페이스쉴드 브랜드 스트랩 전체를<br>하나의 시스템으로 관리
         </div>
         <div class="hero-stats" id="heroStats">
           <div class="hero-stat">
-            <span class="hero-stat-num" data-target="176" data-suffix="개+"
-              >0</span
-            >
-            <span class="hero-stat-label">제품 176개+</span>
+            <span class="hero-stat-num" data-target="596" data-suffix="개">0</span>
+            <span class="hero-stat-label">실데이터 제품</span>
           </div>
           <div class="hero-stat">
-            <span class="hero-stat-num" data-static="14+">14+</span>
-            <span class="hero-stat-label">호환 기종 14+</span>
+            <span class="hero-stat-num" data-target="509" data-suffix="개">0</span>
+            <span class="hero-stat-label">추출 완료 이미지</span>
           </div>
           <div class="hero-stat">
-            <span class="hero-stat-num" data-target="10" data-suffix="종"
-              >0</span
-            >
-            <span class="hero-stat-label">재질 10종</span>
+            <span class="hero-stat-num" data-static="21탭">21탭</span>
+            <span class="hero-stat-label">구글시트 현황</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num" data-static="4개">4개</span>
+            <span class="hero-stat-label">관리 화면 뷰</span>
           </div>
         </div>
-        <div class="hero-contact">
-          이은석 &nbsp;&middot;&nbsp; korea5410@gmail.com &nbsp;&middot;&nbsp;
-          010-7769-4682
+        <div class="hero-demo">
+          <a href="https://doublesilver.github.io/scan-demo/strap-db.html" target="_blank" rel="noopener">데모 사이트 보기 →</a>
+        </div>
+        <div class="hero-contact" style="margin-top: 24px;">
+          이은석 &nbsp;&middot;&nbsp; korea5410@gmail.com &nbsp;&middot;&nbsp; 010-7769-4682
         </div>
       </div>
 
       <!-- Content -->
       <div class="content">
-        <!-- 01 -->
+
+        <!-- 01 프로젝트 개요 -->
         <section id="s01">
           <div class="section-head">
             <div class="section-num">01</div>
-            <div class="section-title">현황 이해</div>
+            <div class="section-title">프로젝트 개요</div>
           </div>
 
-          <h3>사업 현황</h3>
-          <ul>
-            <li>대한민국 워치 스트랩 시장에서 거의 모든 종류 판매</li>
-            <li>
-              재질 10종+ (메탈, 실리콘, 패브릭, 가죽, 나일론, TPU, PC, 포우레더,
-              비즈, 마그네틱)
-            </li>
-            <li>
-              호환 기종 14개+ (갤럭시워치, 가민, 어메이즈핏, 보이스캐디 등)
-            </li>
-            <li>제품명/옵션명을 자체 내부 팀에서 직접 정의</li>
-          </ul>
-
-          <h3>현재 관리 방식</h3>
-          <p
-            style="
-              font-size: 13px;
-              color: var(--text-muted);
-              margin-bottom: 8px;
-            "
-          >
-            현재 구글시트 3개 탭으로 관리 중입니다. 아래 수치는 확인된 일부이며,
-            실제로는 더 많을 수 있습니다.
+          <p class="desc">
+            쵸미앤세븐·스페이스쉴드 브랜드의 워치 스트랩 제품 데이터를 구조화된 전용 시스템으로 전환하는 프로젝트입니다.
           </p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>탭</th>
-                  <th>제품 수</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">20mm 일반형</td>
-                  <td>60개</td>
-                </tr>
-                <tr>
-                  <td class="td-label">갤럭시 울트라</td>
-                  <td>56개</td>
-                </tr>
-                <tr>
-                  <td class="td-label">티렉스</td>
-                  <td>60개</td>
-                </tr>
-                <tr class="total">
-                  <td>합계 176개+, 컬럼 29개</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
+
+          <h3>현재 상황</h3>
+          <div class="stat-strip">
+            <div class="stat-item">
+              <span class="stat-num">21</span>
+              <span class="stat-label">구글시트 탭 수</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">596</span>
+              <span class="stat-label">총 제품 수</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">29~36</span>
+              <span class="stat-label">탭별 컬럼 수</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">107</span>
+              <span class="stat-label">제품 패밀리 수</span>
+            </div>
           </div>
 
           <h3>핵심 문제</h3>
-          <div class="callout">
-            제품과 기종이 늘어날수록 시트 컬럼이 무한 확장되어 관리 한계에 도달
+          <div class="vs">
+            <div class="vs-col vs-before">
+              <h4>현재 — 구글시트 21탭</h4>
+              <ul>
+                <li>기종 추가 시 컬럼이 늘어나는 구조. 이미 29~36컬럼</li>
+                <li>탭마다 같은 제품이 중복 기재. 수정 시 전부 반영해야 함</li>
+                <li>런칭 현황을 한눈에 볼 수 없음. 탭을 오가며 확인</li>
+                <li>이미지 경로와 제품 데이터가 분리되어 연결 불가</li>
+                <li>기획 단계 제품과 판매 중인 제품이 뒤섞임</li>
+              </ul>
+            </div>
+            <div class="vs-col vs-after">
+              <h4>구축 후 — 스트랩 DB</h4>
+              <ul>
+                <li>제품 1건 수정하면 전체 뷰에 즉시 반영</li>
+                <li>기종 추가는 호환 모델 테이블에 행 1줄 추가로 끝</li>
+                <li>어떤 기종에 어떤 제품이 있는지 교차표로 즉시 확인</li>
+                <li>이미지 509개 연결 완료. 제품 카드에 바로 표시</li>
+                <li>상태별(기획/샘플링/입고/판매/단종) 분리 관리</li>
+              </ul>
+            </div>
           </div>
 
+          <h3>무엇을 만드는가</h3>
+          <p>
+            제품 조회 도구이면서 동시에 신제품 기획 도구입니다. "이 기종에 어떤 스트랩을 아직 안 냈는지", "이 디자인이 어떤 기종으로 파생됐는지"를 즉시 확인할 수 있는 스트랩 백과사전입니다.
+          </p>
+        </section>
+
+        <!-- 02 데모 검증 결과 -->
+        <section id="s02">
+          <div class="section-head">
+            <div class="section-num">02</div>
+            <div class="section-title">데모 검증 결과</div>
+          </div>
+
+          <p class="desc">
+            제안 전에 실데이터로 먼저 만들었습니다. 596개 제품, 509개 이미지를 직접 넣어서 동작을 확인한 상태입니다.
+          </p>
+
+          <div class="callout callout-green">
+            <strong>데모 주소:</strong> <a href="https://doublesilver.github.io/scan-demo/strap-db.html" target="_blank" rel="noopener" style="color: var(--navy);">https://doublesilver.github.io/scan-demo/strap-db.html</a>
+          </div>
+
+          <h3>검증된 데이터</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>구분</th>
-                  <th>현행 (구글시트)</th>
-                  <th>구축 후 (스트랩 DB)</th>
+                  <th>항목</th>
+                  <th>수치</th>
+                  <th>비고</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">제품 구분</td>
-                  <td>유사 외형 혼선</td>
-                  <td>속성 기반 자동 분류</td>
+                  <td class="td-label">총 제품 수</td>
+                  <td>596개</td>
+                  <td>구글시트 21탭 전체 기준</td>
                 </tr>
                 <tr>
-                  <td class="td-label">기종 추가</td>
-                  <td>컬럼 수동 추가</td>
-                  <td>호환모델 테이블에 행 추가</td>
+                  <td class="td-label">제품 이미지</td>
+                  <td>509개</td>
+                  <td>NAS에서 추출, 제품과 연결 완료</td>
                 </tr>
                 <tr>
-                  <td class="td-label">가격 관리</td>
-                  <td>시트 수기 입력</td>
-                  <td>채널별 가격 테이블 분리</td>
+                  <td class="td-label">제품 패밀리</td>
+                  <td>107개</td>
+                  <td>기본 디자인 단위. 기종별 파생 기준</td>
                 </tr>
                 <tr>
-                  <td class="td-label">상품명</td>
-                  <td>수동 조합</td>
-                  <td>규칙 기반 자동 생성</td>
+                  <td class="td-label">호환 기종 연결</td>
+                  <td>312건</td>
+                  <td>제품-기종 다대다 관계</td>
                 </tr>
                 <tr>
-                  <td class="td-label">콘텐츠</td>
-                  <td>복붙</td>
-                  <td>DB 자동 연결</td>
+                  <td class="td-label">가격 데이터</td>
+                  <td>141건</td>
+                  <td>채널별 판매가격</td>
                 </tr>
                 <tr>
-                  <td class="td-label">확장성</td>
-                  <td>수백 개 한계</td>
-                  <td>10,000+ SKU 대응</td>
+                  <td class="td-label">제품 카테고리</td>
+                  <td>14개</td>
+                  <td>기종 단위</td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <h3>클라이언트 반응</h3>
+          <div class="quote-block">
+            <p>반응속도 미쳤는데요</p>
+            <cite>— 데모 사이트 첫 확인 시</cite>
+          </div>
+          <div class="quote-block">
+            <p>귀인을 만난 것 같습니다</p>
+            <cite>— 전체 기능 설명 후</cite>
+          </div>
         </section>
 
-        <!-- 02 -->
-        <section id="s02">
-          <div class="section-head">
-            <div class="section-num">02</div>
-            <div class="section-title">시스템 구성</div>
-          </div>
-
-          <div class="callout callout-blue">
-            데이터 입력은 구글시트와 웹 UI를 병행 지원합니다. 어느 쪽에서
-            수정해도 DB에 자동 반영됩니다.
-          </div>
-
-          <!-- prettier-ignore -->
-          <div class="mermaid">
-flowchart TB
-subgraph input["데이터 입력"]
-GS["구글시트\n기존 방식 그대로"]
-WEB["웹 관리 화면\n신규"]
-end
-subgraph server["스트랩 DB 서버"]
-API["API 서버"]
-SYNC["시트 동기화"]
-GEN["상품명 자동 생성"]
-end
-subgraph storage["저장소"]
-DB[("스트랩 DB")]
-end
-GS -->|자동 동기화| SYNC
-SYNC --> DB
-WEB --> API
-API --> DB
-API --> GEN
-GEN --> DB
-          </div>
-
-          <ul class="arch-desc">
-            <li>
-              <strong>구글시트</strong> — 기존 방식 그대로 입력. 자동 동기화
-            </li>
-            <li>
-              <strong>웹 UI</strong> — 별도 관리 화면에서도 직접 입력 가능
-            </li>
-            <li>
-              <strong>스트랩 DB 서버</strong> — 양쪽 입력을 받아 정규화 저장,
-              상품명 자동 생성
-            </li>
-          </ul>
-        </section>
-
-        <!-- 03 -->
+        <!-- 03 핵심 기능 4가지 -->
         <section id="s03">
           <div class="section-head">
             <div class="section-num">03</div>
+            <div class="section-title">핵심 기능 4가지</div>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-card-num">VIEW 01</div>
+              <h4>제품 카탈로그</h4>
+              <p>전체 제품을 검색·필터·카드 뷰로 조회합니다.</p>
+              <ul>
+                <li>제품명 실시간 검색</li>
+                <li>카테고리 / 재질 / 체결방식 다중 필터</li>
+                <li>카드 뷰 ↔ 테이블 뷰 전환</li>
+                <li>제품 클릭 시 상세 모달 (이미지 + 속성 + 호환기종 + 가격)</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-num">VIEW 02</div>
+              <h4>런칭 매트릭스</h4>
+              <p>107개 디자인 × 14개 기종 교차표.</p>
+              <ul>
+                <li>"이 기종에 뭘 출시했고 뭘 안 했는지" 한눈에</li>
+                <li>갤럭시워치9 등 신기종 대응 시 공백 즉시 확인</li>
+                <li>미출시 조합만 빠르게 필터 가능</li>
+                <li>신제품 기획 시트로 활용</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-num">VIEW 03</div>
+              <h4>제품 계보</h4>
+              <p>107개 패밀리의 기종별 파생 관계를 표시합니다.</p>
+              <ul>
+                <li>하나의 디자인이 어떤 기종으로 파생됐는지 시각화</li>
+                <li>네이밍 중복 방지. 유사 디자인 재출시 여부 판단</li>
+                <li>스트랩 백과사전으로 활용</li>
+                <li>단종·파생 이력 추적</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-num">VIEW 04</div>
+              <h4>파이프라인</h4>
+              <p>기획부터 단종까지 상태별 칸반 보드.</p>
+              <ul>
+                <li>기획중 / 샘플링 / 일부입고 / 판매중 / 단종</li>
+                <li>공장 제안 제품 관리</li>
+                <li>프레스티지 라인업 추적</li>
+                <li>입고 예정 제품 현황 파악</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>관리 기능 (CRUD)</h3>
+          <p>
+            4개 뷰는 조회 전용이 아닙니다. 각 뷰에서 직접 수정·추가·삭제가 가능합니다. 제품 상태 변경, 새 기종 추가, 가격 수정을 화면 안에서 처리합니다.
+          </p>
+
+          <h3>기능 흐름</h3>
+          <!-- prettier-ignore -->
+          <div class="mermaid">
+flowchart LR
+  subgraph in["데이터 입력"]
+    GS["구글시트\n기존 방식"]
+    UI["웹 관리화면\nCRUD"]
+  end
+  subgraph core["스트랩 DB"]
+    API["API 서버"]
+    DB[("DB")]
+  end
+  subgraph view["4개 뷰"]
+    V1["제품 카탈로그"]
+    V2["런칭 매트릭스"]
+    V3["제품 계보"]
+    V4["파이프라인"]
+  end
+  GS -->|마이그레이션 + 동기화| API
+  UI --> API
+  API --> DB
+  DB --> V1
+  DB --> V2
+  DB --> V3
+  DB --> V4
+          </div>
+        </section>
+
+        <!-- 04 통합 제안 -->
+        <section id="s04">
+          <div class="section-head">
+            <div class="section-num">04</div>
+            <div class="section-title">통합 제안 — PDA 스캐너 + 스트랩 DB</div>
+          </div>
+
+          <p class="desc">
+            현재 별도로 진행 중인 PDA 스캐너 프로젝트와 스트랩 DB를 하나의 백엔드로 묶으면 비용과 유지보수 부담이 줄어듭니다.
+          </p>
+
+          <h3>비용 비교</h3>
+          <div class="cost-compare">
+            <div class="cost-col">
+              <div class="cost-col-label">별도 구축 시</div>
+              <div class="cost-col-total">1,350만원</div>
+              <div class="cost-col-sub">VAT 별도</div>
+              <div class="cost-col-lines">
+                PDA 스캐너 시스템 — 300만원<br>
+                스트랩 DB 단독 — 900만원<br>
+                별도 연동 작업 — 150만원
+              </div>
+            </div>
+            <div class="cost-col highlight">
+              <div class="cost-col-label">통합 구축 시 (권장)</div>
+              <div class="cost-col-total">950만원</div>
+              <div class="cost-col-sub">VAT 별도</div>
+              <div class="cost-col-lines">
+                PDA 스캐너 시스템 — 300만원<br>
+                통합 어드민 (스트랩 DB 포함) — 650만원<br>
+                연동 비용 없음 — 0원
+              </div>
+            </div>
+          </div>
+          <div class="cost-save">통합 구축 시 <span>약 400만원</span> 절감</div>
+
+          <h3>통합의 실질적 이점</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>별도 구축</th>
+                  <th>통합 구축</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-label">서버 / DB</td>
+                  <td>2개 별도 운영</td>
+                  <td>1개 공유</td>
+                </tr>
+                <tr>
+                  <td class="td-label">로그인 / 인증</td>
+                  <td>각각 따로</td>
+                  <td>단일 계정</td>
+                </tr>
+                <tr>
+                  <td class="td-label">스캐너 ↔ 스트랩 DB 연결</td>
+                  <td>별도 API 연동 필요</td>
+                  <td>내부 함수 호출로 즉시 연결</td>
+                </tr>
+                <tr>
+                  <td class="td-label">유지보수</td>
+                  <td>2개 시스템 관리</td>
+                  <td>1개 시스템 관리</td>
+                </tr>
+                <tr>
+                  <td class="td-label">이미지 / NAS 연결</td>
+                  <td>중복 구현</td>
+                  <td>공유 서비스</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-blue">
+            스트랩 DB 단독으로 진행하는 경우에도 나중에 스캐너 시스템과 통합 가능하도록 설계합니다. 별도 진행 시 스트랩 DB 단독 비용은 <strong>900만원</strong>입니다.
+          </div>
+        </section>
+
+        <!-- 05 데이터 구조 -->
+        <section id="s05">
+          <div class="section-head">
+            <div class="section-num">05</div>
             <div class="section-title">데이터 구조</div>
           </div>
 
+          <h3>기존 vs 신규 구조</h3>
+          <div class="vs">
+            <div class="vs-col vs-before">
+              <h4>현재 — 구글시트 21탭</h4>
+              <ul>
+                <li>탭마다 독립적으로 존재. 탭 간 연결 없음</li>
+                <li>컬럼 29~36개. 기종 추가 시 컬럼 추가</li>
+                <li>제품 상태, 이미지, 가격이 같은 행에 혼재</li>
+                <li>패밀리 개념 없음. 파생 관계 파악 불가</li>
+              </ul>
+            </div>
+            <div class="vs-col vs-after">
+              <h4>신규 — 정규화 DB</h4>
+              <ul>
+                <li>테이블 분리 후 관계로 연결. 중복 없음</li>
+                <li>기종 추가는 행 1개 추가. 컬럼 구조 불변</li>
+                <li>제품 / 속성 / SKU / 이미지 / 가격 / 상태 분리</li>
+                <li>패밀리 107개 정의. 파생 관계 추적 가능</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>테이블 구조</h3>
           <!-- prettier-ignore -->
           <div class="mermaid">
 erDiagram
-strap_product ||--|| strap_attribute : has
-strap_product ||--o{ strap_sku : has
-strap_sku ||--o{ sku_watch_model : compatible
-watch_model ||--o{ sku_watch_model : compatible
-strap_sku ||--o{ strap_price : has
-strap_sku ||--|| strap_content : generates
+  product_family ||--o{ product : "파생"
+  product ||--|| product_attribute : "속성"
+  product ||--o{ product_image : "이미지"
+  product ||--o{ sku : "색상/사이즈"
+  sku ||--o{ sku_model : "호환기종"
+  watch_model ||--o{ sku_model : "호환기종"
+  sku ||--o{ sku_price : "채널별 가격"
+  product ||--|| product_status : "상태"
           </div>
 
           <div class="table-wrap">
@@ -1636,195 +1913,110 @@ strap_sku ||--|| strap_content : generates
                 <tr>
                   <th>테이블</th>
                   <th>설명</th>
-                  <th>예시</th>
+                  <th>현황</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">제품 마스터</td>
-                  <td>스트랩 기본 정보</td>
-                  <td>"모노 스포츠루프", 브랜드 "스페이스쉴드"</td>
+                  <td class="td-label">제품 패밀리</td>
+                  <td>기본 디자인 단위. 기종별 파생의 기준</td>
+                  <td>107개</td>
                 </tr>
                 <tr>
-                  <td class="td-label">속성</td>
-                  <td>재질·체결·폭 등 물리적 특성</td>
-                  <td>재질: 실리콘, 체결: 버클, 폭: 20mm</td>
+                  <td class="td-label">제품 마스터</td>
+                  <td>스트랩 기본 정보 (패밀리 + 기종 조합)</td>
+                  <td>596개</td>
+                </tr>
+                <tr>
+                  <td class="td-label">제품 속성</td>
+                  <td>재질 · 체결방식 · 폭 · 두께 등 물리적 특성</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <td class="td-label">이미지</td>
+                  <td>NAS 연결 이미지. 제품당 복수 이미지 지원</td>
+                  <td>509개</td>
                 </tr>
                 <tr>
                   <td class="td-label">SKU</td>
                   <td>색상·사이즈별 판매 단위</td>
-                  <td>모노 스포츠루프 - 블랙 - S사이즈</td>
+                  <td>—</td>
                 </tr>
                 <tr>
-                  <td class="td-label">호환 모델</td>
-                  <td>장착 가능 시계 기종</td>
-                  <td>갤럭시워치6, 가민 포러너 245</td>
+                  <td class="td-label">호환 기종</td>
+                  <td>장착 가능한 시계 기종 (다대다 관계)</td>
+                  <td>312건</td>
                 </tr>
                 <tr>
                   <td class="td-label">가격</td>
-                  <td>채널별 판매가격</td>
-                  <td>쿠팡 19,900원, 네이버 21,000원</td>
+                  <td>채널별 판매가격 (쿠팡 / 네이버 / 스마트스토어)</td>
+                  <td>141건</td>
                 </tr>
                 <tr>
-                  <td class="td-label">콘텐츠</td>
-                  <td>자동 생성된 상품명/옵션명</td>
-                  <td>"스페이스쉴드 실리콘 버클 갤럭시워치 스포츠 밴드"</td>
+                  <td class="td-label">제품 상태</td>
+                  <td>기획중 / 샘플링 / 일부입고 / 판매중 / 단종 5단계</td>
+                  <td>—</td>
                 </tr>
               </tbody>
             </table>
           </div>
-
-          <div class="callout">
-            호환 모델은 다대다 관계로 설계 — 기종 추가 시 컬럼 확장 없이 행만
-            추가합니다. 향후 1만 SKU 이상 확장에 대응하는 구조입니다.
-          </div>
         </section>
 
-        <!-- 04 -->
-        <section id="s04">
-          <div class="section-head">
-            <div class="section-num">04</div>
-            <div class="section-title">핵심 기능</div>
-          </div>
-
-          <h3>SKU 조회</h3>
-          <ul>
-            <li>
-              제품명 또는 내부코드로 검색하면 해당 SKU의 모든 정보가 한 화면에
-              표시됩니다
-            </li>
-          </ul>
-
-          <h3>다차원 필터링</h3>
-          <ul>
-            <li>
-              예를 들어 '실리콘 재질이면서 갤럭시워치에 맞는 20mm 스트랩'을
-              한번에 찾을 수 있습니다
-            </li>
-            <li>재질별, 커넥터별, 호환 모델별, 가격대별 복합 조건 지원</li>
-          </ul>
-
-          <h3>상품명/옵션명 자동 생성 및 콘텐츠 활용</h3>
-          <ul>
-            <li>
-              규칙: "스페이스쉴드 + 재질 + 체결 + 모델 + 특징" 조합 자동화
-            </li>
-            <li>네이버/쿠팡 글자수 제한 자동 대응</li>
-            <li>내부코드 병행 관리</li>
-            <li>
-              생성된 상품명·옵션명은 상세페이지 콘텐츠 제작에 직접 활용 가능
-            </li>
-          </ul>
-
-          <h3>구글시트 연동 구조</h3>
-          <ul>
-            <li>구글시트 → DB 자동 동기화 (기존 입력 방식 유지)</li>
-            <li>웹 UI에서도 직접 입력 가능 — 두 방식 병행 지원</li>
-            <li>충돌 시 DB 우선 + 알림</li>
-          </ul>
-        </section>
-
-        <!-- 05 -->
-        <section id="s05">
-          <div class="section-head">
-            <div class="section-num">05</div>
-            <div class="section-title">데이터 이관</div>
-          </div>
-
-          <p
-            style="
-              font-size: 13px;
-              color: var(--text-muted);
-              margin-bottom: 16px;
-            "
-          >
-            공유해주신 시트는 전체 데이터의 일부입니다. 아래는 현재 확인된
-            기준이며, 전체 데이터 공유 후 정확한 마이그레이션 범위를 산정합니다.
-          </p>
-
-          <div class="table-wrap migration-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>탭 (현재 확인된 기준)</th>
-                  <th>제품 수</th>
-                  <th>대상 기종</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="td-label">20mm 일반형</td>
-                  <td>60개</td>
-                  <td>갤럭시워치 등 14개</td>
-                </tr>
-                <tr>
-                  <td class="td-label">갤럭시 울트라</td>
-                  <td>56개</td>
-                  <td>울트라 전용</td>
-                </tr>
-                <tr>
-                  <td class="td-label">티렉스</td>
-                  <td>60개</td>
-                  <td>T-Rex 전용</td>
-                </tr>
-                <tr class="total">
-                  <td>합계</td>
-                  <td>176개+</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="migration-cards">
-            <div class="migration-card">
-              <div class="migration-card-title">20mm 일반형</div>
-              <div class="migration-card-row"><span>제품 수</span> 60개</div>
-              <div class="migration-card-row">
-                <span>대상 기종</span> 갤럭시워치 등 14개
-              </div>
-            </div>
-            <div class="migration-card">
-              <div class="migration-card-title">갤럭시 울트라</div>
-              <div class="migration-card-row"><span>제품 수</span> 56개</div>
-              <div class="migration-card-row">
-                <span>대상 기종</span> 울트라 전용
-              </div>
-            </div>
-            <div class="migration-card">
-              <div class="migration-card-title">티렉스</div>
-              <div class="migration-card-row"><span>제품 수</span> 60개</div>
-              <div class="migration-card-row">
-                <span>대상 기종</span> T-Rex 전용
-              </div>
-            </div>
-          </div>
-
-          <!-- prettier-ignore -->
-          <div class="mermaid">
-sequenceDiagram
-participant G as 구글시트
-participant P as 파서
-participant D as DB
-G->>P: 데이터 추출
-P->>P: 속성 분리
-P->>D: 마스터 생성
-P->>D: SKU 연결
-D-->>G: 결과 리포트
-          </div>
-
-          <div class="callout callout-gray">
-            이관 후에도 구글시트 병행 사용 가능
-          </div>
-        </section>
-
-        <!-- 06 -->
+        <!-- 06 개발 일정 -->
         <section id="s06">
           <div class="section-head">
             <div class="section-num">06</div>
             <div class="section-title">개발 일정</div>
           </div>
 
-          <p class="desc">착수일 기준 15 영업일</p>
+          <p class="desc">착수일 기준 21 영업일 (약 4주)</p>
+
+          <div class="gantt">
+            <div class="gantt-header">
+              <div class="gantt-header-days">
+                <span>1~7일</span>
+                <span>8~15일</span>
+                <span>16~19일</span>
+                <span>20~21일</span>
+              </div>
+            </div>
+
+            <div class="gantt-row">
+              <div class="gantt-label">Phase 1 · 설계 + 백엔드</div>
+              <div class="gantt-track">
+                <div class="gantt-bar g-p1" style="left:0%;width:33%;">DB + API + 마이그레이션</div>
+              </div>
+            </div>
+
+            <div class="gantt-row">
+              <div class="gantt-label">Phase 2 · 웹 관리 화면</div>
+              <div class="gantt-track">
+                <div class="gantt-bar g-p2" style="left:33%;width:38%;">4개 뷰 + CRUD</div>
+              </div>
+            </div>
+
+            <div class="gantt-row">
+              <div class="gantt-label">Phase 3 · 연동 + 테스트</div>
+              <div class="gantt-track">
+                <div class="gantt-bar g-p3" style="left:71%;width:19%;">스캐너 연동 + QA</div>
+              </div>
+            </div>
+
+            <div class="gantt-row">
+              <div class="gantt-label">Phase 4 · 배포 + 안정화</div>
+              <div class="gantt-track">
+                <div class="gantt-bar g-p4" style="left:90%;width:10%;">교육 + 배포</div>
+              </div>
+            </div>
+
+            <div class="gantt-legend">
+              <span><span class="legend-dot" style="background:var(--navy);"></span> Phase 1 (7일)</span>
+              <span><span class="legend-dot" style="background:var(--orange);"></span> Phase 2 (8일)</span>
+              <span><span class="legend-dot" style="background:#3b82f6;"></span> Phase 3 (4일)</span>
+              <span><span class="legend-dot" style="background:#16a34a;"></span> Phase 4 (2일)</span>
+            </div>
+          </div>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -1836,91 +2028,113 @@ D-->>G: 결과 리포트
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">1. 설계</td>
-                  <td>3일</td>
-                  <td>ERD 확정, API 설계, 데이터 구조 정의</td>
+                  <td class="td-label">Phase 1 · 설계 + 백엔드</td>
+                  <td>7일</td>
+                  <td>ERD 확정, DB 구축, API 개발, 구글시트 21탭 데이터 마이그레이션</td>
                 </tr>
                 <tr>
-                  <td class="td-label">2. 백엔드</td>
-                  <td>5일</td>
-                  <td>DB 구축, API 개발, 구글시트 연동, 마이그레이션</td>
+                  <td class="td-label">Phase 2 · 웹 관리 화면</td>
+                  <td>8일</td>
+                  <td>4개 뷰 구현 (카탈로그·런칭매트릭스·제품계보·파이프라인) + CRUD</td>
                 </tr>
                 <tr>
-                  <td class="td-label">3. 웹 UI</td>
-                  <td>5일</td>
-                  <td>관리 화면, 조회/검색/필터, CRUD</td>
+                  <td class="td-label">Phase 3 · 연동 + 테스트</td>
+                  <td>4일</td>
+                  <td>PDA 스캐너 연동 (통합 시), QA, 버그 수정</td>
                 </tr>
                 <tr>
-                  <td class="td-label">4. 자동화+배포</td>
+                  <td class="td-label">Phase 4 · 배포 + 안정화</td>
                   <td>2일</td>
-                  <td>상품명/옵션명 생성, 테스트, 배포</td>
+                  <td>사용자 교육, 서버 배포, 안정화</td>
+                </tr>
+                <tr class="total">
+                  <td>합계</td>
+                  <td>21 영업일</td>
+                  <td></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <p>
-            산출물: DB 설계 ERD, API 문서, 웹 관리 UI, 데이터 이관 리포트, 운영
-            가이드
-          </p>
+          <h3>산출물</h3>
+          <ul>
+            <li>DB 설계 ERD 문서</li>
+            <li>API 문서</li>
+            <li>웹 관리 화면 4개 뷰 (CRUD 포함)</li>
+            <li>구글시트 21탭 데이터 이관 리포트</li>
+            <li>운영 가이드</li>
+          </ul>
         </section>
 
-        <!-- 07 -->
+        <!-- 07 비용 -->
         <section id="s07">
           <div class="section-head">
             <div class="section-num">07</div>
             <div class="section-title">비용</div>
           </div>
 
+          <h3>스트랩 DB (통합 기준)</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>항목</th>
-                  <th style="text-align: right">비용</th>
+                  <th style="text-align:right">금액</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">설계 (ERD + API + 데이터 구조)</td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    800,000
-                  </td>
+                  <td class="td-label">설계 (ERD + API + 데이터 구조 확정)</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">1,000,000</td>
                 </tr>
                 <tr>
-                  <td class="td-label">
-                    백엔드 (DB + API + 시트연동 + 마이그레이션)
-                  </td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    1,500,000
-                  </td>
+                  <td class="td-label">백엔드 (DB + API + 데이터 마이그레이션)</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">2,000,000</td>
                 </tr>
                 <tr>
-                  <td class="td-label">웹 관리 화면 (조회/필터/CRUD)</td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    2,000,000
-                  </td>
+                  <td class="td-label">웹 관리 화면 (4개 뷰 + CRUD)</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">2,500,000</td>
                 </tr>
                 <tr>
-                  <td class="td-label">자동화 + 테스트 + 배포</td>
-                  <td style="text-align: right; font-family: var(--font-mono)">
-                    1,700,000
-                  </td>
+                  <td class="td-label">스캐너 통합 + 자동화</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">1,000,000</td>
                 </tr>
                 <tr class="total">
-                  <td>합계</td>
-                  <td
-                    style="
-                      text-align: right;
-                      font-family: var(--font-mono);
-                      font-size: 15px;
-                    "
-                  >
-                    6,000,000원 (VAT 별도)
-                  </td>
+                  <td>통합 어드민 합계</td>
+                  <td style="text-align:right;font-family:var(--font-mono);font-size:15px;">6,500,000원 (VAT 별도)</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <h3>총 프로젝트 비용 (기계약 PDA 스캐너 포함)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th style="text-align:right">금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-label">기계약 PDA 스캐너</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">3,000,000</td>
+                </tr>
+                <tr>
+                  <td class="td-label">통합 어드민 (스트랩 DB 포함)</td>
+                  <td style="text-align:right;font-family:var(--font-mono);">6,500,000</td>
+                </tr>
+                <tr class="total">
+                  <td>총 합계</td>
+                  <td style="text-align:right;font-family:var(--font-mono);font-size:15px;">9,500,000원 (VAT 별도)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-gray">
+            스트랩 DB 단독 진행 시: <strong>9,000,000원 (VAT 별도)</strong>. 나중에 스캐너 시스템과 통합 가능하도록 설계합니다.
           </div>
 
           <h3>결제 조건</h3>
@@ -1930,41 +2144,41 @@ D-->>G: 결과 리포트
                 <tr>
                   <th>시점</th>
                   <th>비율</th>
+                  <th>기준</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">계약 시</td>
+                  <td class="td-label">착수 시</td>
                   <td>50%</td>
+                  <td>계약 체결 후</td>
                 </tr>
                 <tr>
-                  <td class="td-label">인수 완료 후</td>
-                  <td>50%</td>
+                  <td class="td-label">중간 점검 시</td>
+                  <td>30%</td>
+                  <td>Phase 2 완료 후 (웹 화면 시연)</td>
+                </tr>
+                <tr>
+                  <td class="td-label">납품 완료 시</td>
+                  <td>20%</td>
+                  <td>최종 인수 확인 후</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <h3>하자 보수</h3>
-          <p>납품 후 3개월, 이후 별도 협의</p>
+          <p>납품 후 3개월. 이후 유지보수는 별도 협의.</p>
         </section>
 
-        <!-- 08 -->
+        <!-- 08 착수 전 확인 -->
         <section id="s08">
           <div class="section-head">
             <div class="section-num">08</div>
-            <div class="section-title">개발 착수 전 확인 사항</div>
+            <div class="section-title">착수 전 확인 사항</div>
           </div>
 
-          <p
-            style="
-              font-size: 13px;
-              color: var(--text-muted);
-              margin-bottom: 16px;
-            "
-          >
-            클라이언트 요청서 기반으로 착수 전 확정이 필요한 항목입니다.
-          </p>
+          <p class="desc">계약 후 착수 전에 아래 항목을 확정해야 정확한 일정으로 진행됩니다.</p>
 
           <div class="table-wrap">
             <table>
@@ -1976,33 +2190,54 @@ D-->>G: 결과 리포트
               </thead>
               <tbody>
                 <tr>
-                  <td class="td-label">DB 구조 (ERD)</td>
-                  <td>본 제안서 03장 참조. 착수 전 최종 확정</td>
+                  <td class="td-label">구글시트 접근 권한</td>
+                  <td>21탭 전체 편집 권한 공유. 추가 시트가 있는 경우 함께 공유</td>
                 </tr>
                 <tr>
-                  <td class="td-label">데이터 입력 방식</td>
-                  <td>구글시트 + 웹 UI 병행 지원</td>
+                  <td class="td-label">스마트스토어 연동 범위</td>
+                  <td>상품 데이터를 DB와 연동할지 여부 및 범위 확정</td>
                 </tr>
                 <tr>
-                  <td class="td-label">기존 데이터 마이그레이션</td>
-                  <td>본 제안서 05장 참조. 전체 데이터 공유 후 범위 확정</td>
+                  <td class="td-label">NAS 이미지 접근 방식</td>
+                  <td>내부망 WebDAV 접근 또는 이미지 사전 추출 방식 선택</td>
                 </tr>
                 <tr>
-                  <td class="td-label">성능 기준</td>
-                  <td>조회 응답 0.5초 이내, 10,000 SKU 대응</td>
+                  <td class="td-label">프레스티지 라인업 기획</td>
+                  <td>파이프라인 뷰에 반영할 프레스티지 라인업 상세 내용 공유</td>
                 </tr>
                 <tr>
-                  <td class="td-label">유지보수</td>
-                  <td>하자 보수 3개월, 이후 별도 협의</td>
+                  <td class="td-label">DB 구조 (ERD) 확정</td>
+                  <td>본 제안서 05장 기준으로 착수 전 최종 확인</td>
+                </tr>
+                <tr>
+                  <td class="td-label">PDA 스캐너 통합 여부</td>
+                  <td>통합 구축 / 단독 구축 중 선택 확정</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
+
       </div>
       <!-- /content -->
     </div>
     <!-- /main -->
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div class="footer-body">
+          <div>
+            <div class="footer-name">이은석</div>
+            <div class="footer-tagline">스트랩 통합 DB 시스템 구축 제안서</div>
+          </div>
+          <div class="footer-right">
+            <a href="mailto:korea5410@gmail.com">korea5410@gmail.com</a>
+            <a href="tel:01077694682">010-7769-4682</a>
+          </div>
+        </div>
+        <p class="footer-note">2026 · 본 제안서는 수신인 전용입니다.</p>
+      </div>
+    </footer>
 
     <script>
       mermaid.initialize({
@@ -2040,13 +2275,13 @@ D-->>G: 결과 리포트
               navLinks.forEach((link) => {
                 link.classList.toggle(
                   "active",
-                  link.getAttribute("href") === "#" + id,
+                  link.getAttribute("href") === "#" + id
                 );
               });
             }
           });
         },
-        { rootMargin: "-20% 0px -70% 0px" },
+        { rootMargin: "-20% 0px -70% 0px" }
       );
 
       sections.forEach((s) => activeObserver.observe(s));
@@ -2061,7 +2296,7 @@ D-->>G: 결과 리포트
             }
           });
         },
-        { threshold: 0.05 },
+        { threshold: 0.05 }
       );
 
       sections.forEach((s) => fadeObserver.observe(s));
@@ -2086,7 +2321,7 @@ D-->>G: 결과 리포트
             backToTop.classList.toggle("visible", !entry.isIntersecting);
           });
         },
-        { threshold: 0 },
+        { threshold: 0 }
       );
       heroObserver.observe(heroEl);
 
@@ -2099,7 +2334,6 @@ D-->>G: 결과 리포트
         if (el.dataset.static) return;
         const target = parseInt(el.dataset.target, 10);
         const suffix = el.dataset.suffix || "";
-        const format = el.dataset.format;
         const duration = 900;
         const startTime = performance.now();
 
@@ -2108,11 +2342,7 @@ D-->>G: 결과 리포트
           const progress = Math.min(elapsed / duration, 1);
           const eased = 1 - Math.pow(1 - progress, 3);
           const current = Math.round(target * eased);
-          let display = current.toString();
-          if (format === "comma") {
-            display = current.toLocaleString("ko-KR");
-          }
-          el.textContent = display + suffix;
+          el.textContent = current + suffix;
           if (progress < 1) requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);
@@ -2130,11 +2360,11 @@ D-->>G: 결과 리포트
             }
           });
         },
-        { threshold: 0.5 },
+        { threshold: 0.5 }
       );
       statsObserver.observe(document.getElementById("heroStats"));
 
-      // Lightbox for mermaid diagrams
+      // Lightbox
       const lightbox = document.createElement("div");
       lightbox.className = "lightbox";
       lightbox.innerHTML =
@@ -2171,19 +2401,19 @@ D-->>G: 결과 리포트
 
       document.querySelectorAll(".arch").forEach((el) => {
         el.addEventListener("click", () =>
-          openLightbox(el, { width: "min(90vw, 860px)" }),
+          openLightbox(el, { width: "min(90vw, 860px)" })
         );
       });
 
       document.querySelectorAll(".vs").forEach((el) => {
         el.addEventListener("click", () =>
-          openLightbox(el, { width: "min(90vw, 680px)" }),
+          openLightbox(el, { width: "min(90vw, 680px)" })
         );
       });
 
       document.querySelectorAll(".gantt").forEach((el) => {
         el.addEventListener("click", () =>
-          openLightbox(el, { width: "min(90vw, 780px)" }),
+          openLightbox(el, { width: "min(90vw, 780px)" })
         );
       });
 
@@ -2212,7 +2442,7 @@ D-->>G: 결과 리포트
         const checkScroll = () => {
           wrap.classList.toggle(
             "scrollable",
-            wrap.scrollWidth > wrap.clientWidth + 2,
+            wrap.scrollWidth > wrap.clientWidth + 2
           );
         };
         checkScroll();
@@ -2222,7 +2452,7 @@ D-->>G: 결과 리포트
             wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 2;
           wrap.classList.toggle(
             "scrollable",
-            !atEnd && wrap.scrollWidth > wrap.clientWidth + 2,
+            !atEnd && wrap.scrollWidth > wrap.clientWidth + 2
           );
         });
       });
