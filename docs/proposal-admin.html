@@ -13,7 +13,10 @@
       content="구글시트·자체 프로그램을 하나의 웹 시스템으로 통합. PDA 바코드 스캐너, 제품 백과사전, 재고·발주·창고·스토어 관리."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="" />
+    <meta
+      property="og:image"
+      content="https://docs-six-woad-11.vercel.app/og-admin.png"
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
@@ -1366,7 +1369,7 @@
             <span class="hero-stat-label">전체 기능</span>
           </div>
           <div class="hero-stat">
-            <span class="hero-stat-num" data-target="36" data-suffix="일"
+            <span class="hero-stat-num" data-target="36" data-suffix="~41일"
               >0</span
             >
             <span class="hero-stat-label">총 개발 기간</span>
@@ -1483,6 +1486,18 @@
                   <td class="td-label" data-label="항목">데이터 직접 입력</td>
                   <td data-label="포함"><span class="dash">-</span></td>
                   <td data-label="비고">대표님·직원이 직접 입력</td>
+                </tr>
+                <tr>
+                  <td class="td-label" data-label="항목">도메인/호스팅 비용</td>
+                  <td data-label="포함"><span class="dash">-</span></td>
+                  <td data-label="비고">Vercel 무료 플랜 사용</td>
+                </tr>
+                <tr>
+                  <td class="td-label" data-label="항목">
+                    쿠팡/네이버 API 수수료
+                  </td>
+                  <td data-label="포함"><span class="dash">-</span></td>
+                  <td data-label="비고">발생 시 별도</td>
                 </tr>
               </tbody>
             </table>
@@ -2717,13 +2732,13 @@
           </p>
 
           <div class="plan-grid">
-            <div class="plan-card recommended">
+            <div class="plan-card">
               <div class="plan-card-title">A안 — 스트랩 전용</div>
               <div class="plan-card-price">1,330만원</div>
               <div class="plan-card-days">약 36일 개발 (Phase 1~4 합계)</div>
               <div class="plan-card-desc">
                 스트랩 관리에 최적화된 시스템. 빠르게 구축하고 즉시 사용 시작.
-                나중에 B안으로 업그레이드 가능(추가 비용 발생).
+                나중에 B안으로 업그레이드 가능(추가 300~400만원 발생).
               </div>
               <ul>
                 <li>2-1단계 (백과사전+재고): 480만원 · 12일</li>
@@ -2732,13 +2747,14 @@
                 <li>2-4단계 (스토어 연동): 250만원 · 7일</li>
               </ul>
             </div>
-            <div class="plan-card">
+            <div class="plan-card recommended">
               <div class="plan-card-title">B안 — 확장 가능</div>
               <div class="plan-card-price">1,540만원</div>
               <div class="plan-card-days">약 41일 개발 (Phase 1~4 합계)</div>
               <div class="plan-card-desc">
                 A안의 모든 기능 포함 + 다른 상품군도 담을 수 있는 구조. 게임
-                악세서리·케이스 등 카테고리 확장 시 추가 개발 불필요.
+                악세서리·케이스 등 카테고리 확장 시 추가 개발 불필요. A안 대비
+                +210만원(+16%)으로 장기적으로 경제적.
               </div>
               <ul>
                 <li>2-1단계 (백과사전+재고, 확장형): 600만원 · 15일</li>
@@ -2904,6 +2920,18 @@
             </div>
           </div>
 
+          <h3>추천 일정</h3>
+          <div class="callout">
+            <strong>3월 27일</strong> — PDA 앱 안정화 완료<br />
+            <strong>4월 초</strong> — 2-1단계(백과사전+재고) 착수<br />
+            <strong>4월 중순</strong> — 2-1단계 납품 → 실사용 시작<br />
+            <strong>이후</strong> — 대표님 판단에 따라 2-2 또는 2-3 진행<br /><br />
+            <em style="color: var(--text-muted); font-size: 13px"
+              >2-1단계만 완료되면 일상 업무의 약 80%를 시스템으로 처리할 수
+              있습니다.</em
+            >
+          </div>
+
           <h3>기술 환경</h3>
           <div class="table-wrap">
             <table>
@@ -3009,7 +3037,8 @@
           </div>
 
           <div class="callout callout-gray" style="margin-top: 32px">
-            <strong>견적 유효기간:</strong> 견적일로부터 14일<br />
+            <strong>작성일:</strong> 2026년 3월 25일<br />
+            <strong>견적 유효기간:</strong> 2026년 4월 8일까지 (14일간)<br />
             <strong>납품 후:</strong> 1개월 무상 버그 수정 포함
           </div>
         </section>
