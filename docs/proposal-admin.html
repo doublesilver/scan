@@ -790,6 +790,19 @@
         color: var(--navy);
         margin-bottom: 4px;
       }
+      .badge-suggest {
+        display: inline-block;
+        font-size: 9px;
+        font-weight: 600;
+        color: #6366f1;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 3px;
+        padding: 1px 6px;
+        margin-left: 6px;
+        vertical-align: middle;
+        letter-spacing: 0.03em;
+      }
       .feature-item-desc {
         font-size: 12px;
         color: var(--text-muted);
@@ -1547,7 +1560,9 @@
           <h3>웹 어드민 — 제공 화면 구성</h3>
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-item-name">현황판</div>
+              <div class="feature-item-name">
+                현황판 <span class="badge-suggest">제안</span>
+              </div>
               <div class="feature-item-desc">
                 전체 제품 수, 재고 부족 경고, 최근 재고 변동을 일목요연하게
                 표시합니다
@@ -1591,7 +1606,9 @@
               </div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-name">통합 검색</div>
+              <div class="feature-item-name">
+                통합 검색 <span class="badge-suggest">제안</span>
+              </div>
               <div class="feature-item-desc">
                 제품명·재질·바코드로 0.5초 이내 검색
               </div>
@@ -1610,7 +1627,9 @@
               </div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-name">사용자 관리</div>
+              <div class="feature-item-name">
+                사용자 관리 <span class="badge-suggest">제안</span>
+              </div>
               <div class="feature-item-desc">
                 관리자 계정에서 직원별 권한을 직접 설정 가능 (조회만, 재고수정,
                 전체 등)
@@ -1774,21 +1793,27 @@
                   </td>
                 </tr>
                 <tr>
-                  <td class="td-label" data-label="기능">입고 관리</td>
+                  <td class="td-label" data-label="기능">
+                    입고 관리 <span class="badge-suggest">제안</span>
+                  </td>
                   <td data-label="설명">
                     입고 예정일 캘린더 뷰. 일부입고 처리. 주간 입고 예정 현황을
                     즉시 조회할 수 있습니다
                   </td>
                 </tr>
                 <tr>
-                  <td class="td-label" data-label="기능">매입금 관리</td>
+                  <td class="td-label" data-label="기능">
+                    매입금 관리 <span class="badge-suggest">제안</span>
+                  </td>
                   <td data-label="설명">
                     발주별 매입 금액 기록. 월별 집계 및 누적 매입 비용을 조회할
                     수 있습니다
                   </td>
                 </tr>
                 <tr>
-                  <td class="td-label" data-label="기능">발주 현황판</td>
+                  <td class="td-label" data-label="기능">
+                    발주 현황판 <span class="badge-suggest">제안</span>
+                  </td>
                   <td data-label="설명">
                     월별 발주량 그래프로 추이 확인. 판매량·리뷰 수는 엑셀 업로드
                     또는 스토어 연동(2-4단계) 후 자동 반영
@@ -1813,7 +1838,9 @@
         <section id="s05">
           <div class="section-head">
             <div class="section-num">05</div>
-            <div class="section-title">2-4단계 상세 — 스토어 연동</div>
+            <div class="section-title">
+              2-4단계 상세 — 스토어 연동 <span class="badge-suggest">제안</span>
+            </div>
           </div>
 
           <div class="phase-card">
@@ -1968,6 +1995,14 @@
             각 단계 완료 시 이전 단계의 기능은 모두 유지됩니다. 단계별 기능
             구성은 아래 표를 참조하십시오.
           </p>
+          <div
+            class="callout callout-gray"
+            style="font-size: 12px; padding: 10px 16px"
+          >
+            <span class="badge-suggest">제안</span> 표시 기능은 개발자 제안
+            사항으로, 대표님의 판단에 따라 포함 여부를 결정하실 수 있습니다.
+            제외 시 해당 단계 비용이 조정됩니다.
+          </div>
 
           <div class="table-wrap">
             <table>
