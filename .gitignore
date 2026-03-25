@@ -1,2 +1,22 @@
 .omc/
 *.apk
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore/
+server/app/__pycache__/
+server/app/**/__pycache__/
+server/data/scanner.db
+server/data/scanner.db-shm
+server/data/scanner.db-wal
+server/data/cache/
+server/tests/__pycache__/
+scripts/__pycache__/
+Supplier Hub.html
+Supplier Hub_files/
+supplier_hub_skus_*.json

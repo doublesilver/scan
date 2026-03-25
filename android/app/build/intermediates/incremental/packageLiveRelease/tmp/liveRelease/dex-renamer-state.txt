@@ -1,7 +1,0 @@
-#Wed Mar 25 15:43:39 KST 2026
-base.1=/Users/leeeunseok/Projects/scan/android/app/build/intermediates/dex/liveRelease/mergeDexLiveRelease/classes2.dex
-path.1=classes2.dex
-base.0=/Users/leeeunseok/Projects/scan/android/app/build/intermediates/dex/liveRelease/mergeDexLiveRelease/classes.dex
-renamed.1=classes2.dex
-renamed.0=classes.dex
-path.0=classes.dex
