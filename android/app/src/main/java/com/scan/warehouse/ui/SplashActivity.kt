@@ -12,7 +12,6 @@ import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySplashBinding
 import com.scan.warehouse.db.AppDatabase
-import com.scan.warehouse.network.getAccessToken
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import kotlinx.coroutines.delay
@@ -67,14 +66,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun checkServer() {
-        val token = getAccessToken(this)
-        if (token == null) {
-            binding.tvStatus.text = "로그인이 필요합니다"
-            binding.progressBar.visibility = View.GONE
-            binding.layoutButtons.visibility = View.VISIBLE
-            return
-        }
-
         binding.tvStatus.text = getString(R.string.splash_connecting)
         binding.progressBar.visibility = View.VISIBLE
         binding.layoutButtons.visibility = View.GONE

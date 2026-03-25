@@ -13,10 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySettingsBinding
-import com.scan.warehouse.model.LoginRequest
 import com.scan.warehouse.network.RetrofitClient
-import com.scan.warehouse.network.getAccessToken
-import com.scan.warehouse.network.saveTokens
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import kotlinx.coroutines.launch
@@ -57,12 +54,10 @@ class SettingsActivity : AppCompatActivity() {
             binding.etServerUrl.isEnabled = false
             binding.btnSave.isEnabled = false
             binding.btnTest.isEnabled = false
-            binding.layoutLogin.visibility = View.GONE
             return
         }
 
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
-        updateLoginStatus()
 
         binding.btnSave.setOnClickListener {
             val url = binding.etServerUrl.text.toString().trim()
@@ -93,58 +88,6 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             testConnection(url)
-        }
-
-        binding.btnLogin.setOnClickListener {
-            val username = binding.etUsername.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-            if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "아이디와 비밀번호를 입력하세요", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            performLogin(username, password)
-        }
-    }
-
-    private fun updateLoginStatus() {
-        val token = getAccessToken(this)
-        if (token != null) {
-            binding.tvLoginStatus.text = "로그인됨"
-            binding.tvLoginStatus.setTextColor(getColor(R.color.success))
-            binding.tvLoginStatus.visibility = View.VISIBLE
-        } else {
-            binding.tvLoginStatus.text = "로그인 필요"
-            binding.tvLoginStatus.setTextColor(getColor(R.color.error))
-            binding.tvLoginStatus.visibility = View.VISIBLE
-        }
-    }
-
-    private fun performLogin(username: String, password: String) {
-        binding.progressBarSettings.visibility = View.VISIBLE
-        binding.btnLogin.isEnabled = false
-
-        lifecycleScope.launch {
-            try {
-                val api = RetrofitClient.getApiService(this@SettingsActivity)
-                val response = api.login(LoginRequest(username, password))
-                val data = response.data
-                saveTokens(this@SettingsActivity, data.accessToken, data.refreshToken)
-                binding.progressBarSettings.visibility = View.GONE
-                binding.btnLogin.isEnabled = true
-                Toast.makeText(this@SettingsActivity, "로그인 성공", Toast.LENGTH_SHORT).show()
-                updateLoginStatus()
-            } catch (e: Exception) {
-                binding.progressBarSettings.visibility = View.GONE
-                binding.btnLogin.isEnabled = true
-                val msg = when (e) {
-                    is retrofit2.HttpException -> when (e.code()) {
-                        401 -> "아이디 또는 비밀번호가 올바르지 않습니다"
-                        else -> "로그인 실패: ${e.code()}"
-                    }
-                    else -> "로그인 실패: ${e.message}"
-                }
-                Toast.makeText(this@SettingsActivity, msg, Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
