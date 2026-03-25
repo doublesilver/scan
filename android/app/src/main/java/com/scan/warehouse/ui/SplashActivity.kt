@@ -11,6 +11,8 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySplashBinding
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.repository.ProductRepository
+import com.scan.warehouse.scanner.DataWedgeManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -31,6 +33,14 @@ class SplashActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
+        DataWedgeManager.setupProfile(this)
+
+        lifecycleScope.launch {
+            DataWedgeManager.scanFlow.collect { barcode ->
+                goToMainWithBarcode(barcode)
+            }
+        }
+
         if (BuildConfig.FLAVOR == "demo") {
             goToMain()
         } else {
@@ -40,9 +50,15 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        DataWedgeManager.register(this)
         if (BuildConfig.FLAVOR != "demo" && binding.layoutButtons.visibility == View.VISIBLE) {
             checkServer()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        DataWedgeManager.unregister(this)
     }
 
     private fun checkServer() {
@@ -76,6 +92,15 @@ class SplashActivity : AppCompatActivity() {
 
     private fun goToMain() {
         startActivity(Intent(this, MainActivity::class.java))
+        finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    private fun goToMainWithBarcode(barcode: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("BARCODE", barcode)
+        }
+        startActivity(intent)
         finish()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }

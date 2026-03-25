@@ -1,16 +1,21 @@
 package com.scan.warehouse.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySettingsBinding
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.repository.ProductRepository
+import com.scan.warehouse.scanner.DataWedgeManager
 import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
@@ -27,6 +32,19 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.title = "서버 설정"
 
         repository = ProductRepository(applicationContext)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                DataWedgeManager.scanFlow.collect { barcode ->
+                    val intent = Intent(this@SettingsActivity, MainActivity::class.java).apply {
+                        putExtra("BARCODE", barcode)
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    startActivity(intent)
+                    finish()
+                }
+            }
+        }
 
         if (BuildConfig.FLAVOR == "demo") {
             binding.tvConnectionStatus.text = "데모 모드 - 서버 연결 불필요"
@@ -92,6 +110,40 @@ class SettingsActivity : AppCompatActivity() {
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
             }
         }
+    }
+
+    private val keystrokeBuffer = StringBuilder()
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (event.keyCode == KeyEvent.KEYCODE_ENTER && keystrokeBuffer.isNotBlank()) {
+                val barcode = keystrokeBuffer.toString()
+                keystrokeBuffer.clear()
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    putExtra("BARCODE", barcode)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+                finish()
+                return true
+            }
+            val char = event.unicodeChar.toChar()
+            if (char.isDigit()) {
+                keystrokeBuffer.append(char)
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        DataWedgeManager.register(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        DataWedgeManager.unregister(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

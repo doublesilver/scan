@@ -9,7 +9,6 @@ import android.os.Bundle
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 object DataWedgeManager {
 
@@ -42,7 +41,7 @@ object DataWedgeManager {
         if (isRegistered) unregister(context)
         val filter = IntentFilter(ACTION_SCAN)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             context.registerReceiver(receiver, filter)
         }
@@ -56,38 +55,59 @@ object DataWedgeManager {
     }
 
     fun setupProfile(context: Context) {
-        Intent(ACTION_DATAWEDGE).also { intent ->
-            intent.putExtra(EXTRA_CREATE_PROFILE, "WarehouseScanner")
-            context.sendBroadcast(intent)
+        Intent(ACTION_DATAWEDGE).also {
+            it.putExtra(EXTRA_CREATE_PROFILE, "WarehouseScanner")
+            context.sendBroadcast(it)
         }
 
-        val profileConfig = Bundle().apply {
+        // 1. keystroke 끄기 (별도 Intent)
+        val keystrokeConfig = Bundle().apply {
             putString("PROFILE_NAME", "WarehouseScanner")
             putString("PROFILE_ENABLED", "true")
-            putString("CONFIG_MODE", "CREATE_IF_NOT_EXIST")
-
+            putString("CONFIG_MODE", "UPDATE")
             val appConfig = Bundle().apply {
                 putString("PACKAGE_NAME", context.packageName)
                 putStringArray("ACTIVITY_LIST", arrayOf("*"))
             }
             putParcelableArray("APP_LIST", arrayOf(appConfig))
+            val plugin = Bundle().apply {
+                putString("PLUGIN_NAME", "KEYSTROKE")
+                putString("RESET_CONFIG", "true")
+                putBundle("PARAM_LIST", Bundle().apply {
+                    putString("keystroke_output_enabled", "false")
+                })
+            }
+            putBundle("PLUGIN_CONFIG", plugin)
+        }
+        Intent(ACTION_DATAWEDGE).also {
+            it.putExtra(EXTRA_SET_CONFIG, keystrokeConfig)
+            context.sendBroadcast(it)
+        }
 
-            val intentPlugin = Bundle().apply {
+        // 2. intent 출력 설정 (별도 Intent)
+        val intentConfig = Bundle().apply {
+            putString("PROFILE_NAME", "WarehouseScanner")
+            putString("PROFILE_ENABLED", "true")
+            putString("CONFIG_MODE", "UPDATE")
+            val appConfig = Bundle().apply {
+                putString("PACKAGE_NAME", context.packageName)
+                putStringArray("ACTIVITY_LIST", arrayOf("*"))
+            }
+            putParcelableArray("APP_LIST", arrayOf(appConfig))
+            val plugin = Bundle().apply {
                 putString("PLUGIN_NAME", "INTENT")
                 putString("RESET_CONFIG", "true")
-                val intentParams = Bundle().apply {
+                putBundle("PARAM_LIST", Bundle().apply {
                     putString("intent_output_enabled", "true")
                     putString("intent_action", ACTION_SCAN)
                     putString("intent_delivery", "2")
-                }
-                putBundle("PARAM_LIST", intentParams)
+                })
             }
-            putParcelableArray("PLUGIN_CONFIG", arrayOf(intentPlugin))
+            putBundle("PLUGIN_CONFIG", plugin)
         }
-
-        Intent(ACTION_DATAWEDGE).also { intent ->
-            intent.putExtra(EXTRA_SET_CONFIG, profileConfig)
-            context.sendBroadcast(intent)
+        Intent(ACTION_DATAWEDGE).also {
+            it.putExtra(EXTRA_SET_CONFIG, intentConfig)
+            context.sendBroadcast(it)
         }
     }
 }

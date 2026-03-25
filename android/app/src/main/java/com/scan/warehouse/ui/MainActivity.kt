@@ -2,8 +2,10 @@ package com.scan.warehouse.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -15,9 +17,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.ScanResponse
+import com.scan.warehouse.network.RetrofitClient
+import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,13 +41,23 @@ class MainActivity : AppCompatActivity() {
         setupSearch()
         setupHeader()
         observeViewModel()
+        checkServerOnce()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 DataWedgeManager.scanFlow.collect { barcode ->
-                    viewModel.scanBarcode(barcode)
+                    binding.etSearch.setText(barcode)
+                    binding.etSearch.setSelection(barcode.length)
+                    performSearch(barcode)
                 }
             }
+        }
+
+        intent.getStringExtra("BARCODE")?.let { barcode ->
+            binding.etSearch.setText(barcode)
+            binding.etSearch.setSelection(barcode.length)
+            performSearch(barcode)
+            intent.removeExtra("BARCODE")
         }
     }
 
@@ -152,6 +167,49 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+    }
+
+    private fun checkServerOnce() {
+        val url = RetrofitClient.getBaseUrl(this)
+        if (url.isNotBlank() && url != "http://") return
+
+        lifecycleScope.launch {
+            val found = com.scan.warehouse.network.ServerDiscovery.findServer()
+            if (found != null) {
+                RetrofitClient.saveBaseUrl(this@MainActivity, found)
+                Toast.makeText(this@MainActivity, "서버 연결됨", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
+                val query = binding.etSearch.text.toString().trim()
+                if (query.isNotBlank()) {
+                    performSearch(query)
+                }
+                return true
+            }
+            val char = event.unicodeChar.toChar()
+            if (char.isDigit() || char.isLetter()) {
+                if (!binding.etSearch.hasFocus()) {
+                    binding.etSearch.requestFocus()
+                }
+                binding.etSearch.append(char.toString())
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra("BARCODE")?.let { barcode ->
+            binding.etSearch.setText(barcode)
+            binding.etSearch.setSelection(barcode.length)
+            performSearch(barcode)
         }
     }
 
