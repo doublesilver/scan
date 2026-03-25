@@ -7,7 +7,7 @@
     <style>
       @page {
         size: A4;
-        margin: 15mm 18mm;
+        margin: 14mm 16mm;
       }
       * {
         margin: 0;
@@ -21,198 +21,214 @@
           "Noto Sans KR",
           sans-serif;
         color: #1a1a1a;
-        line-height: 1.65;
-        font-size: 13.5px;
+        line-height: 1.6;
+        font-size: 12.5px;
         max-width: 210mm;
         margin: 0 auto;
-        padding: 15mm 18mm;
+        padding: 14mm 16mm;
         background: #fff;
       }
-
-      /* Header */
       .header {
-        margin-bottom: 28px;
+        margin-bottom: 22px;
       }
       .header h1 {
-        font-size: 32px;
+        font-size: 30px;
         font-weight: 800;
         letter-spacing: -0.5px;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
       .header .subtitle {
-        font-size: 16px;
+        font-size: 15px;
         color: #4a4a4a;
         font-weight: 500;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
       .header .contact {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #666;
       }
       .header .contact span {
-        margin-right: 14px;
+        margin-right: 12px;
       }
-
-      /* Summary */
       .summary {
         background: #f8f9fb;
         border-left: 3px solid #2563eb;
-        padding: 16px 20px;
-        margin-bottom: 28px;
-        font-size: 13.5px;
+        padding: 14px 18px;
+        margin-bottom: 22px;
+        font-size: 12.5px;
         color: #333;
-        line-height: 1.75;
+        line-height: 1.7;
       }
-
-      /* Section */
       .section {
-        margin-bottom: 26px;
+        margin-bottom: 20px;
       }
       .section-title {
-        font-size: 15px;
+        font-size: 13.5px;
         font-weight: 700;
         color: #1a1a1a;
         border-bottom: 2px solid #1a1a1a;
-        padding-bottom: 6px;
-        margin-bottom: 16px;
+        padding-bottom: 5px;
+        margin-bottom: 12px;
         text-transform: uppercase;
         letter-spacing: 1px;
       }
-
-      /* Skills */
       .skills-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px 20px;
-        margin-bottom: 4px;
+        gap: 3px 16px;
       }
       .skill-category {
         flex: 0 0 100%;
         display: flex;
         align-items: baseline;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
       }
       .skill-label {
         font-weight: 600;
-        min-width: 90px;
-        font-size: 12.5px;
+        min-width: 80px;
+        font-size: 11.5px;
         color: #555;
       }
       .skill-value {
-        font-size: 13px;
+        font-size: 12px;
         color: #1a1a1a;
       }
 
-      /* Projects */
+      .num-grid {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+      }
+      .num-item {
+        text-align: center;
+        flex: 1;
+      }
+      .num-item .num {
+        font-size: 20px;
+        font-weight: 800;
+        color: #2563eb;
+      }
+      .num-item .label {
+        font-size: 10.5px;
+        color: #888;
+        margin-top: 2px;
+      }
+
+      .workflow-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        font-size: 11.5px;
+        color: #333;
+        line-height: 1.7;
+      }
+      .workflow-box strong {
+        color: #166534;
+      }
+      .workflow-steps {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 11px;
+        color: #555;
+        margin-top: 6px;
+      }
+
+      .strength-item {
+        margin-bottom: 8px;
+      }
+      .strength-item strong {
+        font-size: 12.5px;
+      }
+      .strength-item p {
+        font-size: 11.5px;
+        color: #444;
+        margin-top: 1px;
+      }
+
       .project {
-        margin-bottom: 18px;
+        margin-bottom: 14px;
         page-break-inside: avoid;
       }
       .project-header {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
       }
       .project-name {
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
+      }
+      .project-link {
+        font-size: 10.5px;
+        color: #2563eb;
       }
       .project-period {
-        font-size: 12px;
+        font-size: 11px;
         color: #888;
       }
-      .project-desc {
-        font-size: 13px;
-        color: #444;
-        margin-bottom: 4px;
-      }
       .project-stack {
-        font-size: 11.5px;
+        font-size: 10.5px;
         color: #2563eb;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
       }
       .project-detail {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #333;
-        padding-left: 16px;
+        padding-left: 14px;
       }
       .project-detail li {
-        margin-bottom: 2px;
+        margin-bottom: 1px;
       }
 
-      /* Experience */
       .exp {
-        margin-bottom: 18px;
+        margin-bottom: 14px;
         page-break-inside: avoid;
       }
       .exp-header {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
       }
       .exp-company {
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
       }
       .exp-period {
-        font-size: 12px;
+        font-size: 11px;
         color: #888;
       }
       .exp-role {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #555;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
       }
       .exp-detail {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #333;
-        padding-left: 16px;
+        padding-left: 14px;
       }
       .exp-detail li {
-        margin-bottom: 2px;
+        margin-bottom: 1px;
       }
 
-      /* Education & Language */
       .inline-row {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
       }
       .inline-label {
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
       }
       .inline-value {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: #666;
-      }
-
-      /* Tag */
-      .tag {
-        display: inline-block;
-        background: #eef2ff;
-        color: #3b5bdb;
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 3px;
-        margin: 1px 2px;
-        font-weight: 500;
-      }
-
-      /* Strengths */
-      .strength-item {
-        margin-bottom: 10px;
-      }
-      .strength-item strong {
-        font-size: 13.5px;
-      }
-      .strength-item p {
-        font-size: 12.5px;
-        color: #444;
-        margin-top: 2px;
       }
 
       @media print {
@@ -223,10 +239,9 @@
     </style>
   </head>
   <body>
-    <!-- HEADER -->
     <div class="header">
       <h1>이은석</h1>
-      <div class="subtitle">풀스택 개발자 · CX 출신 개발자</div>
+      <div class="subtitle">풀스택 개발자 — AI Agent 활용 고속 개발</div>
       <div class="contact">
         <span>+82 10-7769-4682</span>
         <span>korea5410@naver.com</span>
@@ -234,13 +249,54 @@
       </div>
     </div>
 
-    <!-- SUMMARY -->
     <div class="summary">
       8년간 CX 현장에서 고객 문제를 직접 마주하며 "이건 시스템으로 해결해야
-      한다"는 확신으로 개발을 시작했습니다. Python·Selenium 자동화로 CX 업무
-      효율을 4배 개선한 것을 시작으로, React·Next.js·FastAPI·PostgreSQL 기반
-      풀스택 개발자로 전환하여 다수의 실서비스를 기획부터 배포까지 1인 개발로
-      완수했습니다. 고객 관점에서 문제를 정의하고, 코드로 해결하는 개발자입니다.
+      한다"는 확신으로 개발을 시작했습니다. AI 코딩 에이전트(Claude Code, MCP)를
+      적극 활용하여 기획부터 배포까지 1인으로 빠르게 완수하며, 8개 프로덕션
+      서비스와 2,016개 이상의 테스트를 작성했습니다. 고객 관점에서 문제를
+      정의하고, AI와 함께 코드로 해결하는 개발자입니다.
+    </div>
+
+    <!-- NUMBERS -->
+    <div class="num-grid">
+      <div class="num-item">
+        <div class="num">8</div>
+        <div class="label">Production 서비스</div>
+      </div>
+      <div class="num-item">
+        <div class="num">2,016+</div>
+        <div class="label">테스트 작성</div>
+      </div>
+      <div class="num-item">
+        <div class="num">3</div>
+        <div class="label">플랫폼 (Web·Toss·Android)</div>
+      </div>
+      <div class="num-item">
+        <div class="num">16</div>
+        <div class="label">업종별 데모</div>
+      </div>
+      <div class="num-item">
+        <div class="num">~80ms</div>
+        <div class="label">P95 Latency</div>
+      </div>
+    </div>
+
+    <!-- AI WORKFLOW -->
+    <div class="section">
+      <div class="section-title">AI Agent 활용 개발 워크플로우</div>
+      <div class="workflow-box">
+        <strong
+          >Claude Code + MCP(LSP·AST-grep) 기반 AI-Assisted Engineering</strong
+        >으로 코드베이스 분석 → 구현 전략 수립 → 코드 생성 → 테스트 자동
+        검증까지 파이프라인을 구축하여,
+        <strong>48시간 만에 AI SaaS 풀스택 프로젝트를 완성</strong>한 경험이
+        있습니다. AI가 생성한 코드에 대해 보안·성능·아키텍처를
+        Human-in-the-loop로 최종 판단합니다.
+        <div class="workflow-steps">
+          PLAN (AI 코드베이스 탐색·전략) → CODE (Context-Aware 생성) → TEST
+          (자동 검증 2,016+) → REVIEW (Human 판단) → DEPLOY (CI/CD)
+        </div>
+      </div>
     </div>
 
     <!-- SKILLS -->
@@ -248,100 +304,136 @@
       <div class="section-title">기술 스택</div>
       <div class="skills-grid">
         <div class="skill-category">
-          <span class="skill-label">Frontend</span>
-          <span class="skill-value"
-            >React 19, Next.js 14, TypeScript, Tailwind CSS, HTML/CSS</span
+          <span class="skill-label">Frontend</span
+          ><span class="skill-value"
+            >React 19, Next.js 15, TypeScript, Tailwind CSS</span
           >
         </div>
         <div class="skill-category">
-          <span class="skill-label">Backend</span>
-          <span class="skill-value">Express 5, FastAPI, Python, Node.js</span>
+          <span class="skill-label">Backend</span
+          ><span class="skill-value">Express 5, FastAPI, Python, Node.js</span>
         </div>
         <div class="skill-category">
-          <span class="skill-label">Database</span>
-          <span class="skill-value">PostgreSQL, SQL, Redis</span>
+          <span class="skill-label">Database</span
+          ><span class="skill-value">PostgreSQL, Supabase, Redis, SQLite</span>
         </div>
         <div class="skill-category">
-          <span class="skill-label">Realtime</span>
-          <span class="skill-value">Socket.IO, WebSocket</span>
+          <span class="skill-label">Realtime</span
+          ><span class="skill-value">Socket.IO, WebSocket</span>
         </div>
         <div class="skill-category">
-          <span class="skill-label">AI / ML</span>
-          <span class="skill-value">OpenAI API, RAG, OCR, MCP</span>
-        </div>
-        <div class="skill-category">
-          <span class="skill-label">DevOps</span>
-          <span class="skill-value"
-            >Docker, Railway, Vercel, GitHub Actions</span
+          <span class="skill-label">AI</span
+          ><span class="skill-value"
+            >OpenAI API, Google Gemini, LangChain, RAG, MCP, OCR</span
           >
         </div>
         <div class="skill-category">
-          <span class="skill-label">Automation</span>
-          <span class="skill-value">Selenium, Celery, Google Apps Script</span>
+          <span class="skill-label">DevOps</span
+          ><span class="skill-value"
+            >Docker, Railway, Vercel, GitHub Actions, Nginx, Prometheus,
+            Grafana</span
+          >
         </div>
         <div class="skill-category">
-          <span class="skill-label">Mobile</span>
-          <span class="skill-value">Kotlin (Android)</span>
+          <span class="skill-label">Mobile</span
+          ><span class="skill-value">Kotlin Android (Zebra PDA 연동)</span>
         </div>
         <div class="skill-category">
-          <span class="skill-label">Tools</span>
-          <span class="skill-value"
+          <span class="skill-label">Automation</span
+          ><span class="skill-value"
+            >Selenium, Celery, Google Apps Script, Claude Code Agent</span
+          >
+        </div>
+        <div class="skill-category">
+          <span class="skill-label">Tools</span
+          ><span class="skill-value"
             >Git, JIRA, Slack, Notion, Figma, Redash</span
           >
         </div>
       </div>
     </div>
 
-    <!-- STRENGTH -->
+    <!-- STRENGTHS -->
     <div class="section">
       <div class="section-title">핵심 강점</div>
       <div class="strength-item">
-        <strong>CX 기반 문제 정의 능력</strong>
+        <strong>AI 에이전트로 스타트업 속도 구현</strong>
         <p>
-          8년간 수만 건의 고객 VOC를 직접 분석한 경험으로, 사용자가 진짜
-          불편해하는 지점을 정확히 파악하고 기능으로 전환할 수 있습니다.
+          Claude Code + MCP 기반 AI 워크플로우로 기획~배포를 48시간~12주 내
+          완수. 1인이 3~4개 프로젝트를 동시 운영하면서도 2,016+ 테스트, 80%+
+          커버리지를 유지합니다.
         </p>
       </div>
       <div class="strength-item">
-        <strong>기획부터 배포까지 1인 풀사이클 개발</strong>
+        <strong>CX 8년 — 고객 문제를 기능으로 전환하는 감각</strong>
         <p>
-          요구사항 분석 → UI/UX 설계 → 프론트엔드·백엔드 구현 → 배포·운영까지 전
-          과정을 혼자 수행합니다. 다수의 외주 프로젝트를 동시에 납품한 실전
-          경험이 있습니다.
+          수만 건의 VOC를 직접 분석한 경험으로 사용자가 진짜 불편해하는 지점을
+          파악하고, 채널톡 AI+RAG 파이프라인 구축, 이탈률 40% 감소 등 코드로
+          해결한 실적이 있습니다.
         </p>
       </div>
       <div class="strength-item">
-        <strong>자동화로 증명한 개발 역량</strong>
+        <strong>풀스택 + 멀티 플랫폼</strong>
         <p>
-          CX 현장에서 Python·Selenium으로 1시간 → 15분 단축, AI+RAG
-          파이프라인으로 상담 데이터 자동 문서화 등 실무 문제를 코드로 해결한
-          경험이 개발자로서의 출발점입니다.
+          Web(React/Next.js) + 토스 미니앱 + Android(Kotlin PDA) 3개 플랫폼 배포
+          경험. 프론트·백엔드·인프라·모니터링까지 전 스택을 혼자 커버합니다.
         </p>
       </div>
     </div>
 
     <!-- PROJECTS -->
     <div class="section">
-      <div class="section-title">프로젝트</div>
+      <div class="section-title">주요 프로젝트</div>
 
       <div class="project">
         <div class="project-header">
           <span class="project-name"
-            >가기싫어 — 출근길 지하철 실시간 익명 채팅</span
+            >가기싫어 — 출근길 지하철 실시간 익명 채팅
+            <span class="project-link">gagisiro.com</span></span
           >
           <span class="project-period">2025.12 - 현재</span>
         </div>
         <div class="project-stack">
-          React 19 · Express 5 · Socket.IO · PostgreSQL · Toss Payments · Vercel
-          · Railway
+          React 19 · Express 5 · TypeScript · Socket.IO · PostgreSQL · Redis ·
+          Toss Payments · Vercel · Railway
         </div>
         <ul class="project-detail">
           <li>
-            지하철 노선별 실시간 익명 채팅, 토스 결제 연동 서비스
-            기획·설계·개발·배포 1인 수행
+            9개 호선별 실시간 채팅, 답장/리액션, 혼잡도, 푸시 알림, 토스 인앱
+            광고 3종 연동
           </li>
-          <li>Socket.IO 기반 실시간 메시징, PostgreSQL 기반 채팅 이력 관리</li>
-          <li>TypeScript 풀스택, CI/CD 파이프라인 구축</li>
+          <li>
+            OpenAI Moderation + Regex 하이브리드 콘텐츠 필터링, OWASP Top 10
+            대응
+          </li>
+          <li>1,556 tests (unit/integration + E2E 10 specs), 80%+ coverage</li>
+          <li>
+            k6 부하 테스트: 200명 동시접속 안정, P95 77ms, Redis 캐시 히트 98.6%
+          </li>
+          <li>Recharts 어드민 대시보드 (DAU/WAU/MAU, 신고 관리, 커스텀 SQL)</li>
+        </ul>
+      </div>
+
+      <div class="project">
+        <div class="project-header">
+          <span class="project-name"
+            >Biz-Retriever — AI 입찰 공고 분석 플랫폼
+            <span class="project-link">biz-retriever.vercel.app</span></span
+          >
+          <span class="project-period">2026.02</span>
+        </div>
+        <div class="project-stack">
+          FastAPI · Google Gemini 2.5 · LangChain RAG · PostgreSQL · Valkey ·
+          Taskiq · Docker · Raspberry Pi
+        </div>
+        <ul class="project-detail">
+          <li>
+            10일 개발, 164 tests (100% pass), 9,572건 공고 수집·AI 분석
+            파이프라인
+          </li>
+          <li>
+            Raspberry Pi + Tailscale 자체 서버, Prometheus + Grafana 모니터링
+          </li>
         </ul>
       </div>
 
@@ -353,87 +445,73 @@
           <span class="project-period">2026.03 - 현재</span>
         </div>
         <div class="project-stack">
-          Python · FastAPI · HTML · Kotlin (Android PDA)
+          Python · FastAPI · Kotlin Android · Zebra TC60 PDA · SQLite · NAS
+          WebDAV
         </div>
         <ul class="project-detail">
           <li>
-            PDA 바코드 스캐너 앱(Kotlin) + 웹 어드민(Python) 통합 시스템 개발
+            Zebra PDA 바코드 스캐너 앱(Kotlin) + 웹 어드민(Python) 통합 시스템,
+            외주 납품
           </li>
-          <li>제품 백과사전, 재고 관리, 스캔 이력 추적 기능 구현</li>
           <li>
-            외주 납품 프로젝트 — 클라이언트 요구사항 분석부터 배포까지 전담
+            제품 백과사전, 재고 관리, 스캔 이력 추적, Mini PC 사내 서버 운영
           </li>
         </ul>
       </div>
 
       <div class="project">
         <div class="project-header">
-          <span class="project-name">AI 문서 질의/요약 플랫폼 (RAG 기반)</span>
-          <span class="project-period">2026.02 - 2026.03</span>
-        </div>
-        <div class="project-stack">Next.js 14 · FastAPI · OpenAI · Docker</div>
-        <ul class="project-detail">
-          <li>
-            문서 업로드 → 벡터 임베딩 → 자연어 질의/요약 RAG 파이프라인 구축
-          </li>
-          <li>Next.js 프론트엔드 + FastAPI 백엔드 분리 아키텍처</li>
-        </ul>
-      </div>
-
-      <div class="project">
-        <div class="project-header">
-          <span class="project-name">AI 스마트 건물 유지보수 관리 플랫폼</span>
-          <span class="project-period">2025.12 - 2026.01</span>
+          <span class="project-name">AI 스마트 건물 유지보수 플랫폼</span>
+          <span class="project-period">2025.12 (48시간 개발)</span>
         </div>
         <div class="project-stack">
-          Next.js · FastAPI · OpenAI · Celery · Redis · WebSocket
+          Next.js 14 · FastAPI · Groq Llama-3 · Celery · Redis · WebSocket · S3
         </div>
         <ul class="project-detail">
           <li>
-            AI 기반 유지보수 요청 자동 분류·우선순위 산정, 실시간 상태 알림
+            48시간 만에 AI SaaS 풀스택 완성 — Groq Llama-3 기반 민원 자동 분류
+            (OpenAI 대비 4.6배 빠름)
           </li>
-          <li>Celery + Redis 비동기 작업 큐, WebSocket 실시간 통신 구현</li>
+          <li>
+            Celery 비동기 처리로 응답 2.5s → 0.1s (25배 개선), 동시 98 req/s
+          </li>
         </ul>
       </div>
 
       <div class="project">
         <div class="project-header">
-          <span class="project-name">소셜 파티 신청 플랫폼 (oddparty)</span>
+          <span class="project-name"
+            >인터넷공룡 — 통신사 요금제 비교 사이트
+            <span class="project-link">internetdinor.vercel.app</span></span
+          >
           <span class="project-period">2026.03</span>
         </div>
         <div class="project-stack">
-          Vanilla JS · Python stdlib · 296 tests · 100% coverage
+          Next.js 15 · React 19 · Supabase · Tailwind · Zod
         </div>
         <ul class="project-detail">
           <li>
-            외부 프레임워크 없이 순수 JS + Python 표준 라이브러리만으로 풀스택
-            구현
+            통신사별 요금제 비교, 가격 계산기, 상담 신청, 미들웨어 기반 관리자
+            페이지
           </li>
-          <li>테스트 296개, 커버리지 100% 달성</li>
         </ul>
       </div>
 
       <div class="project">
         <div class="project-header">
-          <span class="project-name">B 커뮤니티 핫이슈 자동 발행 시스템</span>
-          <span class="project-period">2026.02</span>
-        </div>
-        <div class="project-stack">Next.js 14 · Express · GitHub Actions</div>
-        <ul class="project-detail">
-          <li>커뮤니티 핫이슈 자동 수집·분석·발행 파이프라인 구축</li>
-          <li>GitHub Actions 기반 자동 스케줄링</li>
-        </ul>
-      </div>
-
-      <div class="project">
-        <div class="project-header">
-          <span class="project-name">기타 외주·포트폴리오</span>
+          <span class="project-name">기타 프로젝트</span>
           <span class="project-period">2025 - 현재</span>
         </div>
-        <div class="project-desc">
-          Sales CRM (TypeScript), Vamos Advisory 기업 웹사이트, S Partners 랜딩
-          페이지, 스트랩 통합 DB 시스템, Chatwoot 고객지원 플랫폼 등 다수
-        </div>
+        <ul class="project-detail">
+          <li>
+            OddParty (296 tests, 100% coverage, 프레임워크 제로 풀스택) ·
+            Knowledge Copilot (RAG 문서 질의)
+          </li>
+          <li>
+            Sales CRM · Vamos Advisory · S Partners 랜딩 · 스트랩 통합 DB · 16개
+            업종별 데모 포트폴리오
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -446,18 +524,21 @@
           <span class="exp-company">프리랜서 풀스택 개발자</span>
           <span class="exp-period">2025 - 현재</span>
         </div>
-        <div class="exp-role">1인 외주 개발 · 동시 3~4개 프로젝트 운영</div>
+        <div class="exp-role">
+          1인 외주 개발 · 동시 3~4개 프로젝트 · AI Agent 기반 고속 개발
+        </div>
         <ul class="exp-detail">
           <li>
-            React, Next.js, FastAPI, Express 기반 웹 서비스 기획·개발·배포
+            React/Next.js + FastAPI/Express 풀스택, Kotlin Android, AI/RAG 등
+            다양한 도메인 1인 기획~배포
           </li>
           <li>
-            PDA 스캐너 앱(Kotlin), AI/RAG 파이프라인, 실시간 채팅 등 다양한
-            도메인 경험
+            Claude Code + MCP 워크플로우로 개발 속도 극대화, 전체 프로젝트
+            2,016+ 테스트 유지
           </li>
           <li>
-            클라이언트 요구사항 분석 → 기획 → 개발 → 배포 → 운영 전 과정 1인
-            수행
+            16개 업종별 데모 포트폴리오 — 외주 상담 시 즉시 시연 가능한 데모
+            체계 구축
           </li>
         </ul>
       </div>
@@ -467,24 +548,22 @@
           <span class="exp-company">(주)아이엔지스토리</span>
           <span class="exp-period">2023.07 - 2025 (2년)</span>
         </div>
-        <div class="exp-role">CX 리드 · 사내 개발 도구 제작</div>
+        <div class="exp-role">
+          CX 리드 · 사내 개발 도구 제작 · 프로세스 자동화
+        </div>
         <ul class="exp-detail">
           <li>
-            채널톡 AI + MCP + RAG 파이프라인 설계·구축 — 상담 데이터를
-            정책서/온보딩 문서로 자동 변환
+            채널톡 AI + MCP + RAG 파이프라인 설계·구축 — 상담 데이터 →
+            정책서/온보딩 문서 자동 변환
           </li>
           <li>
-            Python 자동화 프로그램 개발 — 장비 세팅 1시간 → 15분 단축 (75% 개선)
+            Python 빌드 프로그램으로 장비 세팅 1시간 → 15분 (75% 단축), Selenium
+            데이터 마이그레이션 자동화
           </li>
           <li>
-            Selenium 크롤링 기반 레거시 → 신규 시스템 데이터 마이그레이션 자동화
+            JIRA-Slack 연동 자동 알림, OCR 기반 계산 도구 개발, 상담 프로세스
+            개편으로 고객 이탈 40% 감소
           </li>
-          <li>OCR 기반 이용 기간·시간 합산 계산 프로그램 개발</li>
-          <li>
-            JIRA-Slack 연동 — 티켓 상태 변경 시 담당자 자동 알림으로 고객 응대
-            누락 방지
-          </li>
-          <li>상담 프로세스 개편으로 고객 이탈 40% 감소</li>
         </ul>
       </div>
 
@@ -493,10 +572,12 @@
           <span class="exp-company">주식회사 볼드코퍼레이션</span>
           <span class="exp-period">2022.06 - 2023.06 (1년)</span>
         </div>
-        <div class="exp-role">CX 선임</div>
+        <div class="exp-role">CX 선임 · 온보딩 설계</div>
         <ul class="exp-detail">
-          <li>인바운드 외주 업체 초기 세팅 및 업무 매뉴얼 제작</li>
-          <li>신규 입사자 온보딩 교육 프로그램 설계 및 진행</li>
+          <li>
+            인바운드 외주 업체 초기 세팅·매뉴얼 제작, 신규 입사자 온보딩 교육
+            프로그램 설계
+          </li>
         </ul>
       </div>
 
@@ -505,22 +586,22 @@
           <span class="exp-company">(주)승화일렉트론</span>
           <span class="exp-period">2019.09 - 2021.10 (2년 2개월)</span>
         </div>
-        <div class="exp-role">생산관리 · 엑셀 자동화</div>
+        <div class="exp-role">생산관리 · 데이터 자동화</div>
         <ul class="exp-detail">
           <li>
-            엑셀 매크로 기반 VGA 생산 보고서 자동화 — 보고서 작성 시간 90% 단축
+            엑셀 매크로 VGA 보고서 자동화 (작성 시간 90% 단축), 병목 분석으로
+            생산성 15% 향상
           </li>
-          <li>작업량 데이터 분석을 통한 병목 공정 해소, 생산성 15% 향상</li>
         </ul>
       </div>
 
       <div class="exp">
         <div class="exp-header">
-          <span class="exp-company">CS 경력</span>
+          <span class="exp-company">CS 경력 (4개사)</span>
           <span class="exp-period">2012.11 - 2017.08</span>
         </div>
         <div class="exp-role">
-          윙고, 와일드파이어코리아, 프리머스HR, 한국고용정보, 매일유업
+          윙고 · 와일드파이어코리아 · 프리머스HR · 한국고용정보 · 매일유업
         </div>
         <ul class="exp-detail">
           <li>카드사 인바운드 CS, 고객 상담 등 총 4년+ CX/CS 현장 경험</li>
