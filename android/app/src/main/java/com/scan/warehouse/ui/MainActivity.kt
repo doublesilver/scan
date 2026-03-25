@@ -74,6 +74,8 @@ class MainActivity : AppCompatActivity() {
             val barcode = item.barcode
             if (barcode != null) {
                 viewModel.scanBarcode(barcode)
+            } else {
+                Toast.makeText(this, "바코드 정보가 없습니다", Toast.LENGTH_SHORT).show()
             }
         }
         binding.rvProducts.apply {
@@ -101,6 +103,22 @@ class MainActivity : AppCompatActivity() {
                 performSearch(binding.etSearch.text.toString().trim())
                 true
             } else false
+        }
+
+        binding.etSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                binding.btnClearSearch.visibility =
+                    if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+            }
+        })
+
+        binding.btnClearSearch.setOnClickListener {
+            binding.etSearch.setText("")
+            binding.layoutScanWaiting.visibility = View.VISIBLE
+            binding.layoutScanResult.visibility = View.GONE
+            binding.rvProducts.visibility = View.GONE
         }
     }
 

@@ -90,4 +90,13 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvVersion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:textSize="13sp"
+        android:textColor="@color/on_surface_variant" />
+
 </LinearLayout>

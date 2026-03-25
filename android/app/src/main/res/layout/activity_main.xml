@@ -99,6 +99,17 @@
                         android:singleLine="true"
                         android:textSize="15sp"
                         android:textColor="@color/on_surface" />
+
+                    <ImageButton
+                        android:id="@+id/btnClearSearch"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_close"
+                        android:contentDescription="검색 지우기"
+                        android:scaleType="centerInside"
+                        android:padding="8dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton

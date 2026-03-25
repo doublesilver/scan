@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.coroutineScope
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -17,21 +18,27 @@ object ServerDiscovery {
     suspend fun findServer(): String? = withContext(Dispatchers.IO) {
         val subnet = getSubnet() ?: return@withContext null
 
-        (1..254).map { i ->
-            async {
-                val ip = "$subnet.$i"
-                try {
-                    val url = URL("http://$ip:$PORT/health")
-                    val conn = url.openConnection() as HttpURLConnection
-                    conn.connectTimeout = TIMEOUT_MS
-                    conn.readTimeout = TIMEOUT_MS
-                    conn.requestMethod = "GET"
-                    if (conn.responseCode == 200) "http://$ip:$PORT" else null
-                } catch (_: Exception) {
-                    null
-                }
+        for (chunk in (1..254).chunked(20)) {
+            val result = coroutineScope {
+                chunk.map { i ->
+                    async {
+                        val ip = "$subnet.$i"
+                        try {
+                            val url = URL("http://$ip:$PORT/health")
+                            val conn = url.openConnection() as HttpURLConnection
+                            conn.connectTimeout = TIMEOUT_MS
+                            conn.readTimeout = TIMEOUT_MS
+                            conn.requestMethod = "GET"
+                            if (conn.responseCode == 200) "http://$ip:$PORT" else null
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                }.awaitAll().firstOrNull { it != null }
             }
-        }.awaitAll().firstOrNull { it != null }
+            if (result != null) return@withContext result
+        }
+        null
     }
 
     private fun getSubnet(): String? {

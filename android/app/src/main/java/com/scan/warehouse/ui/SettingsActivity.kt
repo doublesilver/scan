@@ -33,6 +33,8 @@ class SettingsActivity : AppCompatActivity() {
 
         repository = ProductRepository(applicationContext)
 
+        binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 DataWedgeManager.scanFlow.collect { barcode ->
