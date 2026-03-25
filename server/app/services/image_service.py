@@ -1,11 +1,27 @@
+import hashlib
 import io
 import logging
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import HTTPException
 from PIL import Image, UnidentifiedImageError
 
 from app.config import settings
+
+ALLOWED_IMAGE_HOSTS = {
+    "img1.coupangcdn.com",
+    "img2.coupangcdn.com",
+    "img3.coupangcdn.com",
+    "img4.coupangcdn.com",
+    "img5.coupangcdn.com",
+    "img6.coupangcdn.com",
+    "thumbnail6.coupangcdn.com",
+    "thumbnail7.coupangcdn.com",
+    "thumbnail8.coupangcdn.com",
+    "thumbnail9.coupangcdn.com",
+    "thumbnail10.coupangcdn.com",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +83,24 @@ async def get_image_data(
     if cache_path.exists() and cache_path.is_file():
         logger.info("image cache hit: %s", path)
         source_path = cache_path
+    elif path.startswith("http://") or path.startswith("https://"):
+        parsed = urlparse(path)
+        if parsed.hostname not in ALLOWED_IMAGE_HOSTS:
+            logger.warning("url fetch 차단 (비허용 호스트): %s", path)
+            raise HTTPException(status_code=403, detail="host not allowed")
+        url_hash = hashlib.sha256(path.encode()).hexdigest()
+        ext = Path(parsed.path).suffix or ".jpg"
+        cache_path = validate_path(cache_base, f"url_cache/{url_hash}{ext}")
+        if cache_path.exists() and cache_path.is_file():
+            logger.info("url cache hit: %s", path)
+            source_path = cache_path
+        else:
+            image_bytes = await _fetch_from_url(http_client, path)
+            if image_bytes:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                _check_and_evict(cache_base)
+                cache_path.write_bytes(image_bytes)
+                logger.info("image url fetch + cached: %s", path)
     else:
         mock_base = Path("data/mock_images").resolve()
         mock_path = validate_path(mock_base, path)
@@ -102,6 +136,17 @@ async def get_image_data(
     if source_path:
         return None, source_path, None
     return image_bytes, None, None
+
+
+async def _fetch_from_url(client, url: str) -> bytes | None:
+    try:
+        resp = await client.get(url)
+        if resp.status_code == 200:
+            return resp.content
+        logger.warning("url fetch %s → %d", url, resp.status_code)
+    except Exception as e:
+        logger.warning("url fetch 실패: %s — %s", url, e)
+    return None
 
 
 async def _fetch_from_webdav(client, path: str) -> bytes | None:

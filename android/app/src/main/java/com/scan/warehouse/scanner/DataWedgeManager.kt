@@ -41,7 +41,12 @@ object DataWedgeManager {
         if (isRegistered) unregister(context)
         val filter = IntentFilter(ACTION_SCAN)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            context.registerReceiver(
+                receiver, filter,
+                "com.symbol.datawedge.permission.DATAWEDGE",
+                null,
+                Context.RECEIVER_EXPORTED
+            )
         } else {
             context.registerReceiver(receiver, filter)
         }

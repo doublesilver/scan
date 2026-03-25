@@ -56,6 +56,9 @@ open class ProductRepository(private val context: Context) {
     }
 
     open fun getImageUrl(filePath: String): String {
+        if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+            return filePath
+        }
         val baseUrl = RetrofitClient.getBaseUrl(context)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         return "${normalized}api/image/${filePath}"

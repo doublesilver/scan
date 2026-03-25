@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivitySplashBinding
@@ -36,8 +38,10 @@ class SplashActivity : AppCompatActivity() {
         DataWedgeManager.setupProfile(this)
 
         lifecycleScope.launch {
-            DataWedgeManager.scanFlow.collect { barcode ->
-                goToMainWithBarcode(barcode)
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                DataWedgeManager.scanFlow.collect { barcode ->
+                    goToMainWithBarcode(barcode)
+                }
             }
         }
 

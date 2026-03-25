@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ScanViewModel by viewModels()
     private lateinit var productAdapter: ProductAdapter
+    private var lastKeystrokeTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -194,6 +195,11 @@ class MainActivity : AppCompatActivity() {
             }
             val char = event.unicodeChar.toChar()
             if (char.isDigit() || char.isLetter()) {
+                val now = System.currentTimeMillis()
+                if (now - lastKeystrokeTime > 300) {
+                    binding.etSearch.setText("")
+                }
+                lastKeystrokeTime = now
                 if (!binding.etSearch.hasFocus()) {
                     binding.etSearch.requestFocus()
                 }

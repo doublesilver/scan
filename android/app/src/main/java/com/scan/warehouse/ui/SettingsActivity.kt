@@ -113,6 +113,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private val keystrokeBuffer = StringBuilder()
+    private var lastKeystrokeTime = 0L
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
@@ -129,6 +130,11 @@ class SettingsActivity : AppCompatActivity() {
             }
             val char = event.unicodeChar.toChar()
             if (char.isDigit()) {
+                val now = System.currentTimeMillis()
+                if (now - lastKeystrokeTime > 300) {
+                    keystrokeBuffer.clear()
+                }
+                lastKeystrokeTime = now
                 keystrokeBuffer.append(char)
                 return true
             }
