@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "cached_products")
 data class CachedProduct(
     @PrimaryKey val barcode: String,
-    val skuId: String,
+    val skuId: Int,
     val productName: String,
     val categoryName: String?,
     val brandName: String?,

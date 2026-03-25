@@ -1,0 +1,32 @@
+<variant
+    name="liveRelease"
+    package="com.scan.warehouse"
+    minSdkVersion="24"
+    targetSdkVersion="34"
+    mergedManifest="build/intermediates/merged_manifest/liveRelease/AndroidManifest.xml"
+    manifestMergeReport="build/outputs/logs/manifest-merger-live-release-report.txt"
+    proguardFiles="build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.2:proguard-rules.pro"
+    partialResultsDir="build/intermediates/lint_vital_partial_results/liveRelease/out">
+  <buildFeatures
+      viewBinding="true"
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src/main/AndroidManifest.xml"
+        javaDirectories="src/main/java:src/live/java:src/release/java:src/liveRelease/java:src/main/kotlin:src/live/kotlin:src/release/kotlin:src/liveRelease/kotlin"
+        resDirectories="src/main/res:src/live/res:src/release/res:src/liveRelease/res"
+        assetsDirectories="src/main/assets:src/live/assets:src/release/assets:src/liveRelease/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      classOutputs="build/intermediates/javac/liveRelease/classes:build/tmp/kotlin-classes/liveRelease:build/tmp/kapt3/classes/liveRelease:build/kotlinToolingMetadata:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/liveRelease/R.jar"
+      type="MAIN"
+      applicationId="com.scan.warehouse"
+      generatedSourceFolders="build/generated/source/kapt/liveRelease:build/generated/ap_generated_sources/liveRelease/out:build/generated/source/buildConfig/live/release:build/generated/data_binding_base_class_source_out/liveRelease/out"
+      generatedResourceFolders="build/generated/res/resValues/live/release"
+      desugaredMethodsFiles="/Users/leeeunseok/.gradle/caches/transforms-3/9800946bb6bb399df0a0c9d35948c37c/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

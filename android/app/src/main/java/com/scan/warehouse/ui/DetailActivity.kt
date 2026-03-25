@@ -47,8 +47,8 @@ class DetailActivity : AppCompatActivity() {
         } ?: return
 
         binding.tvDetailProductName.text = data.productName
-        binding.tvDetailSkuId.text = data.skuId
-        binding.tvDetailCategory.text = data.category ?: "-"
+        binding.tvDetailSkuId.text = data.skuId.toString()
+        binding.tvDetailCategory.text = data.material ?: "-"
         binding.tvDetailBrand.text = data.brand ?: "-"
 
         val barcodeText = SpannableStringBuilder()

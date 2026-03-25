@@ -5,12 +5,13 @@ import com.google.gson.Gson
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.db.CachedProduct
 import com.scan.warehouse.model.ImageItem
+import com.scan.warehouse.model.ScanRequest
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.network.RetrofitClient
 
-open class ProductRepository(private val context: Context) {
+open class ProductRepository(protected val context: Context) {
 
     private val api get() = RetrofitClient.getApiService(context)
     private val dao get() = AppDatabase.getInstance(context).productDao()
@@ -18,9 +19,10 @@ open class ProductRepository(private val context: Context) {
 
     open suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
         return try {
-            val response = api.scanBarcode(barcode)
-            cacheProduct(barcode, response)
-            Pair(Result.success(response), false)
+            val response = api.scanBarcode(ScanRequest(barcode))
+            val scanData = response.data
+            cacheProduct(barcode, scanData)
+            Pair(Result.success(scanData), false)
         } catch (e: Exception) {
             val cached = dao.getByBarcode(barcode)
             if (cached != null) {
@@ -34,7 +36,11 @@ open class ProductRepository(private val context: Context) {
     open suspend fun searchProducts(query: String, limit: Int = 20): Pair<Result<SearchResponse>, Boolean> {
         return try {
             val response = api.searchProducts(query, limit)
-            Pair(Result.success(response), false)
+            val data = response.data
+            val allItems = mutableListOf<SearchItem>()
+            data.products.forEach { allItems.add(it) }
+            data.skus.forEach { allItems.add(it) }
+            Pair(Result.success(SearchResponse(total = data.total, items = allItems)), false)
         } catch (e: Exception) {
             val cached = dao.searchByName(query)
             if (cached.isNotEmpty()) {
@@ -61,7 +67,7 @@ open class ProductRepository(private val context: Context) {
         }
         val baseUrl = RetrofitClient.getBaseUrl(context)
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
-        return "${normalized}api/image/${filePath}"
+        return "${normalized}api/images/proxy?path=${filePath}"
     }
 
     private suspend fun cacheProduct(barcode: String, response: ScanResponse) {
@@ -70,7 +76,7 @@ open class ProductRepository(private val context: Context) {
             barcode = barcode,
             skuId = response.skuId,
             productName = response.productName,
-            categoryName = response.category,
+            categoryName = response.material,
             brandName = response.brand,
             imageUrls = imageUrls
         )
@@ -86,7 +92,7 @@ open class ProductRepository(private val context: Context) {
         return ScanResponse(
             skuId = skuId,
             productName = productName,
-            category = categoryName,
+            material = categoryName,
             brand = brandName,
             barcodes = listOf(barcode),
             images = images
@@ -95,7 +101,7 @@ open class ProductRepository(private val context: Context) {
 
     private fun CachedProduct.toSearchItem(): SearchItem {
         return SearchItem(
-            skuId = skuId,
+            skuId = skuId.toString(),
             productName = productName,
             category = categoryName,
             brand = brandName,

@@ -1,0 +1,174 @@
+[
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_search.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_search.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_offline_chip.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_offline_chip.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/anim_slide_out_left.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/anim/slide_out_left.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_bottom_nav.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_bottom_nav.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_close.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_close.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_info_row.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_info_row.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_item_product.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/item_product.xml"
+    },
+    {
+        "merged": "com.scan.warehouse.app-merged_res-43:/layout_activity_settings.xml.flat",
+        "source": "com.scan.warehouse.app-main-46:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_dialog_barcode_input.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/dialog_barcode_input.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_settings.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_activity_splash.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_info_row_alt.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_info_row_alt.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_activity_main.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_activity_detail.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/activity_detail.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/anim_slide_out_right.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/anim/slide_out_right.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/menu_bottom_nav.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/menu/bottom_nav.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/layout_activity_settings.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_search_bar.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_search_bar.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/anim_slide_in_left.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/anim/slide_in_left.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_arrow_back.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_arrow_back.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/anim_slide_in_right.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/anim/slide_in_right.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_back_button.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_back_button.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_detail_info_card.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_detail_info_card.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_image_type_chip.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_image_type_chip.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/xml_network_security_config.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/menu_main_menu.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/menu/main_menu.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_avatar.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_avatar.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_barcode_scan.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_barcode_scan.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_keyboard.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_keyboard.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/color_bottom_nav_color.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/color/bottom_nav_color.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_placeholder.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_placeholder.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_bg_scan_result_card.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/bg_scan_result_card.xml"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-merged_res-43:/drawable_ic_chevron_right.xml.flat",
+        "source": "/Users/leeeunseok/.gradle/daemon/8.5/com.scan.warehouse.app-main-46:/drawable/ic_chevron_right.xml"
+    }
+]
