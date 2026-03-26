@@ -149,7 +149,13 @@ async def _fetch_from_url(client, url: str) -> bytes | None:
     return None
 
 
+ALLOWED_WEBDAV_PREFIXES = ("img/", "real_image/")
+
+
 async def _fetch_from_webdav(client, path: str) -> bytes | None:
+    if not path.startswith(ALLOWED_WEBDAV_PREFIXES):
+        logger.warning("webdav 경로 차단 (비허용 prefix): %s", path)
+        return None
     from urllib.parse import quote
     prefix = settings.webdav_path_prefix.strip("/")
     encoded_prefix = quote(prefix) if prefix else ""

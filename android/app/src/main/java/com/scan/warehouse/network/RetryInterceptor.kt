@@ -5,8 +5,7 @@ import okhttp3.Response
 import java.io.IOException
 
 class RetryInterceptor(
-    private val maxRetries: Int = 2,
-    private val initialDelayMs: Long = 300
+    private val maxRetries: Int = 2
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -14,11 +13,6 @@ class RetryInterceptor(
         var lastException: IOException? = null
 
         for (attempt in 0..maxRetries) {
-            if (attempt > 0) {
-                val delay = initialDelayMs * (1L shl (attempt - 1))
-                Thread.sleep(delay)
-            }
-
             try {
                 val response = chain.proceed(request)
 

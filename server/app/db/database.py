@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import aiosqlite
@@ -9,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 _write_db: aiosqlite.Connection | None = None
 _read_db: aiosqlite.Connection | None = None
+_write_lock = asyncio.Lock()
+_read_lock = asyncio.Lock()
 
 
 async def _init_connection(db: aiosqlite.Connection) -> None:
@@ -51,24 +54,28 @@ async def _run_migrations(db: aiosqlite.Connection) -> None:
 async def get_db() -> aiosqlite.Connection:
     global _write_db
     if _write_db is None:
-        db_path = settings.db_path
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        _write_db = await aiosqlite.connect(str(db_path))
-        await _init_connection(_write_db)
-        await _write_db.executescript(SCHEMA_SQL)
-        await _write_db.commit()
-        await _run_migrations(_write_db)
-        await _write_db.execute("PRAGMA optimize")
+        async with _write_lock:
+            if _write_db is None:
+                db_path = settings.db_path
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+                _write_db = await aiosqlite.connect(str(db_path))
+                await _init_connection(_write_db)
+                await _write_db.executescript(SCHEMA_SQL)
+                await _write_db.commit()
+                await _run_migrations(_write_db)
+                await _write_db.execute("PRAGMA optimize")
     return _write_db
 
 
 async def get_read_db() -> aiosqlite.Connection:
     global _read_db
     if _read_db is None:
-        db_path = settings.db_path
-        _read_db = await aiosqlite.connect(str(db_path))
-        await _init_connection(_read_db)
-        await _read_db.execute("PRAGMA query_only=ON")
+        async with _read_lock:
+            if _read_db is None:
+                db_path = settings.db_path
+                _read_db = await aiosqlite.connect(str(db_path))
+                await _init_connection(_read_db)
+                await _read_db.execute("PRAGMA query_only=ON")
     return _read_db
 
 

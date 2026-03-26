@@ -38,24 +38,25 @@ object DataWedgeManager {
     }
 
     fun register(context: Context) {
-        if (isRegistered) unregister(context)
+        val appContext = context.applicationContext
+        if (isRegistered) unregister(appContext)
         val filter = IntentFilter(ACTION_SCAN)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(
+            appContext.registerReceiver(
                 receiver, filter,
                 "com.symbol.datawedge.permission.DATAWEDGE",
                 null,
                 Context.RECEIVER_EXPORTED
             )
         } else {
-            context.registerReceiver(receiver, filter)
+            appContext.registerReceiver(receiver, filter)
         }
         isRegistered = true
     }
 
     fun unregister(context: Context) {
         if (!isRegistered) return
-        try { context.unregisterReceiver(receiver) } catch (_: IllegalArgumentException) {}
+        try { context.applicationContext.unregisterReceiver(receiver) } catch (_: IllegalArgumentException) {}
         isRegistered = false
     }
 

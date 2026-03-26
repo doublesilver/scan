@@ -11,9 +11,9 @@ class DemoRepository(context: Context) : ProductRepository(context) {
 
     private val products = listOf(
         ScanResponse(
-            skuId = 1,
+            skuId = "1",
             productName = "쵸미세븐 무당벌레 청소기 레드 105 x 70mm",
-            material = "청소용품",
+            category = "청소용품",
             brand = "쵸미세븐",
             barcodes = listOf("8809461170008"),
             images = listOf(ImageItem(
@@ -22,9 +22,9 @@ class DemoRepository(context: Context) : ProductRepository(context) {
             ))
         ),
         ScanResponse(
-            skuId = 2,
+            skuId = "2",
             productName = "쵸미세븐 무당벌레 청소기 그린 105 x 70mm",
-            material = "청소용품",
+            category = "청소용품",
             brand = "쵸미세븐",
             barcodes = listOf("8809461170015"),
             images = listOf(ImageItem(
@@ -33,9 +33,9 @@ class DemoRepository(context: Context) : ProductRepository(context) {
             ))
         ),
         ScanResponse(
-            skuId = 3,
+            skuId = "3",
             productName = "쵸미세븐 버섯돌이 청소기 레드 95 x 90mm",
-            material = "청소용품",
+            category = "청소용품",
             brand = "쵸미세븐",
             barcodes = listOf("8809461170046"),
             images = listOf(ImageItem(
@@ -44,9 +44,9 @@ class DemoRepository(context: Context) : ProductRepository(context) {
             ))
         ),
         ScanResponse(
-            skuId = 4,
+            skuId = "4",
             productName = "쵸미세븐 버섯돌이 청소기 그린 95 x 90mm",
-            material = "청소용품",
+            category = "청소용품",
             brand = "쵸미세븐",
             barcodes = listOf("8809461170053"),
             images = listOf(ImageItem(
@@ -55,9 +55,9 @@ class DemoRepository(context: Context) : ProductRepository(context) {
             ))
         ),
         ScanResponse(
-            skuId = 5,
+            skuId = "5",
             productName = "쵸미세븐 버섯돌이 청소기 핑크 95 x 90mm",
-            material = "청소용품",
+            category = "청소용품",
             brand = "쵸미세븐",
             barcodes = listOf("8809461170077"),
             images = listOf(ImageItem(
@@ -78,7 +78,7 @@ class DemoRepository(context: Context) : ProductRepository(context) {
         delay(300)
         val matched = products
             .filter { it.productName.contains(query, ignoreCase = true) }
-            .map { SearchItem(skuId = it.skuId.toString(), productName = it.productName, category = it.material, brand = it.brand, barcode = it.barcodes.firstOrNull()) }
+            .map { SearchItem(skuId = it.skuId, productName = it.productName, category = it.category, brand = it.brand, barcode = it.barcodes.firstOrNull()) }
         return Pair(Result.success(SearchResponse(total = matched.size, items = matched)), false)
     }
 

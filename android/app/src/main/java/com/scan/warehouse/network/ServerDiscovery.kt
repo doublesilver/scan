@@ -23,15 +23,18 @@ object ServerDiscovery {
                 chunk.map { i ->
                     async {
                         val ip = "$subnet.$i"
+                        var conn: HttpURLConnection? = null
                         try {
                             val url = URL("http://$ip:$PORT/health")
-                            val conn = url.openConnection() as HttpURLConnection
+                            conn = url.openConnection() as HttpURLConnection
                             conn.connectTimeout = TIMEOUT_MS
                             conn.readTimeout = TIMEOUT_MS
                             conn.requestMethod = "GET"
                             if (conn.responseCode == 200) "http://$ip:$PORT" else null
                         } catch (_: Exception) {
                             null
+                        } finally {
+                            conn?.disconnect()
                         }
                     }
                 }.awaitAll().firstOrNull { it != null }

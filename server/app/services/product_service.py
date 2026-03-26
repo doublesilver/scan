@@ -22,61 +22,57 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
 
     sku_id = row["sku_id"]
 
-    if sku_id:
-        cursor = await db.execute(
-            "SELECT sku_id, product_name, category, brand FROM product WHERE sku_id = ?",
-            (sku_id,),
-        )
-        product = await cursor.fetchone()
-
-        cursor = await db.execute(
-            "SELECT DISTINCT barcode FROM barcode WHERE sku_id = ?", (sku_id,)
-        )
-        barcodes = [r["barcode"] for r in await cursor.fetchall()]
-    else:
-        product = None
-        barcodes = [barcode]
-
-    if sku_id:
-        cursor = await db.execute(
-            "SELECT DISTINCT i.file_path, i.image_type, i.sort_order "
-            "FROM image i JOIN barcode b ON b.barcode = i.barcode "
-            "WHERE b.sku_id = ? ORDER BY i.sort_order, i.id",
-            (sku_id,),
-        )
-    else:
+    if not sku_id:
         cursor = await db.execute(
             "SELECT file_path, image_type, sort_order FROM image "
             "WHERE barcode = ? ORDER BY sort_order, id",
             (barcode,),
         )
+        images = [
+            ImageItem(file_path=r["file_path"], image_type=r["image_type"])
+            for r in await cursor.fetchall()
+        ]
+        return ScanResponse(
+            sku_id="", product_name="", category="", brand="",
+            barcodes=[barcode], images=images, quantity=None,
+        )
+
+    cursor = await db.execute(
+        "SELECT p.sku_id, p.product_name, p.category, p.brand, "
+        "s.quantity, "
+        "GROUP_CONCAT(DISTINCT b2.barcode) as all_barcodes "
+        "FROM product p "
+        "LEFT JOIN stock s ON s.sku_id = p.sku_id "
+        "LEFT JOIN barcode b2 ON b2.sku_id = p.sku_id "
+        "WHERE p.sku_id = ? "
+        "GROUP BY p.sku_id",
+        (sku_id,),
+    )
+    product = await cursor.fetchone()
+    if not product:
+        return None
+
+    cursor = await db.execute(
+        "SELECT DISTINCT i.file_path, i.image_type "
+        "FROM image i JOIN barcode b ON b.barcode = i.barcode "
+        "WHERE b.sku_id = ? ORDER BY i.sort_order, i.id",
+        (sku_id,),
+    )
     images = [
         ImageItem(file_path=r["file_path"], image_type=r["image_type"])
         for r in await cursor.fetchall()
     ]
 
-    if sku_id and not product:
-        return None
-
-    product_name = _strip_brands(product["product_name"] if product else "")
-
-    quantity = None
-    if sku_id:
-        cursor = await db.execute(
-            "SELECT quantity FROM stock WHERE sku_id = ?", (sku_id,)
-        )
-        stock_row = await cursor.fetchone()
-        if stock_row:
-            quantity = stock_row["quantity"]
+    barcodes = product["all_barcodes"].split(",") if product["all_barcodes"] else [barcode]
 
     return ScanResponse(
-        sku_id=product["sku_id"] if product else "",
-        product_name=product_name,
-        category=product["category"] if product else "",
-        brand=product["brand"] if product else "",
+        sku_id=product["sku_id"],
+        product_name=_strip_brands(product["product_name"]),
+        category=product["category"],
+        brand=product["brand"],
         barcodes=barcodes,
         images=images,
-        quantity=quantity,
+        quantity=product["quantity"],
     )
 
 
