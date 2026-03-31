@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     codepath_file: str = "codepath.xlsx"
     sku_download_pattern: str = "coupangmd00_sku_download_*.xlsx"
 
+    # URL 임포트
+    url_import_file: str = "./data/xlsx/purchase_urls.xlsx"
+
     # NAS 동기화
     nas_sync_interval: int = 60
 
@@ -32,6 +35,20 @@ class Settings(BaseSettings):
 
     # 브랜드 필터
     brand_filter: list[str] = ["스페이스쉴드"]
+
+    # 라벨 프린터
+    printer_name: str = ""
+    label_width_mm: int = 60
+    label_height_mm: int = 40
+    label_gap_mm: int = 3
+    label_density: int = 8
+
+    # 구글시트 장바구니
+    gsheet_credentials: str = "./credentials.json"
+    gsheet_url: str = ""
+
+    # 선반 사진 NAS 경로
+    shelf_photo_nas_prefix: str = "shelf_photos"
 
     # CORS
     cors_origins: list[str] = ["*"]

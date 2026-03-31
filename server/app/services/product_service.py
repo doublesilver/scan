@@ -39,6 +39,7 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
 
     cursor = await db.execute(
         "SELECT p.sku_id, p.product_name, p.category, p.brand, "
+        "p.purchase_url, p.location, "
         "s.quantity, "
         "GROUP_CONCAT(DISTINCT b2.barcode) as all_barcodes "
         "FROM product p "
@@ -73,15 +74,44 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
         barcodes=barcodes,
         images=images,
         quantity=product["quantity"],
+        coupang_url=product["purchase_url"],
+        location=product["location"],
     )
 
 
 async def search_products(db, query: str, limit: int) -> list[SearchItem]:
+    # 숫자만 입력된 경우 바코드 부분 검색 우선
+    if query.isdigit():
+        pattern = f"%{query}%"
+        cursor = await db.execute(
+            "SELECT p.sku_id, p.product_name, p.category, p.brand, "
+            "b.barcode as first_barcode, "
+            "(SELECT i.file_path FROM image i WHERE i.barcode = b.barcode LIMIT 1) as thumbnail "
+            "FROM barcode b JOIN product p ON b.sku_id = p.sku_id "
+            "WHERE b.barcode LIKE ? LIMIT ?",
+            (pattern, limit),
+        )
+        rows = await cursor.fetchall()
+        if rows:
+            return [
+                SearchItem(
+                    sku_id=r["sku_id"],
+                    product_name=_strip_brands(r["product_name"]),
+                    category=r["category"],
+                    brand=r["brand"],
+                    barcode=r["first_barcode"],
+                    thumbnail=r["thumbnail"],
+                )
+                for r in rows
+            ]
+
     try:
         safe_query = '"' + query.replace('"', '""') + '"'
         cursor = await db.execute(
             "SELECT p.sku_id, p.product_name, p.category, p.brand, "
-            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = p.sku_id LIMIT 1) as first_barcode "
+            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = p.sku_id LIMIT 1) as first_barcode, "
+            "(SELECT i.file_path FROM image i WHERE i.barcode = "
+            "(SELECT b2.barcode FROM barcode b2 WHERE b2.sku_id = p.sku_id LIMIT 1) LIMIT 1) as thumbnail "
             "FROM product_fts f JOIN product p ON f.sku_id = p.sku_id "
             "WHERE product_fts MATCH ? LIMIT ?",
             (safe_query, limit),
@@ -92,7 +122,9 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
         pattern = f"%{query}%"
         cursor = await db.execute(
             "SELECT sku_id, product_name, category, brand, "
-            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = product.sku_id LIMIT 1) as first_barcode "
+            "(SELECT b.barcode FROM barcode b WHERE b.sku_id = product.sku_id LIMIT 1) as first_barcode, "
+            "(SELECT i.file_path FROM image i WHERE i.barcode = "
+            "(SELECT b2.barcode FROM barcode b2 WHERE b2.sku_id = product.sku_id LIMIT 1) LIMIT 1) as thumbnail "
             "FROM product "
             "WHERE product_name LIKE ? OR sku_id LIKE ? LIMIT ?",
             (pattern, pattern, limit),
@@ -106,6 +138,7 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
             category=r["category"],
             brand=r["brand"],
             barcode=r["first_barcode"],
+            thumbnail=r["thumbnail"],
         )
         for r in rows
     ]

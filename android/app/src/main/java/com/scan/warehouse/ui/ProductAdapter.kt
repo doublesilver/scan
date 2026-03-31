@@ -5,10 +5,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ItemProductBinding
 import com.scan.warehouse.model.SearchItem
+import com.scan.warehouse.repository.ProductRepository
 
 class ProductAdapter(
+    private val repository: ProductRepository,
     private val onItemClick: (SearchItem) -> Unit
 ) : ListAdapter<SearchItem, ProductAdapter.ProductViewHolder>(DIFF_CALLBACK) {
 
@@ -32,8 +36,16 @@ class ProductAdapter(
             binding.tvItemSkuId.text = item.skuId
             binding.tvItemCategory.text = item.category ?: ""
 
-            val initial = item.productName.firstOrNull()?.toString() ?: "?"
-            binding.tvItemAvatar.text = initial
+            val imageUrl = item.thumbnail?.let { repository.getImageUrl(it) }
+            if (imageUrl != null) {
+                binding.ivItemImage.load(imageUrl) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_placeholder)
+                    error(R.drawable.ic_placeholder)
+                }
+            } else {
+                binding.ivItemImage.setImageResource(R.drawable.ic_placeholder)
+            }
 
             binding.root.setOnClickListener {
                 onItemClick(item)

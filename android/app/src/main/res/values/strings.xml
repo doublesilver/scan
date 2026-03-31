@@ -14,9 +14,10 @@
     <string name="scan_waiting_title">PDA 버튼을 눌러 스캔하세요</string>
     <string name="scan_waiting_subtitle">또는 검색창에 상품명을 입력하세요</string>
     <string name="offline_mode">오프라인 모드</string>
-    <string name="tap_to_detail">탭하여 상세 보기</string>
+    <string name="tap_to_detail">더 보기</string>
     <string name="image_type_thumbnail">썸네일</string>
     <string name="image_type_real">실사</string>
     <string name="tap_to_switch_image">탭하여 전환</string>
     <string name="barcode_copied">바코드가 복사되었습니다</string>
+    <string name="shelf_number_format">선반 %d</string>
 </resources>

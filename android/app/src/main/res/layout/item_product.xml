@@ -13,15 +13,14 @@
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground">
 
-    <TextView
-        android:id="@+id/tvItemAvatar"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/bg_avatar"
-        android:gravity="center"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+    <ImageView
+        android:id="@+id/ivItemImage"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_placeholder"
+        android:contentDescription="상품 이미지"
+        android:background="@color/surface_container_low" />
 
     <LinearLayout
         android:layout_width="0dp"

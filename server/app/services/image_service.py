@@ -149,7 +149,7 @@ async def _fetch_from_url(client, url: str) -> bytes | None:
     return None
 
 
-ALLOWED_WEBDAV_PREFIXES = ("img/", "real_image/")
+ALLOWED_WEBDAV_PREFIXES = ("img/", "real_image/", "shelf_photos/")
 
 
 async def _fetch_from_webdav(client, path: str) -> bytes | None:
@@ -204,3 +204,74 @@ def guess_media_type(path: str) -> str:
         ".gif": "image/gif",
         ".webp": "image/webp",
     }.get(ext, "application/octet-stream")
+
+
+async def upload_to_webdav(http_client, file_bytes: bytes, remote_path: str) -> bool:
+    from urllib.parse import quote
+    resized = resize_image(file_bytes, 1920, remote_path)
+    data = resized if resized is not None else file_bytes
+
+    prefix = settings.webdav_path_prefix.strip("/")
+    encoded_prefix = quote(prefix) if prefix else ""
+    base = settings.webdav_base_url.rstrip("/")
+    url = f"{base}/{encoded_prefix}/{remote_path}" if encoded_prefix else f"{base}/{remote_path}"
+
+    auth = None
+    if settings.webdav_username:
+        auth = (settings.webdav_username, settings.webdav_password)
+
+    try:
+        resp = await http_client.put(
+            url,
+            content=data,
+            headers={"Content-Type": "image/jpeg"},
+            auth=auth,
+            timeout=5.0,
+        )
+        if resp.status_code in (201, 204):
+            return True
+        if resp.status_code == 409:
+            parent = remote_path.rsplit("/", 1)[0] if "/" in remote_path else ""
+            if parent:
+                parent_url = f"{base}/{encoded_prefix}/{parent}" if encoded_prefix else f"{base}/{parent}"
+                await http_client.request("MKCOL", parent_url, auth=auth, timeout=5.0)
+            resp = await http_client.put(
+                url,
+                content=data,
+                headers={"Content-Type": "image/jpeg"},
+                auth=auth,
+                timeout=5.0,
+            )
+            if resp.status_code in (201, 204):
+                return True
+        logger.error("webdav upload 실패: %s → %d", url, resp.status_code)
+        raise HTTPException(status_code=502, detail=f"NAS upload failed: {resp.status_code}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("webdav upload 오류: %s — %s", url, e)
+        raise HTTPException(status_code=502, detail="NAS upload error")
+
+
+async def delete_from_webdav(http_client, remote_path: str) -> bool:
+    from urllib.parse import quote
+    prefix = settings.webdav_path_prefix.strip("/")
+    encoded_prefix = quote(prefix) if prefix else ""
+    base = settings.webdav_base_url.rstrip("/")
+    url = f"{base}/{encoded_prefix}/{remote_path}" if encoded_prefix else f"{base}/{remote_path}"
+
+    auth = None
+    if settings.webdav_username:
+        auth = (settings.webdav_username, settings.webdav_password)
+
+    try:
+        resp = await http_client.delete(url, auth=auth, timeout=5.0)
+        if resp.status_code == 204:
+            return True
+        if resp.status_code == 404:
+            return True
+        logger.warning("webdav delete %s → %d", url, resp.status_code)
+        return False
+    except Exception as e:
+        logger.warning("webdav delete 오류: %s — %s", url, e)
+        return False

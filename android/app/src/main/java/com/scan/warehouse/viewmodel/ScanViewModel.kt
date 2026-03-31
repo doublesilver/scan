@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.BuildConfig
@@ -38,6 +39,9 @@ class ScanViewModel(
     private val _isOffline = MutableLiveData(false)
     val isOffline: LiveData<Boolean> = _isOffline
 
+    private val _boxResult = MutableLiveData<BoxResponse?>()
+    val boxResult: LiveData<BoxResponse?> = _boxResult
+
     private var lastScanTime = 0L
 
     fun scanBarcode(barcode: String) {
@@ -47,6 +51,8 @@ class ScanViewModel(
 
         _isLoading.value = true
         _error.value = null
+        savedStateHandle[KEY_SCAN_RESULT] = null
+        _searchResults.value = null
         viewModelScope.launch {
             val (result, offline) = repository.scanBarcode(barcode)
             _isOffline.value = offline
@@ -73,6 +79,8 @@ class ScanViewModel(
         if (query.isBlank()) return
         _isLoading.value = true
         _error.value = null
+        savedStateHandle[KEY_SCAN_RESULT] = null
+        _searchResults.value = null
         viewModelScope.launch {
             val (result, offline) = repository.searchProducts(query)
             _isOffline.value = offline
@@ -103,6 +111,21 @@ class ScanViewModel(
 
     fun getImageUrl(filePath: String): String {
         return repository.getImageUrl(filePath)
+    }
+
+    fun scanBox(qrCode: String) {
+        _isLoading.value = true
+        _error.value = null
+        viewModelScope.launch {
+            repository.scanBox(qrCode)
+                .onSuccess { _boxResult.value = it }
+                .onFailure { _error.value = "박스 조회 실패: ${it.message}" }
+            _isLoading.value = false
+        }
+    }
+
+    fun clearBoxResult() {
+        _boxResult.value = null
     }
 
     companion object {

@@ -4,11 +4,19 @@ import android.content.Context
 import com.google.gson.Gson
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.db.CachedProduct
+import com.scan.warehouse.model.BoxResponse
+import com.scan.warehouse.model.CartRequest
+import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.ImageItem
+import com.scan.warehouse.model.PrintRequest
+import com.scan.warehouse.model.PrintResponse
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.model.SearchResponse
+import com.scan.warehouse.model.ShelfItem
+import com.scan.warehouse.model.ShelfListResponse
 import com.scan.warehouse.network.RetrofitClient
+import okhttp3.MultipartBody
 
 open class ProductRepository(protected val context: Context) {
 
@@ -93,6 +101,14 @@ open class ProductRepository(protected val context: Context) {
         )
     }
 
+    open suspend fun addToCart(barcode: String, skuId: String, productName: String, quantity: Int): CartResponse {
+        return api.addToCart(CartRequest(barcode, skuId, productName, quantity))
+    }
+
+    open suspend fun printLabel(barcode: String, skuId: String, productName: String, quantity: Int): PrintResponse {
+        return api.printLabel(PrintRequest(barcode, skuId, productName, quantity))
+    }
+
     private fun CachedProduct.toSearchItem(): SearchItem {
         return SearchItem(
             skuId = skuId,
@@ -102,4 +118,55 @@ open class ProductRepository(protected val context: Context) {
             barcode = barcode
         )
     }
+
+    open suspend fun scanBox(qrCode: String): Result<BoxResponse> {
+        return try {
+            Result.success(api.getBox(qrCode))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun getShelves(floor: Int, zone: String): Result<ShelfListResponse> {
+        return try {
+            Result.success(api.getShelves(floor, zone))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun updateShelfLabel(shelfId: Int, label: String): Result<ShelfItem> {
+        return try {
+            Result.success(api.updateShelfLabel(shelfId, mapOf("label" to label)))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun deleteShelfLabel(shelfId: Int): Result<Unit> {
+        return try {
+            api.deleteShelfLabel(shelfId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun uploadShelfPhoto(shelfId: Int, filePart: MultipartBody.Part): Result<ShelfItem> {
+        return try {
+            Result.success(api.uploadShelfPhoto(shelfId, filePart))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun deleteShelfPhoto(photoId: Int): Result<Unit> {
+        return try {
+            api.deleteShelfPhoto(photoId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }

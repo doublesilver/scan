@@ -30,9 +30,9 @@ object DataWedgeManager {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == ACTION_SCAN) {
-                val barcode = intent.getStringExtra(EXTRA_DATA) ?: return
-                if (!barcode.matches(barcodeRegex)) return
-                _scanFlow.tryEmit(barcode.trim())
+                val raw = intent.getStringExtra(EXTRA_DATA)?.trim() ?: return
+                if (!raw.matches(barcodeRegex) && !raw.startsWith("BOX-")) return
+                _scanFlow.tryEmit(raw)
             }
         }
     }

@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -29,7 +31,7 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:theme="@style/Theme.WarehouseScanner.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
 
         <activity
             android:name=".ui.DetailActivity"
@@ -38,9 +40,31 @@
             android:parentActivityName=".ui.MainActivity" />
 
         <activity
+            android:name=".ui.BoxDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WarehouseScanner.NoActionBar"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <activity
             android:name=".ui.SettingsActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
+
+        <activity
+            android:name=".ui.ShelfListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WarehouseScanner.NoActionBar"
+            android:parentActivityName=".ui.MainActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

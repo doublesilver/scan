@@ -17,10 +17,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.ScanResponse
+import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
+import android.view.inputmethod.InputMethodManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -44,11 +46,14 @@ class MainActivity : AppCompatActivity() {
         observeViewModel()
         checkServerOnce()
 
+        binding.etSearch.requestFocus()
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 DataWedgeManager.scanFlow.collect { barcode ->
                     binding.etSearch.setText(barcode)
                     binding.etSearch.setSelection(barcode.length)
+                    hideKeyboard()
                     performSearch(barcode)
                 }
             }
@@ -63,6 +68,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupHeader() {
+        binding.btnBarCart.setOnClickListener {
+            currentScanResult?.let { addToCart(it) }
+        }
+
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
@@ -70,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        productAdapter = ProductAdapter { item ->
+        productAdapter = ProductAdapter(ProductRepository(this)) { item ->
             val barcode = item.barcode
             if (barcode != null) {
                 viewModel.scanBarcode(barcode)
@@ -82,12 +91,15 @@ class MainActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = productAdapter
         }
+
     }
 
     private fun performSearch(query: String) {
         if (query.isBlank()) return
         if (query.matches(Regex(DataWedgeManager.BARCODE_PATTERN))) {
             viewModel.scanBarcode(query)
+        } else if (query.startsWith("BOX-")) {
+            viewModel.scanBox(query)
         } else {
             viewModel.searchProducts(query)
         }
@@ -118,6 +130,7 @@ class MainActivity : AppCompatActivity() {
             binding.etSearch.setText("")
             binding.layoutScanWaiting.visibility = View.VISIBLE
             binding.layoutScanResult.visibility = View.GONE
+            binding.bottomBar.visibility = View.GONE
             binding.rvProducts.visibility = View.GONE
         }
     }
@@ -137,31 +150,55 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.scanResult.observe(this) { result ->
-            result?.let {
+            if (result != null) {
                 binding.layoutScanWaiting.visibility = View.GONE
-                showScanResult(it)
+                showScanResult(result)
+            } else {
+                binding.layoutScanResult.visibility = View.GONE
+                binding.bottomBar.visibility = View.GONE
             }
         }
 
         viewModel.searchResults.observe(this) { response ->
-            response?.let {
+            if (response != null) {
                 binding.layoutScanWaiting.visibility = View.GONE
                 binding.layoutScanResult.visibility = View.GONE
+                binding.bottomBar.visibility = View.GONE
                 binding.rvProducts.visibility = View.VISIBLE
-                productAdapter.submitList(it.items)
+                productAdapter.submitList(response.items)
+            } else {
+                binding.rvProducts.visibility = View.GONE
             }
         }
 
         viewModel.isOffline.observe(this) { offline ->
             binding.tvOfflineBanner.visibility = if (offline) View.VISIBLE else View.GONE
         }
+
+        viewModel.boxResult.observe(this) { box ->
+            if (box != null) {
+                showBoxDialog(box)
+                viewModel.clearBoxResult()
+            }
+        }
+
     }
 
+    private fun showBoxDialog(box: com.scan.warehouse.model.BoxResponse) {
+        val json = com.google.gson.Gson().toJson(box)
+        startActivity(BoxDetailActivity.createIntent(this, json))
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
+    private var currentScanResult: ScanResponse? = null
+
     private fun showScanResult(result: ScanResponse) {
+        currentScanResult = result
         binding.rvProducts.visibility = View.GONE
         binding.layoutScanResult.visibility = View.VISIBLE
+        binding.bottomBar.visibility = View.VISIBLE
 
-        binding.tvProductName.text = result.productName
+        binding.tvProductName.text = BarcodeUtils.applyColorKeywords(result.productName)
         binding.tvSkuId.text = "SKU: ${result.skuId}"
 
         val barcode = result.barcodes.firstOrNull() ?: ""
@@ -209,6 +246,7 @@ class MainActivity : AppCompatActivity() {
                 if (query.isNotBlank()) {
                     performSearch(query)
                 }
+                hideKeyboard()
                 return true
             }
             val char = event.unicodeChar.toChar()
@@ -222,10 +260,33 @@ class MainActivity : AppCompatActivity() {
                     binding.etSearch.requestFocus()
                 }
                 binding.etSearch.append(char.toString())
+                hideKeyboard()
                 return true
             }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    private fun addToCart(data: ScanResponse) {
+        val barcode = data.barcodes.firstOrNull() ?: return
+        val repository = ProductRepository(this)
+        binding.btnBarCart.isEnabled = false
+        Toast.makeText(this, "장바구니 추가 중...", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                val result = repository.addToCart(barcode, data.skuId, data.productName, 1)
+                Toast.makeText(this@MainActivity, result.message, Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "장바구니 추가 실패", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.btnBarCart.isEnabled = true
+            }
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -234,6 +295,21 @@ class MainActivity : AppCompatActivity() {
             binding.etSearch.setText(barcode)
             binding.etSearch.setSelection(barcode.length)
             performSearch(barcode)
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (binding.layoutScanResult.visibility == View.VISIBLE || binding.rvProducts.visibility == View.VISIBLE) {
+            binding.etSearch.setText("")
+            binding.layoutScanResult.visibility = View.GONE
+            binding.rvProducts.visibility = View.GONE
+            binding.bottomBar.visibility = View.GONE
+            binding.layoutScanWaiting.visibility = View.VISIBLE
+            currentScanResult = null
+        } else {
+            @Suppress("DEPRECATION")
+            super.onBackPressed()
         }
     }
 
