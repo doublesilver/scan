@@ -10,7 +10,7 @@
     <string name="splash_error">서버에 연결할 수 없습니다</string>
     <string name="splash_retry">재시도</string>
     <string name="splash_settings">설정</string>
-    <string name="default_server_url">http://192.168.0.100:8000</string>
+    <string name="default_server_url">http://100.125.17.60:8000</string>
     <string name="scan_waiting_title">PDA 버튼을 눌러 스캔하세요</string>
     <string name="scan_waiting_subtitle">또는 검색창에 상품명을 입력하세요</string>
     <string name="offline_mode">오프라인 모드</string>

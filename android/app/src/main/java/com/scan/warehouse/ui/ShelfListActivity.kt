@@ -53,16 +53,16 @@ class ShelfListActivity : AppCompatActivity() {
     private var floor = 0
     private var zone = ""
     private var currentShelfNumber: Int? = null
-    private var pendingUploadShelfId: Int? = null
+    private var pendingUploadCellKey: String? = null
     private var photoUri: Uri? = null
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            val shelfId = pendingUploadShelfId ?: return@registerForActivityResult
+            val cellKey = pendingUploadCellKey ?: return@registerForActivityResult
             val uri = photoUri ?: return@registerForActivityResult
-            uploadPhoto(shelfId, uri)
+            uploadPhoto(cellKey, uri)
         }
-        pendingUploadShelfId = null
+        pendingUploadCellKey = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +82,11 @@ class ShelfListActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener {
             finish()
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
+
+        binding.btnBarEdit.setOnClickListener {
+            startActivity(MapEditorActivity.createIntent(this, zone))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
         adapter = ShelfAdapter(
@@ -133,7 +138,7 @@ class ShelfListActivity : AppCompatActivity() {
             .setPositiveButton("저장") { _, _ ->
                 val newLabel = input.text.toString().trim()
                 if (newLabel.isNotEmpty()) {
-                    updateLabel(shelf.id, newLabel)
+                    updateLabel(shelf, newLabel)
                 }
             }
             .setNeutralButton("라벨 삭제") { _, _ ->
@@ -147,23 +152,31 @@ class ShelfListActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("라벨 삭제")
             .setMessage("선반 ${shelf.shelfNumber}의 라벨을 삭제하시겠습니까?")
-            .setPositiveButton("삭제") { _, _ -> deleteLabel(shelf.id) }
+            .setPositiveButton("삭제") { _, _ -> deleteLabel(shelf) }
             .setNegativeButton("취소", null)
             .show()
     }
 
-    private fun updateLabel(shelfId: Int, label: String) {
+    private fun updateLabel(shelf: ShelfItem, label: String) {
         lifecycleScope.launch {
-            repository.updateShelfLabel(shelfId, label)
-                .onSuccess { loadShelves() }
+            val result = if (shelf.cellKey != null) {
+                repository.updateMapCell(shelf.cellKey, mapOf("label" to label))
+            } else {
+                repository.updateShelfLabel(shelf.id, label).map { Unit }
+            }
+            result.onSuccess { loadShelves() }
                 .onFailure { Toast.makeText(this@ShelfListActivity, "라벨 저장 실패", Toast.LENGTH_SHORT).show() }
         }
     }
 
-    private fun deleteLabel(shelfId: Int) {
+    private fun deleteLabel(shelf: ShelfItem) {
         lifecycleScope.launch {
-            repository.deleteShelfLabel(shelfId)
-                .onSuccess { loadShelves() }
+            val result = if (shelf.cellKey != null) {
+                repository.updateMapCell(shelf.cellKey, mapOf("label" to ""))
+            } else {
+                repository.deleteShelfLabel(shelf.id)
+            }
+            result.onSuccess { loadShelves() }
                 .onFailure { Toast.makeText(this@ShelfListActivity, "라벨 삭제 실패", Toast.LENGTH_SHORT).show() }
         }
     }
@@ -174,11 +187,11 @@ class ShelfListActivity : AppCompatActivity() {
         }
         val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
         photoUri = uri
-        pendingUploadShelfId = shelf.id
+        pendingUploadCellKey = shelf.cellKey
         takePicture.launch(uri)
     }
 
-    private fun uploadPhoto(shelfId: Int, uri: Uri) {
+    private fun uploadPhoto(cellKey: String, uri: Uri) {
         Toast.makeText(this, "업로드 중...", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
             try {
@@ -190,7 +203,7 @@ class ShelfListActivity : AppCompatActivity() {
                 val requestBody = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", "photo.jpg", requestBody)
 
-                repository.uploadShelfPhoto(shelfId, part)
+                repository.uploadCellPhoto(cellKey, part)
                     .onSuccess { loadShelves() }
                     .onFailure { e ->
                         Toast.makeText(this@ShelfListActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -206,9 +219,9 @@ class ShelfListActivity : AppCompatActivity() {
             .setTitle("사진 삭제")
             .setMessage("선반 ${shelf.shelfNumber}의 사진을 삭제하시겠습니까?")
             .setPositiveButton("삭제") { _, _ ->
-                val photoId = shelf.id
+                val cellKey = shelf.cellKey ?: return@setPositiveButton
                 lifecycleScope.launch {
-                    repository.deleteShelfPhoto(photoId)
+                    repository.deleteCellPhoto(cellKey)
                         .onSuccess { loadShelves() }
                         .onFailure { Toast.makeText(this@ShelfListActivity, "사진 삭제 실패", Toast.LENGTH_SHORT).show() }
                 }

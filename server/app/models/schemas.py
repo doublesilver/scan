@@ -124,6 +124,7 @@ class ShelfItem(BaseModel):
     label: str | None = None
     photo_path: str | None = None
     photo_url: str | None = None
+    cell_key: str | None = None
 
 
 class ShelfListResponse(BaseModel):

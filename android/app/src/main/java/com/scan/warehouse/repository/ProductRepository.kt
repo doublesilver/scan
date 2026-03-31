@@ -6,6 +6,7 @@ import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.db.CachedProduct
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.CartRequest
+import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.ImageItem
 import com.scan.warehouse.model.PrintRequest
@@ -135,6 +136,15 @@ open class ProductRepository(protected val context: Context) {
         }
     }
 
+    open suspend fun updateMapCell(cellKey: String, data: Map<String, Any>): Result<Unit> {
+        return try {
+            api.updateMapCell(cellKey, data)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     open suspend fun updateShelfLabel(shelfId: Int, label: String): Result<ShelfItem> {
         return try {
             Result.success(api.updateShelfLabel(shelfId, mapOf("label" to label)))
@@ -152,18 +162,45 @@ open class ProductRepository(protected val context: Context) {
         }
     }
 
-    open suspend fun uploadShelfPhoto(shelfId: Int, filePart: MultipartBody.Part): Result<ShelfItem> {
+    open suspend fun uploadCellPhoto(cellKey: String, filePart: MultipartBody.Part): Result<String> {
         return try {
-            Result.success(api.uploadShelfPhoto(shelfId, filePart))
+            val result = api.uploadCellPhoto(cellKey, filePart)
+            Result.success(result["photo_url"] ?: "")
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    open suspend fun deleteShelfPhoto(photoId: Int): Result<Unit> {
+    open suspend fun deleteCellPhoto(cellKey: String): Result<Unit> {
         return try {
-            api.deleteShelfPhoto(photoId)
+            api.deleteCellPhoto(cellKey)
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun uploadLevelPhoto(cellKey: String, levelIndex: Int, filePart: MultipartBody.Part): Result<String> {
+        return try {
+            val result = api.uploadLevelPhoto(cellKey, levelIndex, filePart)
+            Result.success(result["photo_url"] ?: "")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun deleteLevelPhoto(cellKey: String, levelIndex: Int): Result<Unit> {
+        return try {
+            api.deleteLevelPhoto(cellKey, levelIndex)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun getMapLayout(): Result<MapLayout> {
+        return try {
+            Result.success(api.getMapLayout())
         } catch (e: Exception) {
             Result.failure(e)
         }

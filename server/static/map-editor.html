@@ -1,0 +1,2030 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title id="pageTitle">창고 도면 에디터</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, "Malgun Gothic", sans-serif;
+        background: #0a0f1a;
+        color: #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #toolbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #111827;
+        border-bottom: 1px solid #1e2d40;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+      }
+      .tg {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 8px;
+      }
+      .tg span {
+        color: #4fc3f7;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+      }
+      .tg span:hover {
+        border-color: #4fc3f7;
+      }
+      .sep {
+        width: 1px;
+        height: 24px;
+        background: #2a3040;
+        margin: 0 4px;
+      }
+      .tb {
+        padding: 5px 10px;
+        background: #1e2d40;
+        border: 1px solid #2a3a50;
+        border-radius: 5px;
+        color: #ccd6f6;
+        font-size: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s;
+      }
+      .tb:hover {
+        background: #263850;
+        color: #fff;
+      }
+      #zoomLabel {
+        font-size: 12px;
+        color: #607080;
+        min-width: 38px;
+        text-align: center;
+      }
+      #searchBox {
+        padding: 5px 10px;
+        background: #1e2d40;
+        border: 1px solid #2a3a50;
+        border-radius: 5px;
+        color: #e0e0e0;
+        font-size: 12px;
+        width: 160px;
+      }
+      #searchBox:focus {
+        outline: none;
+        border-color: #4fc3f7;
+      }
+      #statusBar {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 5px 16px;
+        background: #0d1420;
+        border-top: 1px solid #1e2d40;
+        font-size: 11px;
+        color: #607080;
+        flex-shrink: 0;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+      }
+      .dg {
+        background: #4caf50;
+      }
+      .dr {
+        background: #f44336;
+      }
+      .dy {
+        background: #ff9800;
+      }
+      #main {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      #canvas {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+      }
+      #zonesContainer {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        min-height: 100%;
+      }
+      .zone {
+        background: #1a1f2e;
+        border-radius: 10px;
+        padding: 14px;
+        border: 1px solid #2a3040;
+        position: relative;
+      }
+      .zone.dzover {
+        border-color: #ff9800;
+        box-shadow: 0 0 0 2px #ff980044;
+      }
+      .zone-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .zone-title {
+        color: #81d4fa;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+      }
+      .zone-title:hover {
+        border-color: #4fc3f7;
+      }
+      .zbadge {
+        background: #1565c0;
+        color: #90caf9;
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .zbadge:hover {
+        background: #1976d2;
+      }
+      .za {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+      .zab {
+        padding: 3px 8px;
+        background: #1e2d40;
+        border: 1px solid #2a3a50;
+        border-radius: 4px;
+        color: #90a4ae;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .zab:hover {
+        background: #263850;
+        color: #fff;
+      }
+      .zab.del {
+        border-color: #5a2020;
+        color: #ef5350;
+      }
+      .zab.del:hover {
+        background: #3a1515;
+      }
+      .grid {
+        display: grid;
+        gap: 5px;
+      }
+      .cell {
+        width: 90px;
+        height: 75px;
+        background: #1e2635;
+        border: 2px solid #2d3748;
+        border-radius: 7px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        font-size: 11px;
+        text-align: center;
+        padding: 4px;
+        position: relative;
+        user-select: none;
+      }
+      .cell:hover {
+        border-color: #4fc3f7;
+        background: #1f2f45;
+      }
+      .cell.active {
+        border-color: #4fc3f7;
+        background: #162540;
+        box-shadow: 0 0 0 2px #4fc3f755;
+      }
+      .cell.smatch {
+        border-color: #ffd600;
+        background: #2a2500;
+      }
+      .cell.sused {
+        background: #1a2a1a;
+        border-color: #4caf50;
+      }
+      .cell.sfull {
+        background: #2a1a1a;
+        border-color: #ef5350;
+      }
+      .cell.dcover {
+        border-color: #ff9800;
+        background: #251e10;
+      }
+      .cid {
+        font-size: 9px;
+        color: #546e7a;
+        position: absolute;
+        top: 2px;
+        left: 4px;
+      }
+      .cst {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        position: absolute;
+        top: 4px;
+        right: 4px;
+      }
+      .clabel {
+        font-size: 11px;
+        color: #b0bec5;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 80px;
+        margin-top: 2px;
+      }
+      .csku {
+        font-size: 9px;
+        color: #546e7a;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 80px;
+      }
+      .cphoto {
+        width: 36px;
+        height: 28px;
+        object-fit: cover;
+        border-radius: 3px;
+        margin-top: 2px;
+      }
+      .add-row-btn {
+        width: 100%;
+        margin-top: 5px;
+        height: 30px;
+        background: transparent;
+        border: 1px dashed #2a3040;
+        border-radius: 5px;
+        color: #546e7a;
+        cursor: pointer;
+        font-size: 18px;
+      }
+      .add-row-btn:hover {
+        border-color: #4fc3f7;
+        color: #4fc3f7;
+      }
+      .add-zone-btn {
+        height: 80px;
+        min-width: 120px;
+        background: transparent;
+        border: 2px dashed #2a3040;
+        border-radius: 10px;
+        color: #546e7a;
+        cursor: pointer;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .add-zone-btn:hover {
+        border-color: #4fc3f7;
+        color: #4fc3f7;
+      }
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #00000088;
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+      }
+      .overlay.show {
+        display: flex;
+      }
+      .modal {
+        background: #1a1f2e;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #2a3040;
+        min-width: 340px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal h3 {
+        color: #4fc3f7;
+        font-size: 15px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .mclose {
+        background: none;
+        border: none;
+        color: #607080;
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .mclose:hover {
+        color: #e0e0e0;
+      }
+      #ctxMenu {
+        display: none;
+        position: fixed;
+        background: #1a1f2e;
+        border: 1px solid #2a3040;
+        border-radius: 7px;
+        z-index: 500;
+        min-width: 140px;
+        box-shadow: 0 4px 16px #0008;
+        overflow: hidden;
+      }
+      .ci {
+        padding: 8px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        color: #ccd6f6;
+      }
+      .ci:hover {
+        background: #263850;
+      }
+      .ci.danger {
+        color: #ef5350;
+      }
+      .ci.danger:hover {
+        background: #2a1515;
+      }
+      .csep {
+        height: 1px;
+        background: #2a3040;
+        margin: 2px 0;
+      }
+      .fg {
+        margin-bottom: 10px;
+      }
+      .fg label {
+        display: block;
+        font-size: 11px;
+        color: #90a4ae;
+        margin-bottom: 3px;
+      }
+      .fg input,
+      .fg textarea,
+      .fg select {
+        width: 100%;
+        padding: 7px 10px;
+        background: #252b3d;
+        border: 1px solid #3a4050;
+        border-radius: 5px;
+        color: #e0e0e0;
+        font-size: 13px;
+      }
+      .fg input:focus,
+      .fg textarea:focus,
+      .fg select:focus {
+        outline: none;
+        border-color: #4fc3f7;
+      }
+      .fg textarea {
+        resize: vertical;
+        min-height: 56px;
+      }
+      .fg input[type="color"] {
+        height: 32px;
+        padding: 2px 4px;
+        cursor: pointer;
+      }
+      .levels-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .lrow {
+        background: #252b3d;
+        border-radius: 6px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border: 1px solid #2a3040;
+      }
+      .lrow-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .lbadge {
+        background: #1565c0;
+        color: #90caf9;
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 9px;
+        white-space: nowrap;
+        cursor: pointer;
+        min-width: 52px;
+        text-align: center;
+      }
+      .lbadge:hover {
+        background: #1976d2;
+      }
+      .linput {
+        flex: 1;
+        padding: 5px 8px;
+        background: #1a1f2e;
+        border: 1px solid #3a4050;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-size: 12px;
+      }
+      .linput:focus {
+        outline: none;
+        border-color: #4fc3f7;
+      }
+      .ldel {
+        background: none;
+        border: none;
+        color: #546e7a;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 2px;
+      }
+      .ldel:hover {
+        color: #ef5350;
+      }
+      .lphoto-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .lphoto {
+        width: 50px;
+        height: 38px;
+        object-fit: cover;
+        border-radius: 4px;
+        background: #1a1f2e;
+        border: 1px solid #2a3040;
+      }
+      .lphoto.hid {
+        display: none;
+      }
+      .lfbtn {
+        padding: 4px 8px;
+        background: #1e2d40;
+        border: 1px solid #2a3a50;
+        border-radius: 4px;
+        color: #90a4ae;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .lfbtn:hover {
+        background: #263850;
+        color: #fff;
+      }
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 7px 14px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: background 0.15s;
+      }
+      .bp {
+        background: #1565c0;
+        color: #fff;
+      }
+      .bp:hover {
+        background: #1976d2;
+      }
+      .bd {
+        background: #b71c1c;
+        color: #fff;
+      }
+      .bd:hover {
+        background: #c62828;
+      }
+      .bs {
+        background: #37474f;
+        color: #fff;
+      }
+      .bs:hover {
+        background: #455a64;
+      }
+      .bg {
+        background: transparent;
+        border: 1px solid #2a3a50;
+        color: #90a4ae;
+      }
+      .bg:hover {
+        background: #1e2d40;
+        color: #fff;
+      }
+      .bsm {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      .iedit {
+        background: #1a1f2e;
+        border: 1px solid #4fc3f7;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-size: inherit;
+        padding: 1px 6px;
+        outline: none;
+        width: 120px;
+      }
+      @media print {
+        #toolbar,
+        #statusBar,
+        #ctxMenu,
+        .overlay,
+        .za,
+        .add-row-btn,
+        .add-zone-btn {
+          display: none !important;
+        }
+        body {
+          background: #fff;
+          color: #000;
+          height: auto;
+          overflow: visible;
+        }
+        #main {
+          overflow: visible;
+          display: block;
+        }
+        #canvas {
+          overflow: visible;
+          padding: 10px;
+        }
+        .zone {
+          background: #fff;
+          border: 1px solid #aaa;
+          break-inside: avoid;
+        }
+        .zone-title {
+          color: #000;
+        }
+        .cell {
+          background: #f5f5f5;
+          border: 1px solid #bbb;
+          break-inside: avoid;
+        }
+        .cid {
+          color: #333;
+        }
+        .clabel {
+          color: #000;
+        }
+      }
+      /* ── Mobile nav ────────────────────────────────────── */
+      #mobileNav {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 12px;
+        background: #0a0f1a;
+      }
+      .m-level {
+        display: flex;
+        flex-direction: column;
+      }
+      .m-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0 12px;
+        border-bottom: 1px solid #2a3040;
+        margin-bottom: 12px;
+      }
+      .m-back {
+        background: #252b3d;
+        border: none;
+        color: #4fc3f7;
+        font-size: 20px;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .m-header span {
+        font-size: 18px;
+        font-weight: bold;
+        color: #e0e0e0;
+      }
+      .zone-card {
+        background: #1a1f2e;
+        border: 1px solid #2a3040;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        min-height: 64px;
+      }
+      .zone-card:active {
+        background: #252b3d;
+      }
+      .zc-name {
+        font-size: 17px;
+        font-weight: bold;
+        color: #e0e0e0;
+      }
+      .zc-info {
+        font-size: 13px;
+        color: #607080;
+        margin-top: 3px;
+      }
+      .zc-arrow {
+        font-size: 20px;
+        color: #4fc3f7;
+      }
+      .m-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 4px 0;
+      }
+      .m-grid .cell {
+        width: 100% !important;
+        height: 60px !important;
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        padding: 8px 12px !important;
+        gap: 12px;
+        border-radius: 8px;
+      }
+      .m-grid .cell .cid {
+        position: static !important;
+        font-size: 14px !important;
+        font-weight: bold;
+        min-width: 44px;
+        color: #90a4ae;
+      }
+      .m-grid .cell .cst {
+        position: static !important;
+        flex-shrink: 0;
+      }
+      .m-grid .cell .clabel {
+        font-size: 14px !important;
+        max-width: unset !important;
+      }
+      .m-content {
+        padding: 4px 0;
+      }
+      .m-content .fg {
+        margin-bottom: 14px;
+      }
+      .m-content .fg label {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+      .m-content .fg input,
+      .m-content .fg textarea,
+      .m-content .fg select {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
+      }
+      .m-content .btn {
+        min-height: 48px;
+        font-size: 15px;
+      }
+
+      @media (max-width: 768px) {
+        #mobileNav {
+          display: flex;
+        }
+        #main {
+          display: none;
+        }
+
+        #toolbar {
+          padding: 6px 8px;
+          gap: 4px;
+        }
+        .tb {
+          padding: 10px 12px;
+          font-size: 13px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+        }
+        #searchBox {
+          width: 100%;
+          padding: 10px 12px;
+          font-size: 13px;
+          min-height: 44px;
+        }
+        #statusBar {
+          flex-wrap: wrap;
+          gap: 8px;
+          padding: 6px 10px;
+          font-size: 10px;
+        }
+        #zonesContainer {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .zone {
+          width: 100%;
+        }
+        .zone-header {
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .zone-title {
+          font-size: 13px;
+        }
+        .zbadge {
+          font-size: 10px;
+        }
+        .zab {
+          padding: 8px 10px;
+          font-size: 12px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+        }
+        .cell {
+          width: 70px;
+          height: 60px;
+          font-size: 10px;
+        }
+        .clabel {
+          font-size: 10px;
+          max-width: 62px;
+        }
+        .csku {
+          font-size: 8px;
+          max-width: 62px;
+        }
+        .overlay {
+          align-items: flex-start;
+        }
+        .modal {
+          min-width: unset !important;
+          max-width: 100% !important;
+          width: 100% !important;
+          border-radius: 0 !important;
+          max-height: 100vh !important;
+          padding: 16px;
+        }
+        .btn {
+          min-height: 44px;
+          padding: 10px 14px;
+          font-size: 13px;
+        }
+        .lrow-top {
+          flex-wrap: wrap;
+        }
+        .lbadge {
+          min-height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .linput {
+          min-height: 36px;
+          font-size: 13px;
+          padding: 8px 10px;
+        }
+        .ci {
+          padding: 12px 16px;
+          font-size: 14px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+        }
+        #ctxMenu {
+          min-width: 180px;
+        }
+        .fg input,
+        .fg textarea,
+        .fg select {
+          font-size: 14px;
+          padding: 9px 12px;
+        }
+      }
+      @media (max-width: 480px) {
+        .cell {
+          width: 60px;
+          height: 50px;
+          font-size: 10px;
+          padding: 2px;
+        }
+        .clabel {
+          font-size: 10px;
+          max-width: 54px;
+        }
+        .csku {
+          display: none;
+        }
+        .cphoto {
+          width: 28px;
+          height: 22px;
+        }
+        #zonesContainer {
+          gap: 12px;
+        }
+        .zone {
+          padding: 10px;
+        }
+        .zone-title {
+          font-size: 12px;
+        }
+        .modal {
+          max-height: 90vh;
+          padding: 12px;
+        }
+        #toolbar {
+          padding: 4px 6px;
+        }
+        .tb {
+          padding: 10px;
+          font-size: 12px;
+        }
+        .tg span {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <div class="tg">
+        <span id="titleDisplay" title="클릭하여 편집"></span>
+        <span
+          id="floorDisplay"
+          title="층 편집"
+          style="color: #ff9800; font-size: 13px"
+        ></span>
+      </div>
+      <div class="sep"></div>
+      <button class="tb" onclick="saveAll()">💾 전체 저장</button>
+      <button class="tb" onclick="exportJSON()">📤 내보내기</button>
+      <button class="tb" onclick="showImport()">📥 불러오기</button>
+      <button class="tb" onclick="window.print()">🖨 인쇄</button>
+      <div class="sep"></div>
+      <button class="tb" onclick="undo()" title="Ctrl+Z">↩ 실행취소</button>
+      <button class="tb" onclick="redo()" title="Ctrl+Y">↪ 다시실행</button>
+      <div class="sep"></div>
+      <button class="tb" onclick="zoom(-0.1)">🔍-</button>
+      <span id="zoomLabel">100%</span>
+      <button class="tb" onclick="zoom(0.1)">🔍+</button>
+      <div class="sep"></div>
+      <input
+        id="searchBox"
+        type="text"
+        placeholder="검색 (라벨, SKU, 메모)"
+        oninput="doSearch(this.value)"
+      />
+    </div>
+
+    <!-- Mobile depth navigation -->
+    <div id="mobileNav">
+      <div id="mLevel0" class="m-level"></div>
+      <div id="mLevel1" class="m-level" style="display: none">
+        <div class="m-header">
+          <button class="m-back" onclick="mGoBack()">←</button>
+          <span id="mZoneTitle">구역</span>
+        </div>
+        <div id="mGrid" class="m-grid"></div>
+      </div>
+    </div>
+
+    <div id="main">
+      <div id="canvas"><div id="zonesContainer"></div></div>
+    </div>
+
+    <div id="statusBar">
+      <span
+        ><span class="dot" id="sdot"></span>서버:
+        <span id="sstatus">확인 중...</span></span
+      >
+      <span>전체: <span id="totalCells">0</span>개</span>
+      <span>사용 중: <span id="usedCells">0</span>개</span>
+      <span>마지막 저장: <span id="lastSaved">-</span></span>
+      <span>줌: <span id="zoomStatus">100%</span></span>
+    </div>
+
+    <!-- Cell modal -->
+    <div class="overlay" id="cellModal">
+      <div class="modal" style="min-width: 420px">
+        <h3>
+          <span id="modalTitle" class="editable" onclick="editModalTitle(this)"
+            >선반 상세</span
+          ><button class="mclose" onclick="closeModal('cellModal')">✕</button>
+        </h3>
+        <div class="fg" style="margin-bottom: 4px">
+          <label>위치명</label
+          ><input
+            type="text"
+            id="cellName"
+            placeholder="예: 1-1, 냉장고앞 등"
+          />
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 4px">
+          <div class="fg" style="flex: 1">
+            <label>라벨</label
+            ><input type="text" id="cellLabel" placeholder="선반 라벨" />
+          </div>
+          <div class="fg" style="width: 80px">
+            <label>배경색</label
+            ><input type="color" id="cellColor" value="#1e2635" />
+          </div>
+        </div>
+        <div class="fg">
+          <label>SKU</label
+          ><input type="text" id="cellSku" placeholder="상품 SKU" />
+        </div>
+        <div class="fg">
+          <label>상태</label>
+          <select id="cellStatus">
+            <option value="empty">빈 선반</option>
+            <option value="used">사용 중</option>
+            <option value="full">가득 참</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>메모</label
+          ><textarea id="cellMemo" placeholder="메모"></textarea>
+        </div>
+        <div
+          style="
+            margin: 14px 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <span style="color: #81d4fa; font-size: 13px; font-weight: 700"
+            >선반 층 상세</span
+          >
+          <div style="display: flex; gap: 6px">
+            <button class="btn bg bsm" onclick="addLevel()">+ 층 추가</button>
+            <button class="btn bg bsm" onclick="removeLevel()">
+              - 층 삭제
+            </button>
+          </div>
+        </div>
+        <div class="levels-list" id="levelsList"></div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="saveCellModal()">저장</button>
+          <button class="btn bd" onclick="clearCell()">비우기</button>
+          <button class="btn bs" onclick="closeModal('cellModal')">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone modal -->
+    <div class="overlay" id="zoneModal">
+      <div class="modal">
+        <h3>
+          <span>구역 설정</span
+          ><button class="mclose" onclick="closeModal('zoneModal')">✕</button>
+        </h3>
+        <input type="hidden" id="zeId" />
+        <div class="fg">
+          <label>구역 이름</label><input type="text" id="zeName" />
+        </div>
+        <div class="fg">
+          <label>구역 코드</label
+          ><input type="text" id="zeCode" maxlength="5" />
+        </div>
+        <div style="display: flex; gap: 10px">
+          <div class="fg" style="flex: 1">
+            <label>행 수</label
+            ><input type="number" id="zeRows" min="1" max="20" />
+          </div>
+          <div class="fg" style="flex: 1">
+            <label>열 수</label
+            ><input type="number" id="zeCols" min="1" max="20" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="saveZoneModal()">저장</button>
+          <button class="btn bd" onclick="deleteZoneModal()">구역 삭제</button>
+          <button class="btn bs" onclick="closeModal('zoneModal')">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import modal -->
+    <div class="overlay" id="importModal">
+      <div class="modal">
+        <h3>
+          <span>JSON 불러오기</span
+          ><button class="mclose" onclick="closeModal('importModal')">✕</button>
+        </h3>
+        <div class="fg">
+          <label>JSON 붙여넣기</label
+          ><textarea
+            id="importText"
+            style="min-height: 180px; font-family: monospace; font-size: 11px"
+            placeholder='{"title":"...","zones":[]}'
+          ></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn bp" onclick="doImport()">불러오기</button>
+          <button class="btn bs" onclick="closeModal('importModal')">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context menu -->
+    <div id="ctxMenu">
+      <div class="ci" onclick="ctxEdit()">편집</div>
+      <div class="ci" onclick="ctxCopy()">복사</div>
+      <div class="ci" onclick="ctxPaste()">붙여넣기</div>
+      <div class="csep"></div>
+      <div class="ci" onclick="ctxColor()">색상 변경</div>
+      <div class="csep"></div>
+      <div class="ci danger" onclick="ctxClear()">비우기</div>
+    </div>
+    <input
+      type="color"
+      id="ctxColorPicker"
+      style="display: none"
+      onchange="applyCtxColor(this.value)"
+    />
+
+    <div
+      id="toast"
+      style="
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1565c0;
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 7px;
+        font-size: 13px;
+        display: none;
+        z-index: 999;
+        pointer-events: none;
+      "
+    ></div>
+
+    <script>
+      const API = window.location.origin;
+
+      let W = {
+        title: "창고 도면 에디터",
+        floor: 5,
+        zones: [
+          { id: "z1", name: "501호", code: "A", rows: 3, cols: 4 },
+          { id: "z2", name: "포장다이", code: "B", rows: 3, cols: 2 },
+          { id: "z3", name: "502호", code: "C", rows: 3, cols: 3 },
+        ],
+        cells: {},
+      };
+
+      let selKey = null,
+        ctxKey = null,
+        clipboard = null,
+        zl = 1.0;
+      let hist = [],
+        hi = -1,
+        dzid = null,
+        dsrcKey = null,
+        zid = 10;
+
+      // ── Mobile nav ───────────────────────────────────────
+      let mobileDepth = 0,
+        mobileZone = null;
+
+      function isMobile() {
+        return window.innerWidth <= 768;
+      }
+
+      function renderMobileZoneList() {
+        const el = document.getElementById("mLevel0");
+        el.innerHTML =
+          '<h2 style="color:#4fc3f7;margin-bottom:16px">' +
+          esc(W.title || "창고 도면") +
+          "</h2>";
+        W.zones.forEach((z, i) => {
+          const card = document.createElement("div");
+          card.className = "zone-card";
+          card.innerHTML = `<div><div class="zc-name">${esc(z.name)} (${esc(z.code)}구역)</div><div class="zc-info">${z.rows}행 × ${z.cols}열 = ${z.rows * z.cols}칸</div></div><span class="zc-arrow">▶</span>`;
+          card.onclick = () => mOpenZone(i);
+          el.appendChild(card);
+        });
+      }
+
+      function mOpenZone(zoneIdx) {
+        mobileZone = zoneIdx;
+        const z = W.zones[zoneIdx];
+        document.getElementById("mZoneTitle").textContent =
+          `${z.name} (${z.code}구역)`;
+        const grid = document.getElementById("mGrid");
+        grid.innerHTML = "";
+        for (let r = 1; r <= z.rows; r++) {
+          for (let c = 1; c <= z.cols; c++) {
+            const key = ckey(z.code, r, c);
+            const d = W.cells[key] || {};
+            const sc =
+              d.status === "used"
+                ? " sused"
+                : d.status === "full"
+                  ? " sfull"
+                  : "";
+            const cell = document.createElement("div");
+            cell.className = "cell" + sc;
+            if (d.bgColor) cell.style.background = d.bgColor;
+            const dc =
+              d.status === "used"
+                ? "#4caf50"
+                : d.status === "full"
+                  ? "#ef5350"
+                  : "#546e7a";
+            const dkey = d.name || `${r}-${c}`;
+            cell.innerHTML = `<span class="cid">${esc(dkey)}</span><span class="cst" style="background:${dc}"></span><span class="clabel">${esc(d.label || "빈 선반")}</span>`;
+            cell.onclick = () => openCellModal(key);
+            grid.appendChild(cell);
+          }
+        }
+        mShowLevel(1);
+      }
+
+      function mShowLevel(level) {
+        mobileDepth = level;
+        document.getElementById("mLevel0").style.display =
+          level === 0 ? "flex" : "none";
+        document.getElementById("mLevel1").style.display =
+          level === 1 ? "flex" : "none";
+      }
+
+      function mGoBack() {
+        if (mobileDepth === 1) {
+          mShowLevel(0);
+          renderMobileZoneList();
+        }
+      }
+
+      // ── Init ─────────────────────────────────────────────
+      function init() {
+        loadLS();
+        renderTitle();
+        renderZones();
+        checkServer();
+        loadFromServer();
+        updateStatus();
+        pushH();
+        if (isMobile()) renderMobileZoneList();
+        window.addEventListener("resize", () => {
+          const mob = isMobile();
+          if (mob) renderMobileZoneList();
+        });
+      }
+
+      function renderTitle() {
+        document.getElementById("titleDisplay").textContent = W.title;
+        document.getElementById("floorDisplay").textContent = W.floor + "층";
+        document.title = W.title;
+      }
+
+      // ── Zones ────────────────────────────────────────────
+      function renderZones() {
+        const c = document.getElementById("zonesContainer");
+        c.innerHTML = "";
+        c.style.transform = `scale(${zl})`;
+        c.style.transformOrigin = "top left";
+        W.zones.forEach((z) => c.appendChild(buildZone(z)));
+        const ab = document.createElement("button");
+        ab.className = "add-zone-btn";
+        ab.innerHTML =
+          '<span style="font-size:22px">+</span><span>구역 추가</span>';
+        ab.onclick = addZone;
+        c.appendChild(ab);
+        updateStatus();
+        if (isMobile()) renderMobileZoneList();
+      }
+
+      function buildZone(z) {
+        const el = document.createElement("div");
+        el.className = "zone";
+        el.dataset.zid = z.id;
+        el.setAttribute("draggable", true);
+        el.addEventListener("dragstart", (e) => {
+          if (e.target.classList.contains("cell")) return;
+          dzid = z.id;
+          dsrcKey = null;
+          e.dataTransfer.effectAllowed = "move";
+        });
+        el.addEventListener("dragover", (e) => {
+          if (!dzid || dsrcKey) return;
+          e.preventDefault();
+          el.classList.add("dzover");
+        });
+        el.addEventListener("dragleave", () => el.classList.remove("dzover"));
+        el.addEventListener("drop", (e) => {
+          el.classList.remove("dzover");
+          if (!dzid || dsrcKey) return;
+          e.preventDefault();
+          const ti = W.zones.findIndex((x) => x.id === z.id);
+          const fi = W.zones.findIndex((x) => x.id === dzid);
+          if (fi === ti) {
+            dzid = null;
+            return;
+          }
+          pushH();
+          const [m] = W.zones.splice(fi, 1);
+          W.zones.splice(ti, 0, m);
+          dzid = null;
+          renderZones();
+          saveLS();
+        });
+        el.innerHTML = `
+    <div class="zone-header">
+      <span class="zone-title" onclick="editZone('${z.id}')">${z.name}</span>
+      <span class="zbadge" onclick="editZone('${z.id}')">${z.code}구역</span>
+      <div class="za">
+        <button class="zab" onclick="zrow('${z.id}',1)">+행</button>
+        <button class="zab" onclick="zrow('${z.id}',-1)">-행</button>
+        <button class="zab" onclick="zcol('${z.id}',1)">+열</button>
+        <button class="zab" onclick="zcol('${z.id}',-1)">-열</button>
+        <button class="zab del" onclick="delZone('${z.id}')">삭제</button>
+      </div>
+    </div>
+    <div class="grid" id="grid-${z.id}" style="grid-template-columns:repeat(${z.cols},90px)"></div>
+    <button class="add-row-btn" onclick="zrow('${z.id}',1)">+</button>`;
+        const grid = el.querySelector(`#grid-${z.id}`);
+        for (let r = 1; r <= z.rows; r++)
+          for (let cl = 1; cl <= z.cols; cl++)
+            grid.appendChild(buildCell(z, r, cl));
+        return el;
+      }
+
+      function ckey(code, r, c) {
+        return `${code}-${r}-${c}`;
+      }
+      function displayKey(r, c) {
+        return `${r}-${c}`;
+      }
+
+      function buildCell(z, r, c) {
+        const key = ckey(z.code, r, c);
+        const el = document.createElement("div");
+        el.className = "cell";
+        el.id = `cell-${key}`;
+        el.dataset.ck = key;
+        el.setAttribute("draggable", true);
+        applyCellEl(el, key, W.cells[key] || {});
+        el.addEventListener("click", () => openCellModal(key));
+        el.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          showCtx(e, key);
+        });
+        el.addEventListener("dragstart", (e) => {
+          e.stopPropagation();
+          dsrcKey = key;
+          dzid = null;
+          e.dataTransfer.effectAllowed = "move";
+        });
+        el.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.classList.add("dcover");
+        });
+        el.addEventListener("dragleave", () => el.classList.remove("dcover"));
+        el.addEventListener("dragend", () => el.classList.remove("dcover"));
+        el.addEventListener("drop", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.classList.remove("dcover");
+          if (!dsrcKey || dsrcKey === key) {
+            dsrcKey = null;
+            return;
+          }
+          pushH();
+          const s = W.cells[dsrcKey] || null,
+            d = W.cells[key] || null;
+          if (s) W.cells[key] = s;
+          else delete W.cells[key];
+          if (d) W.cells[dsrcKey] = d;
+          else delete W.cells[dsrcKey];
+          refreshCell(dsrcKey);
+          refreshCell(key);
+          dsrcKey = null;
+          updateStatus();
+          saveLS();
+          showToast(`${dsrcKey || "?"} ↔ ${key} 이동됨`);
+        });
+        return el;
+      }
+
+      function applyCellEl(el, key, d) {
+        const sc =
+          d.status === "used" ? "sused" : d.status === "full" ? "sfull" : "";
+        el.className = "cell" + (sc ? " " + sc : "");
+        el.style.background = d.bgColor || "";
+        const dc =
+          d.status === "used"
+            ? "#4caf50"
+            : d.status === "full"
+              ? "#ef5350"
+              : "#546e7a";
+        const lv = (d.levels && d.levels[0]) || {};
+        const ph = lv.photo || d.photo_url || "";
+        const parts = key.split("-");
+        const dkey =
+          d && d.name
+            ? d.name
+            : parts.length >= 3
+              ? `${parts[1]}-${parts[2]}`
+              : key;
+        el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
+    <span class="clabel">${d.label || "빈 선반"}</span>${d.sku ? `<span class="csku">${d.sku}</span>` : ""}`;
+      }
+
+      function refreshCell(key) {
+        const el = document.getElementById(`cell-${key}`);
+        if (!el) return;
+        applyCellEl(el, key, W.cells[key] || {});
+        if (key === selKey) el.classList.add("active");
+      }
+
+      // ── Cell modal ────────────────────────────────────────
+      function openCellModal(key) {
+        selKey = key;
+        document
+          .querySelectorAll(".cell")
+          .forEach((c) => c.classList.remove("active"));
+        const el = document.getElementById(`cell-${key}`);
+        if (el) el.classList.add("active");
+        const kparts = key.split("-");
+        const dname = kparts.length >= 3 ? `${kparts[1]}-${kparts[2]}` : key;
+        const d = W.cells[key] || {};
+        const titlePrefix = d.modalTitle || "선반 상세";
+        document.getElementById("modalTitle").textContent =
+          `${titlePrefix} — ${d.name || dname}`;
+        document.getElementById("cellName").value = d.name || dname;
+        document.getElementById("cellLabel").value = d.label || "";
+        document.getElementById("cellColor").value = d.bgColor || "#1e2635";
+        document.getElementById("cellSku").value = d.sku || "";
+        document.getElementById("cellStatus").value = d.status || "empty";
+        document.getElementById("cellMemo").value = d.memo || "";
+        renderLevels(
+          d.levels || [
+            { label: "하단 (1층)", photo: "", itemLabel: "", sku: "" },
+          ],
+        );
+        document.getElementById("cellModal").classList.add("show");
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("show");
+        if (id === "cellModal") {
+          document
+            .querySelectorAll(".cell")
+            .forEach((c) => c.classList.remove("active"));
+          selKey = null;
+        }
+      }
+
+      function renderLevels(lvs) {
+        const list = document.getElementById("levelsList");
+        list.innerHTML = "";
+        lvs.forEach((lv, i) => {
+          const row = document.createElement("div");
+          row.className = "lrow";
+          row.dataset.idx = i;
+          row.innerHTML = `<div class="lrow-top">
+      <span class="lbadge" data-i="${i}" onclick="renameLevel(${i})">${lv.label || i + 1 + "층"}</span>
+      <input class="linput" type="text" placeholder="라벨/상품명" value="${esc(lv.itemLabel || "")}"/>
+      <input class="linput" type="text" placeholder="SKU" value="${esc(lv.sku || "")}" style="max-width:90px"/>
+      <button class="ldel" onclick="delLevel(${i})">✕</button>
+    </div>
+    <div class="lphoto-row">
+      <img class="lphoto${lv.photo ? "" : " hid"}" src="${lv.photo || ""}"/>
+      <button class="lfbtn" onclick="pickPhoto(${i})">📷 사진</button>
+      ${lv.photo ? `<button class="lfbtn" style="color:#ef5350" onclick="rmPhoto(${i})">✕ 삭제</button>` : ""}
+    </div>`;
+          list.appendChild(row);
+        });
+      }
+
+      function getLevels() {
+        return [
+          ...document.getElementById("levelsList").querySelectorAll(".lrow"),
+        ].map((row) => {
+          const ins = row.querySelectorAll(".linput");
+          const img = row.querySelector(".lphoto");
+          const b = row.querySelector(".lbadge");
+          return {
+            label: b ? b.textContent : "",
+            itemLabel: ins[0] ? ins[0].value : "",
+            sku: ins[1] ? ins[1].value : "",
+            photo: img && !img.classList.contains("hid") ? img.src : "",
+          };
+        });
+      }
+
+      function addLevel() {
+        const lvs = getLevels();
+        const n = lvs.length + 1;
+        const names = ["하단", "중단", "상단", "최상단"];
+        lvs.push({
+          label: (names[n - 1] || n) + ` (${n}층)`,
+          photo: "",
+          itemLabel: "",
+          sku: "",
+        });
+        renderLevels(lvs);
+      }
+
+      function removeLevel() {
+        const lvs = getLevels();
+        if (lvs.length <= 1) {
+          showToast("최소 1층");
+          return;
+        }
+        lvs.pop();
+        renderLevels(lvs);
+      }
+
+      function delLevel(i) {
+        const lvs = getLevels();
+        lvs.splice(i, 1);
+        renderLevels(lvs);
+      }
+
+      function renameLevel(i) {
+        const b = document
+          .getElementById("levelsList")
+          .querySelectorAll(".lbadge")[i];
+        if (!b) return;
+        const cur = b.textContent;
+        const inp = document.createElement("input");
+        inp.className = "iedit";
+        inp.value = cur;
+        inp.style.width = "90px";
+        b.replaceWith(inp);
+        inp.focus();
+        inp.select();
+        const done = () => {
+          const s = document.createElement("span");
+          s.className = "lbadge";
+          s.textContent = inp.value || cur;
+          s.onclick = () => renameLevel(i);
+          s.title = "클릭하여 이름 변경";
+          inp.replaceWith(s);
+        };
+        inp.addEventListener("blur", done);
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") done();
+        });
+      }
+
+      function pickPhoto(i) {
+        const inp = document.createElement("input");
+        inp.type = "file";
+        inp.accept = "image/*";
+        inp.onchange = async (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const url = await f2url(f);
+          const row = document
+            .getElementById("levelsList")
+            .querySelectorAll(".lrow")[i];
+          if (!row) return;
+          const img = row.querySelector(".lphoto");
+          img.src = url;
+          img.classList.remove("hid");
+          let rb = row.querySelector(".rm-ph");
+          if (!rb) {
+            rb = document.createElement("button");
+            rb.className = "lfbtn rm-ph";
+            rb.style.color = "#ef5350";
+            rb.textContent = "✕ 삭제";
+            rb.onclick = () => rmPhoto(i);
+            row.querySelector(".lphoto-row").appendChild(rb);
+          }
+        };
+        inp.click();
+      }
+
+      function rmPhoto(i) {
+        const row = document
+          .getElementById("levelsList")
+          .querySelectorAll(".lrow")[i];
+        if (!row) return;
+        const img = row.querySelector(".lphoto");
+        img.src = "";
+        img.classList.add("hid");
+      }
+
+      function saveCellModal() {
+        if (!selKey) return;
+        pushH();
+        const d = W.cells[selKey] || {};
+        d.name = document.getElementById("cellName").value.trim();
+        d.label = document.getElementById("cellLabel").value.trim();
+        d.bgColor = document.getElementById("cellColor").value;
+        d.sku = document.getElementById("cellSku").value.trim();
+        d.status = document.getElementById("cellStatus").value;
+        d.memo = document.getElementById("cellMemo").value;
+        d.levels = getLevels();
+        W.cells[selKey] = d;
+        refreshCell(selKey);
+        updateStatus();
+        saveLS();
+        closeModal("cellModal");
+        showToast("저장됨");
+      }
+
+      function clearCell() {
+        if (!selKey || !confirm("이 셀을 비우시겠습니까?")) return;
+        pushH();
+        delete W.cells[selKey];
+        refreshCell(selKey);
+        updateStatus();
+        saveLS();
+        closeModal("cellModal");
+        showToast("비워짐");
+      }
+
+      // ── Zone management ───────────────────────────────────
+      function addZone() {
+        pushH();
+        zid++;
+        const code = String.fromCharCode(65 + W.zones.length);
+        W.zones.push({
+          id: `z${zid}`,
+          name: "새 구역",
+          code,
+          rows: 3,
+          cols: 3,
+        });
+        renderZones();
+        saveLS();
+      }
+
+      function editZone(id) {
+        const z = W.zones.find((x) => x.id === id);
+        if (!z) return;
+        document.getElementById("zeId").value = id;
+        document.getElementById("zeName").value = z.name;
+        document.getElementById("zeCode").value = z.code;
+        document.getElementById("zeRows").value = z.rows;
+        document.getElementById("zeCols").value = z.cols;
+        document.getElementById("zoneModal").classList.add("show");
+      }
+
+      function saveZoneModal() {
+        const id = document.getElementById("zeId").value;
+        const z = W.zones.find((x) => x.id === id);
+        if (!z) return;
+        pushH();
+        z.name = document.getElementById("zeName").value.trim() || z.name;
+        z.code = document.getElementById("zeCode").value.trim() || z.code;
+        z.rows = Math.max(
+          1,
+          parseInt(document.getElementById("zeRows").value) || z.rows,
+        );
+        z.cols = Math.max(
+          1,
+          parseInt(document.getElementById("zeCols").value) || z.cols,
+        );
+        renderZones();
+        saveLS();
+        closeModal("zoneModal");
+      }
+
+      function deleteZoneModal() {
+        const id = document.getElementById("zeId").value;
+        closeModal("zoneModal");
+        delZone(id);
+      }
+
+      function delZone(id) {
+        const z = W.zones.find((x) => x.id === id);
+        if (!z) return;
+        if (!confirm(`"${z.name}" 구역을 삭제하시겠습니까?`)) return;
+        pushH();
+        W.zones = W.zones.filter((x) => x.id !== id);
+        renderZones();
+        saveLS();
+      }
+
+      function zrow(id, d) {
+        const z = W.zones.find((x) => x.id === id);
+        if (!z || z.rows + d < 1) return;
+        pushH();
+        z.rows += d;
+        renderZones();
+        saveLS();
+      }
+      function zcol(id, d) {
+        const z = W.zones.find((x) => x.id === id);
+        if (!z || z.cols + d < 1) return;
+        pushH();
+        z.cols += d;
+        renderZones();
+        saveLS();
+      }
+
+      // ── Context menu ──────────────────────────────────────
+      function showCtx(e, key) {
+        ctxKey = key;
+        const m = document.getElementById("ctxMenu");
+        m.style.display = "block";
+        let x = e.clientX,
+          y = e.clientY;
+        if (x + 160 > window.innerWidth) x = window.innerWidth - 160;
+        if (y + 200 > window.innerHeight) y = window.innerHeight - 200;
+        m.style.left = x + "px";
+        m.style.top = y + "px";
+      }
+      function hideCtx() {
+        document.getElementById("ctxMenu").style.display = "none";
+      }
+      function ctxEdit() {
+        hideCtx();
+        if (ctxKey) openCellModal(ctxKey);
+      }
+      function ctxCopy() {
+        hideCtx();
+        if (!ctxKey) return;
+        clipboard = JSON.parse(JSON.stringify(W.cells[ctxKey] || {}));
+        showToast("복사됨");
+      }
+      function ctxPaste() {
+        hideCtx();
+        if (!ctxKey || !clipboard) {
+          showToast("붙여넣을 데이터 없음");
+          return;
+        }
+        pushH();
+        W.cells[ctxKey] = JSON.parse(JSON.stringify(clipboard));
+        refreshCell(ctxKey);
+        updateStatus();
+        saveLS();
+        showToast("붙여넣기 완료");
+      }
+      function ctxColor() {
+        hideCtx();
+        const p = document.getElementById("ctxColorPicker");
+        p.value = (W.cells[ctxKey] || {}).bgColor || "#1e2635";
+        p.click();
+      }
+      function applyCtxColor(v) {
+        if (!ctxKey) return;
+        pushH();
+        if (!W.cells[ctxKey]) W.cells[ctxKey] = {};
+        W.cells[ctxKey].bgColor = v;
+        refreshCell(ctxKey);
+        saveLS();
+      }
+      function ctxClear() {
+        hideCtx();
+        if (!ctxKey || !confirm("비우시겠습니까?")) return;
+        pushH();
+        delete W.cells[ctxKey];
+        refreshCell(ctxKey);
+        updateStatus();
+        saveLS();
+        showToast("비워짐");
+      }
+
+      // ── Inline title edit ─────────────────────────────────
+      document
+        .getElementById("titleDisplay")
+        .addEventListener("click", function () {
+          inlineEdit(this, (v) => {
+            W.title = v || W.title;
+            renderTitle();
+            saveLS();
+          });
+        });
+      document
+        .getElementById("floorDisplay")
+        .addEventListener("click", function () {
+          inlineEdit(this, (v) => {
+            const n = parseInt(v);
+            if (!isNaN(n)) W.floor = n;
+            renderTitle();
+            saveLS();
+          });
+        });
+
+      function inlineEdit(el, cb) {
+        const cur = el.textContent;
+        const inp = document.createElement("input");
+        inp.className = "iedit";
+        inp.value = cur;
+        el.style.display = "none";
+        el.parentNode.insertBefore(inp, el);
+        inp.focus();
+        inp.select();
+        const done = () => {
+          cb(inp.value.trim());
+          inp.remove();
+          el.style.display = "";
+        };
+        inp.addEventListener("blur", done);
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") done();
+          if (e.key === "Escape") {
+            inp.remove();
+            el.style.display = "";
+          }
+        });
+      }
+
+      function editModalTitle(el) {
+        inlineEdit(el, (val) => {
+          if (!selKey) return;
+          const parts = val.split(" — ");
+          const prefix = parts[0] || "선반 상세";
+          const d = W.cells[selKey] || {};
+          d.modalTitle = prefix;
+          W.cells[selKey] = d;
+          const kparts = selKey.split("-");
+          const dname =
+            d.name ||
+            (kparts.length >= 3 ? `${kparts[1]}-${kparts[2]}` : selKey);
+          el.textContent = `${prefix} — ${dname}`;
+          saveLS();
+        });
+      }
+
+      // ── Search ────────────────────────────────────────────
+      function doSearch(q) {
+        document
+          .querySelectorAll(".cell")
+          .forEach((el) => el.classList.remove("smatch"));
+        if (!q.trim()) return;
+        const lq = q.toLowerCase();
+        Object.entries(W.cells).forEach(([key, d]) => {
+          const hay = [
+            d.label,
+            d.sku,
+            d.memo,
+            ...(d.levels || []).map((l) => l.itemLabel + " " + l.sku),
+          ]
+            .join(" ")
+            .toLowerCase();
+          if (hay.includes(lq)) {
+            const el = document.getElementById(`cell-${key}`);
+            if (el) el.classList.add("smatch");
+          }
+        });
+      }
+
+      // ── Zoom ──────────────────────────────────────────────
+      function zoom(delta) {
+        zl = Math.min(2, Math.max(0.4, zl + delta));
+        const c = document.getElementById("zonesContainer");
+        c.style.transform = `scale(${zl})`;
+        c.style.transformOrigin = "top left";
+        const pct = Math.round(zl * 100) + "%";
+        document.getElementById("zoomLabel").textContent = pct;
+        document.getElementById("zoomStatus").textContent = pct;
+      }
+
+      // ── Undo/Redo ─────────────────────────────────────────
+      function pushH() {
+        hist = hist.slice(0, hi + 1);
+        hist.push(JSON.stringify(W));
+        hi = hist.length - 1;
+        if (hist.length > 50) {
+          hist.shift();
+          hi--;
+        }
+      }
+      function undo() {
+        if (hi <= 0) {
+          showToast("더 이상 되돌릴 수 없음");
+          return;
+        }
+        hi--;
+        W = JSON.parse(hist[hi]);
+        renderTitle();
+        renderZones();
+      }
+      function redo() {
+        if (hi >= hist.length - 1) {
+          showToast("더 이상 없음");
+          return;
+        }
+        hi++;
+        W = JSON.parse(hist[hi]);
+        renderTitle();
+        renderZones();
+      }
+
+      // ── Save/Load ─────────────────────────────────────────
+      function saveLS() {
+        try {
+          localStorage.setItem("wmapdata", JSON.stringify(W));
+        } catch (e) {}
+      }
+      function loadLS() {
+        try {
+          const r = localStorage.getItem("wmapdata");
+          if (r) {
+            const d = JSON.parse(r);
+            if (d && d.zones) W = d;
+          }
+        } catch (e) {}
+      }
+
+      async function saveAll() {
+        saveLS();
+        try {
+          const r = await fetch(`${API}/api/map-layout`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(W),
+          });
+          if (r.ok) {
+            document.getElementById("lastSaved").textContent =
+              new Date().toLocaleTimeString("ko-KR");
+            showToast("서버에 저장 완료");
+          } else showToast("서버 저장 실패 (로컬에는 저장됨)");
+        } catch {
+          showToast("서버 저장 실패 (로컬에는 저장됨)");
+        }
+      }
+
+      async function loadFromServer() {
+        try {
+          const r = await fetch(`${API}/api/map-layout`);
+          if (r.ok) {
+            const d = await r.json();
+            if (d && d.zones) {
+              W = d;
+              renderTitle();
+              renderZones();
+            }
+          }
+        } catch {}
+        renderZones();
+      }
+
+      function exportJSON() {
+        const blob = new Blob([JSON.stringify(W, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `warehouse-map-${Date.now()}.json`;
+        a.click();
+      }
+
+      function showImport() {
+        document.getElementById("importText").value = "";
+        document.getElementById("importModal").classList.add("show");
+      }
+
+      function doImport() {
+        try {
+          const d = JSON.parse(document.getElementById("importText").value);
+          if (!d.zones) {
+            showToast("유효하지 않은 JSON");
+            return;
+          }
+          pushH();
+          W = d;
+          renderTitle();
+          renderZones();
+          saveLS();
+          closeModal("importModal");
+          showToast("불러오기 완료");
+        } catch {
+          showToast("JSON 파싱 실패");
+        }
+      }
+
+      async function checkServer() {
+        const dot = document.getElementById("sdot"),
+          txt = document.getElementById("sstatus");
+        try {
+          const r = await fetch(`${API}/health`);
+          if (r.ok) {
+            dot.className = "dot dg";
+            txt.textContent = "연결됨";
+          } else {
+            dot.className = "dot dy";
+            txt.textContent = "응답 오류";
+          }
+        } catch {
+          dot.className = "dot dr";
+          txt.textContent = "연결 실패";
+        }
+      }
+
+      function updateStatus() {
+        let total = 0,
+          used = 0;
+        W.zones.forEach((z) => (total += z.rows * z.cols));
+        used = Object.values(W.cells).filter((d) => d && d.label).length;
+        document.getElementById("totalCells").textContent = total;
+        document.getElementById("usedCells").textContent = used;
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(t._t);
+        t._t = setTimeout(() => (t.style.display = "none"), 2200);
+      }
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function f2url(f) {
+        return new Promise((res) => {
+          const r = new FileReader();
+          r.onload = (e) => res(e.target.result);
+          r.readAsDataURL(f);
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeModal("cellModal");
+          closeModal("zoneModal");
+          closeModal("importModal");
+          hideCtx();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+          e.preventDefault();
+          undo();
+        }
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          (e.key === "y" || (e.shiftKey && e.key === "z"))
+        ) {
+          e.preventDefault();
+          redo();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          saveAll();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+          e.preventDefault();
+          document.getElementById("searchBox").focus();
+        }
+      });
+      document.addEventListener("click", (e) => {
+        if (!document.getElementById("ctxMenu").contains(e.target)) hideCtx();
+      });
+
+      init();
+    </script>
+  </body>
+</html>

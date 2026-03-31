@@ -19,6 +19,7 @@ import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.network.RetrofitClient
+import com.scan.warehouse.network.UpdateManager
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
@@ -47,6 +48,13 @@ class MainActivity : AppCompatActivity() {
         checkServerOnce()
 
         binding.etSearch.requestFocus()
+
+        lifecycleScope.launch {
+            val update = UpdateManager.checkUpdate(this@MainActivity)
+            if (update != null) {
+                UpdateManager.showUpdateDialog(this@MainActivity, update)
+            }
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {

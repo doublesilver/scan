@@ -1,6 +1,8 @@
 package com.scan.warehouse.network
 
+import com.scan.warehouse.model.AppVersion
 import com.scan.warehouse.model.BoxResponse
+import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.PrintRequest
@@ -44,6 +46,9 @@ interface ApiService {
     @GET("health")
     suspend fun healthCheck(): ResponseBody
 
+    @GET("api/app-version")
+    suspend fun getAppVersion(): AppVersion
+
     @GET("api/box/{qr_code}")
     suspend fun getBox(@Path("qr_code") qrCode: String): BoxResponse
 
@@ -57,10 +62,30 @@ interface ApiService {
     suspend fun deleteShelfLabel(@Path("shelfId") shelfId: Int): ResponseBody
 
     @Multipart
-    @POST("api/shelf/{shelfId}/photo")
-    suspend fun uploadShelfPhoto(@Path("shelfId") shelfId: Int, @Part file: MultipartBody.Part): ShelfItem
+    @POST("api/map-layout/cell/{cellKey}/photo")
+    suspend fun uploadCellPhoto(@Path("cellKey") cellKey: String, @Part file: MultipartBody.Part): Map<String, String>
 
-    @DELETE("api/shelf/photo/{photoId}")
-    suspend fun deleteShelfPhoto(@Path("photoId") photoId: Int): ResponseBody
+    @DELETE("api/map-layout/cell/{cellKey}/photo")
+    suspend fun deleteCellPhoto(@Path("cellKey") cellKey: String): Map<String, String>
+
+    @Multipart
+    @POST("api/map-layout/cell/{cellKey}/level/{levelIndex}/photo")
+    suspend fun uploadLevelPhoto(
+        @Path("cellKey") cellKey: String,
+        @Path("levelIndex") levelIndex: Int,
+        @Part file: MultipartBody.Part
+    ): Map<String, String>
+
+    @DELETE("api/map-layout/cell/{cellKey}/level/{levelIndex}/photo")
+    suspend fun deleteLevelPhoto(
+        @Path("cellKey") cellKey: String,
+        @Path("levelIndex") levelIndex: Int
+    ): Map<String, String>
+
+    @GET("api/map-layout")
+    suspend fun getMapLayout(): MapLayout
+
+    @PATCH("api/map-layout/cell/{cellKey}")
+    suspend fun updateMapCell(@Path("cellKey") cellKey: String, @Body data: Map<String, @JvmSuppressWildcards Any>): Map<String, String>
 
 }

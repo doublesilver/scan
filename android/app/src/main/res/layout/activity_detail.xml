@@ -235,6 +235,22 @@
                 app:iconGravity="top"
                 app:iconTint="@android:color/white" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBarEdit"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="편집"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                app:icon="@drawable/ic_map"
+                app:iconGravity="top"
+                app:iconTint="@android:color/white"
+                android:visibility="gone" />
+
         </LinearLayout>
 
     </LinearLayout>

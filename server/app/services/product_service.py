@@ -105,6 +105,7 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
                 for r in rows
             ]
 
+    rows = []
     try:
         safe_query = '"' + query.replace('"', '""') + '"'
         cursor = await db.execute(
@@ -119,6 +120,8 @@ async def search_products(db, query: str, limit: int) -> list[SearchItem]:
         rows = await cursor.fetchall()
     except Exception as e:
         logger.warning("FTS5 검색 실패, LIKE 폴백: %s", e)
+
+    if not rows:
         pattern = f"%{query}%"
         cursor = await db.execute(
             "SELECT sku_id, product_name, category, brand, "

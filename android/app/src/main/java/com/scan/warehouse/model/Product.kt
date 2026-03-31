@@ -84,7 +84,8 @@ data class ShelfItem(
     @SerializedName("shelf_number") val shelfNumber: Int,
     @SerializedName("label") val label: String? = null,
     @SerializedName("photo_path") val photoPath: String? = null,
-    @SerializedName("photo_url") val photoUrl: String? = null
+    @SerializedName("photo_url") val photoUrl: String? = null,
+    @SerializedName("cell_key") val cellKey: String? = null
 )
 
 data class ShelfListResponse(
@@ -93,4 +94,40 @@ data class ShelfListResponse(
     @SerializedName("shelves") val shelves: List<ShelfItem>
 )
 
+data class AppVersion(
+    @SerializedName("versionCode") val versionCode: Int,
+    @SerializedName("versionName") val versionName: String,
+    @SerializedName("downloadUrl") val downloadUrl: String,
+    @SerializedName("releaseNotes") val releaseNotes: String,
+    @SerializedName("forceUpdate") val forceUpdate: Boolean
+)
 
+data class MapZone(
+    @SerializedName("code") val code: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("rows") val rows: Int,
+    @SerializedName("cols") val cols: Int
+)
+
+data class MapLevel(
+    @SerializedName("index") val index: Int = 0,
+    @SerializedName("label") val label: String = "",
+    @SerializedName("itemLabel") val itemLabel: String? = null,
+    @SerializedName("sku") val sku: String? = null,
+    @SerializedName("photo") val photo: String? = null
+)
+
+data class MapCell(
+    @SerializedName("name") val name: String? = null,
+    @SerializedName("label") val label: String? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("bgColor") val bgColor: String? = null,
+    @SerializedName("levels") val levels: List<MapLevel>? = null
+)
+
+data class MapLayout(
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("floor") val floor: Int = 5,
+    @SerializedName("zones") val zones: List<MapZone> = emptyList(),
+    @SerializedName("cells") val cells: Map<String, MapCell> = emptyMap()
+)

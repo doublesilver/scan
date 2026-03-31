@@ -12,7 +12,10 @@ import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import coil.load
+import com.scan.warehouse.repository.ProductRepository
+import kotlinx.coroutines.launch
 import com.google.gson.Gson
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxDetailBinding
@@ -75,12 +78,22 @@ class BoxDetailActivity : AppCompatActivity() {
             addSkuTreeItem(member, index == box.members.size - 1, index)
         }
 
+        binding.bottomBar.visibility = View.VISIBLE
+        binding.btnBarEdit.visibility = View.VISIBLE
+        binding.btnBarEdit.setOnClickListener {
+            startActivity(MapEditorActivity.createIntent(this))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+
         if (box.location != null) {
-            binding.bottomBar.visibility = View.VISIBLE
+            binding.btnBarMap.visibility = View.VISIBLE
             binding.btnBarMap.setOnClickListener {
-                WarehouseMapDialog.show(this, box.location) { floor, zone ->
-                    startActivity(ShelfListActivity.createIntent(this, floor, zone, box.location))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                lifecycleScope.launch {
+                    val layout = ProductRepository(this@BoxDetailActivity).getMapLayout().getOrNull()
+                    WarehouseMapDialog.show(this@BoxDetailActivity, box.location, layout) { floor, zone, _, _, cellKey ->
+                        startActivity(CellDetailActivity.createIntent(this@BoxDetailActivity, floor, zone, cellKey))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    }
                 }
             }
         }

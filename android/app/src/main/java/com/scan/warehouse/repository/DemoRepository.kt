@@ -5,6 +5,9 @@ import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.FamilyMember
 import com.scan.warehouse.model.ImageItem
+import com.scan.warehouse.model.MapCell
+import com.scan.warehouse.model.MapLayout
+import com.scan.warehouse.model.MapZone
 import com.scan.warehouse.model.PrintResponse
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchItem
@@ -136,6 +139,11 @@ override suspend fun printLabel(barcode: String, skuId: String, productName: Str
         return Result.success(ShelfListResponse(floor, zone, shelves))
     }
 
+    override suspend fun updateMapCell(cellKey: String, data: Map<String, Any>): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
     override suspend fun updateShelfLabel(shelfId: Int, label: String): Result<ShelfItem> {
         delay(300)
         return Result.success(ShelfItem(shelfId, 5, "A", 1, label, null, null))
@@ -146,14 +154,31 @@ override suspend fun printLabel(barcode: String, skuId: String, productName: Str
         return Result.success(Unit)
     }
 
-    override suspend fun uploadShelfPhoto(shelfId: Int, filePart: MultipartBody.Part): Result<ShelfItem> {
+    override suspend fun uploadCellPhoto(cellKey: String, filePart: MultipartBody.Part): Result<String> {
         delay(500)
-        return Result.success(ShelfItem(shelfId, 5, "A", 1, null, null, null))
+        return Result.success("/static/photos/demo.jpg")
     }
 
-    override suspend fun deleteShelfPhoto(photoId: Int): Result<Unit> {
+    override suspend fun deleteCellPhoto(cellKey: String): Result<Unit> {
         delay(300)
         return Result.success(Unit)
+    }
+
+    override suspend fun getMapLayout(): Result<MapLayout> {
+        return Result.success(MapLayout(
+            title = "창고 도면",
+            floor = 5,
+            zones = listOf(
+                MapZone("A", "501호", 3, 4),
+                MapZone("B", "포장다이", 3, 2),
+                MapZone("C", "502호", 3, 3)
+            ),
+            cells = mapOf(
+                "A-1-1" to MapCell(name = "1-1", label = "스트랩 보관", status = "used"),
+                "A-1-2" to MapCell(name = "1-2", label = "케이스 보관", status = "used"),
+                "B-1-1" to MapCell(name = "1-1", label = "포장대", status = "used")
+            )
+        ))
     }
 
     override suspend fun scanBox(qrCode: String): Result<BoxResponse> {

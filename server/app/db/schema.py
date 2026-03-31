@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -167,6 +167,13 @@ MIGRATIONS = {
         # Seed: 5층 D구역 2개 선반
         "INSERT INTO shelf (floor, zone, shelf_number, label) VALUES (5, 'D', 1, 'D-01 입고 대기')",
         "INSERT INTO shelf (floor, zone, shelf_number, label) VALUES (5, 'D', 2, 'D-02 출고 대기')",
+    ],
+    8: [
+        """CREATE TABLE IF NOT EXISTS map_layout (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            data TEXT NOT NULL,
+            updated_at TEXT DEFAULT (datetime('now'))
+        )""",
     ],
     4: [
         "ALTER TABLE product ADD COLUMN coupang_url TEXT DEFAULT NULL",

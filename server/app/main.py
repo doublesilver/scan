@@ -6,6 +6,8 @@ import httpx
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 from app.config import settings
@@ -56,6 +58,20 @@ app.add_middleware(
 
 
 app.include_router(router)
+
+_apk_dir = os.path.join(os.path.dirname(__file__), "..", "apk")
+os.makedirs(_apk_dir, exist_ok=True)
+if os.path.exists(_apk_dir):
+    app.mount("/apk", StaticFiles(directory=_apk_dir), name="apk")
+
+_static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.exists(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+
+@app.get("/admin/map-editor", include_in_schema=False)
+async def map_editor():
+    return FileResponse(os.path.join(_static_dir, "map-editor.html"))
 
 
 @app.get("/health")

@@ -157,19 +157,25 @@ class DetailActivity : AppCompatActivity() {
         if (data.location != null) {
             binding.layoutLocation.visibility = View.VISIBLE
             binding.tvDetailLocation.text = data.location
-            binding.btnBarMap.visibility = View.VISIBLE
-            binding.btnBarMap.setOnClickListener {
-                WarehouseMapDialog.show(this, data.location) { floor, zone ->
-                    startActivity(ShelfListActivity.createIntent(this, floor, zone, data.location))
+        }
+
+        binding.btnBarMap.visibility = View.VISIBLE
+        binding.btnBarMap.setOnClickListener {
+            lifecycleScope.launch {
+                val layout = ProductRepository(this@DetailActivity).getMapLayout().getOrNull()
+                WarehouseMapDialog.show(this@DetailActivity, data.location, layout) { floor, zone, _, _, cellKey ->
+                    startActivity(CellDetailActivity.createIntent(this@DetailActivity, floor, zone, cellKey))
                     overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 }
             }
         }
 
-        if (data.coupangUrl != null) {
-            binding.btnBarBuy.visibility = View.VISIBLE
-            binding.btnBarBuy.setOnClickListener {
+        binding.btnBarBuy.visibility = View.VISIBLE
+        binding.btnBarBuy.setOnClickListener {
+            if (data.coupangUrl != null) {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(data.coupangUrl)))
+            } else {
+                Toast.makeText(this, "구매 링크가 없습니다", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -193,6 +199,12 @@ class DetailActivity : AppCompatActivity() {
         }
 
         binding.btnBarPrint.setOnClickListener { showQuantityDialog(data) }
+
+        binding.btnBarEdit.visibility = View.VISIBLE
+        binding.btnBarEdit.setOnClickListener {
+            startActivity(MapEditorActivity.createIntent(this))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
 
         if (thumbnailUrl != null && realImageUrl != null) {
             binding.tvImageTypeChip.visibility = View.VISIBLE

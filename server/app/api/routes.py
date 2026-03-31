@@ -40,6 +40,9 @@ from app.services.shelf_service import (
     add_shelf_photo as _add_shelf_photo,
     delete_shelf_photo as _delete_shelf_photo,
 )
+from app.services.map_layout_service import get_layout as _get_layout
+from app.services.map_layout_service import get_or_init_layout as _get_or_init_layout
+from app.services.map_layout_service import save_layout_only as _save_layout_only
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -193,7 +196,32 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/shelves/{floor}/{zone}", response_model=ShelfListResponse)
 async def get_shelves(floor: int, zone: str) -> ShelfListResponse:
     db = await get_read_db()
-    shelves = await _get_shelves(db, floor, zone)
+    layout = await _get_or_init_layout(db)
+    zone_def = next((z for z in layout.get("zones", []) if z["code"] == zone), None)
+    if not zone_def:
+        return ShelfListResponse(floor=floor, zone=zone, shelves=[])
+
+    from app.models.schemas import ShelfItem as ShelfItemSchema
+    shelves = []
+    for r in range(1, zone_def["rows"] + 1):
+        for c in range(1, zone_def["cols"] + 1):
+            cell_key = f"{zone}-{r}-{c}"
+            cell_key_padded = f"{zone}-{str(r).zfill(2)}-{str(c).zfill(2)}"
+            cells = layout.get("cells", {})
+            cell = cells.get(cell_key) or cells.get(cell_key_padded) or {}
+            shelf_num = (r - 1) * zone_def["cols"] + c
+            levels = cell.get("levels", [])
+            photo_url = levels[0].get("photo") if levels else None
+            shelves.append(ShelfItemSchema(
+                id=shelf_num,
+                floor=floor,
+                zone=zone,
+                shelf_number=shelf_num,
+                label=cell.get("label"),
+                photo_path=None,
+                photo_url=photo_url,
+                cell_key=cell_key,
+            ))
     return ShelfListResponse(floor=floor, zone=zone, shelves=shelves)
 
 
@@ -255,4 +283,99 @@ async def delete_shelf_photo(photo_id: int, request: Request):
     http_client = request.app.state.http_client
     await delete_from_webdav(http_client, file_path)
 
+    return {"status": "ok"}
+
+
+@router.get("/app-version")
+async def app_version():
+    import os
+    apk_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'apk')
+    return {
+        "versionCode": 45,
+        "versionName": "3.9.2",
+        "downloadUrl": "/apk/app-live-debug.apk",
+        "releaseNotes": "최신 버전",
+        "forceUpdate": False
+    }
+
+
+@router.get("/map-layout")
+async def get_map_layout():
+    db = await get_read_db()
+    return await _get_or_init_layout(db)
+
+
+@router.post("/map-layout")
+async def save_map_layout(request: Request):
+    body = await request.json()
+    db = await get_db()
+    await _save_layout_only(db, body)
+    return {"status": "ok", "message": "저장 완료"}
+
+
+@router.post("/map-layout/cell/{cell_key}/photo")
+async def upload_cell_photo(cell_key: str, file: UploadFile):
+    import os
+    db = await get_db()
+    layout = await _get_or_init_layout(db)
+
+    photo_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'photos')
+    os.makedirs(photo_dir, exist_ok=True)
+
+    filename = f"{cell_key.replace('-', '_')}_{int(time.time())}.jpg"
+    filepath = os.path.join(photo_dir, filename)
+
+    content = await file.read()
+    with open(filepath, 'wb') as f:
+        f.write(content)
+
+    photo_url = f"/static/photos/{filename}"
+
+    if "cells" not in layout:
+        layout["cells"] = {}
+    cell = layout["cells"].get(cell_key, {})
+    levels = cell.get("levels", [])
+    if not levels:
+        levels = [{"label": "1층", "photo": photo_url, "itemLabel": "", "sku": ""}]
+    else:
+        levels[0]["photo"] = photo_url
+    cell["levels"] = levels
+    layout["cells"][cell_key] = cell
+
+    await _save_layout_only(db, layout)
+    return {"status": "ok", "photo_url": photo_url}
+
+
+@router.delete("/map-layout/cell/{cell_key}/photo")
+async def delete_cell_photo(cell_key: str):
+    import os
+    db = await get_db()
+    layout = await _get_or_init_layout(db)
+
+    cell = layout.get("cells", {}).get(cell_key, {})
+    levels = cell.get("levels", [])
+
+    for level in levels:
+        photo = level.get("photo", "")
+        if photo:
+            filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            level["photo"] = ""
+
+    cell["levels"] = levels
+    layout["cells"][cell_key] = cell
+    await _save_layout_only(db, layout)
+    return {"status": "ok"}
+
+
+@router.patch("/map-layout/cell/{cell_key}")
+async def update_map_cell(cell_key: str, request: Request):
+    body = await request.json()
+    db = await get_db()
+    layout = await _get_or_init_layout(db)
+    if "cells" not in layout:
+        layout["cells"] = {}
+    layout["cells"][cell_key] = {**layout["cells"].get(cell_key, {}), **body}
+    await _save_layout_only(db, layout)
     return {"status": "ok"}

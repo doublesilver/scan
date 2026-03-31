@@ -9,13 +9,29 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.scan.warehouse.R
+import com.scan.warehouse.model.MapLayout
+import com.scan.warehouse.model.MapZone
 
 object WarehouseMapDialog {
 
-    fun show(context: Context, location: String?, onZoneClick: ((floor: Int, zone: String) -> Unit)? = null) {
+    private val FALLBACK_ZONES = listOf(
+        MapZone("A", "501호", 3, 4),
+        MapZone("B", "포장다이", 3, 2),
+        MapZone("C", "502호", 3, 3),
+    )
+
+    fun show(
+        context: Context,
+        location: String?,
+        mapLayout: MapLayout? = null,
+        onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)? = null
+    ) {
         val parsed = parseLocation(location)
         val density = context.resources.displayMetrics.density
         val pad = (16 * density).toInt()
+
+        val zones = if (mapLayout != null && mapLayout.zones.isNotEmpty()) mapLayout.zones else FALLBACK_ZONES
+        val floor = mapLayout?.floor ?: parsed.floor
 
         val layout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -23,31 +39,28 @@ object WarehouseMapDialog {
         }
 
         layout.addView(TextView(context).apply {
-            text = "${parsed.floor}층 창고 도면"
+            text = "${floor}층 창고 도면"
             textSize = 18f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(ContextCompat.getColor(context, R.color.on_surface))
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, (16 * density).toInt())
+            setPadding(0, 0, 0, (12 * density).toInt())
         })
-
-        val gridContainer = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
 
         var dialog: AlertDialog? = null
 
-        val leftGrid = createGrid(context, listOf("A", "B", "C"), 3, parsed, parsed.floor, onZoneClick) { dialog?.dismiss() }
-        val spacer = LinearLayout(context).apply {
-            layoutParams = LinearLayout.LayoutParams((16 * density).toInt(), 1)
-        }
-        val rightGrid = createGrid(context, listOf("D", "E", "F"), 3, parsed, parsed.floor, onZoneClick) { dialog?.dismiss() }
+        for (zone in zones) {
+            layout.addView(TextView(context).apply {
+                text = "${zone.name} (${zone.code}구역)"
+                textSize = 13f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
+                setPadding(0, (8 * density).toInt(), 0, (4 * density).toInt())
+            })
 
-        gridContainer.addView(leftGrid)
-        gridContainer.addView(spacer)
-        gridContainer.addView(rightGrid)
-        layout.addView(gridContainer)
+            val grid = createGrid(context, zone, mapLayout, parsed, floor, onCellClick) { dialog?.dismiss() }
+            layout.addView(grid)
+        }
 
         if (location != null) {
             layout.addView(TextView(context).apply {
@@ -56,12 +69,14 @@ object WarehouseMapDialog {
                 setTextColor(ContextCompat.getColor(context, R.color.primary))
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setPadding(0, (16 * density).toInt(), 0, 0)
+                setPadding(0, (12 * density).toInt(), 0, 0)
             })
         }
 
+        val scrollView = android.widget.ScrollView(context).apply { addView(layout) }
+
         dialog = AlertDialog.Builder(context)
-            .setView(layout)
+            .setView(scrollView)
             .setPositiveButton("닫기", null)
             .show()
     }
@@ -80,11 +95,11 @@ object WarehouseMapDialog {
 
     private fun createGrid(
         context: Context,
-        zones: List<String>,
-        cols: Int,
+        zone: MapZone,
+        mapLayout: MapLayout?,
         current: ParsedLocation,
         floor: Int,
-        onZoneClick: ((floor: Int, zone: String) -> Unit)?,
+        onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)?,
         onDismiss: () -> Unit
     ): LinearLayout {
         val density = context.resources.displayMetrics.density
@@ -95,41 +110,57 @@ object WarehouseMapDialog {
             orientation = LinearLayout.VERTICAL
         }
 
-        for (zone in zones) {
-            val row = LinearLayout(context).apply {
+        for (row in 1..zone.rows) {
+            val rowLayout = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
             }
-            for (col in 1..cols) {
-                val shelf = String.format("%02d", col)
-                val isCurrentCell = zone == current.zone && shelf == current.shelf
+            for (col in 1..zone.cols) {
+                val cellNum = (row - 1) * zone.cols + col
+                val shelf = String.format("%02d", cellNum)
+                val isCurrentCell = zone.code == current.zone && shelf == current.shelf
+
+                val cellKey = "${zone.code}-$row-$col"
+                val cellData = mapLayout?.cells?.get(cellKey)
+                val cellText = cellData?.name ?: "$row-$col"
 
                 val cell = TextView(context).apply {
-                    text = "$zone-$shelf"
+                    text = cellText
                     textSize = 10f
                     gravity = Gravity.CENTER
                     typeface = if (isCurrentCell) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                     layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
                         setMargins(margin, margin, margin, margin)
                     }
-                    if (isCurrentCell) {
-                        setBackgroundColor(ContextCompat.getColor(context, R.color.primary))
-                        setTextColor(Color.WHITE)
-                    } else {
-                        setBackgroundColor(ContextCompat.getColor(context, R.color.surface_container_high))
-                        setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
+                    when {
+                        isCurrentCell -> {
+                            setBackgroundColor(ContextCompat.getColor(context, R.color.primary))
+                            setTextColor(Color.WHITE)
+                        }
+                        cellData?.status == "full" -> {
+                            setBackgroundColor(Color.parseColor("#FFCDD2"))
+                            setTextColor(Color.parseColor("#B71C1C"))
+                        }
+                        cellData?.status == "used" -> {
+                            setBackgroundColor(Color.parseColor("#C8E6C9"))
+                            setTextColor(Color.parseColor("#1B5E20"))
+                        }
+                        else -> {
+                            setBackgroundColor(ContextCompat.getColor(context, R.color.surface_container_high))
+                            setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
+                        }
                     }
-                    if (onZoneClick != null) {
+                    if (onCellClick != null) {
                         isClickable = true
                         isFocusable = true
                         setOnClickListener {
-                            onZoneClick.invoke(floor, zone)
+                            onCellClick.invoke(floor, zone.code, row, col, cellKey)
                             onDismiss()
                         }
                     }
                 }
-                row.addView(cell)
+                rowLayout.addView(cell)
             }
-            grid.addView(row)
+            grid.addView(rowLayout)
         }
         return grid
     }
