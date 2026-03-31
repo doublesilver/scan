@@ -291,8 +291,8 @@ async def app_version():
     import os
     apk_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'apk')
     return {
-        "versionCode": 45,
-        "versionName": "3.9.2",
+        "versionCode": 46,
+        "versionName": "4.0.0",
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "최신 버전",
         "forceUpdate": False

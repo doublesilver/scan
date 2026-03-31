@@ -107,7 +107,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBarMap"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent"
@@ -122,7 +122,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBarEdit"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent"
