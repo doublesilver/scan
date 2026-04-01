@@ -683,24 +683,24 @@
       }
       .m-grid {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 4px;
         padding: 4px 0;
       }
       .m-grid .cell {
         width: 100% !important;
-        height: 60px !important;
-        flex-direction: row !important;
-        justify-content: flex-start !important;
-        padding: 8px 12px !important;
-        gap: 12px;
-        border-radius: 8px;
+        height: auto !important;
+        min-height: 70px;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 6px 4px !important;
+        border-radius: 6px;
+        text-align: center;
       }
       .m-grid .cell .cid {
         position: static !important;
-        font-size: 14px !important;
+        font-size: 12px !important;
         font-weight: bold;
-        min-width: 44px;
         color: #90a4ae;
       }
       .m-grid .cell .cst {
@@ -708,8 +708,16 @@
         flex-shrink: 0;
       }
       .m-grid .cell .clabel {
-        font-size: 14px !important;
+        font-size: 11px !important;
         max-width: unset !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+      }
+      .m-grid .cell .cphoto {
+        max-height: 30px;
+        border-radius: 3px;
       }
       .m-content {
         padding: 4px 0;
@@ -977,10 +985,6 @@
           </div>
         </div>
         <div class="fg">
-          <label>SKU</label
-          ><input type="text" id="cellSku" placeholder="상품 SKU" />
-        </div>
-        <div class="fg">
           <label>상태</label>
           <select id="cellStatus">
             <option value="empty">빈 선반</option>
@@ -1161,10 +1165,13 @@
       function mOpenZone(zoneIdx) {
         mobileZone = zoneIdx;
         const z = W.zones[zoneIdx];
-        document.getElementById("mZoneTitle").textContent =
-          `${z.name} (${z.code}구역)`;
+        const titleEl = document.getElementById("mZoneTitle");
+        titleEl.textContent = `${z.name} (${z.code}구역)`;
+        titleEl.style.cursor = "pointer";
+        titleEl.onclick = () => editZone(z.id);
         const grid = document.getElementById("mGrid");
         grid.innerHTML = "";
+        grid.style.gridTemplateColumns = `repeat(${z.cols}, 1fr)`;
         for (let r = 1; r <= z.rows; r++) {
           for (let c = 1; c <= z.cols; c++) {
             const key = ckey(z.code, r, c);
@@ -1381,7 +1388,7 @@
               ? `${parts[1]}-${parts[2]}`
               : key;
         el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
-    <span class="clabel">${d.label || "빈 선반"}</span>${d.sku ? `<span class="csku">${d.sku}</span>` : ""}`;
+    <span class="clabel">${d.label || "빈 선반"}</span>`;
       }
 
       function refreshCell(key) {
@@ -1408,7 +1415,6 @@
         document.getElementById("cellName").value = d.name || dname;
         document.getElementById("cellLabel").value = d.label || "";
         document.getElementById("cellColor").value = d.bgColor || "#1e2635";
-        document.getElementById("cellSku").value = d.sku || "";
         document.getElementById("cellStatus").value = d.status || "empty";
         document.getElementById("cellMemo").value = d.memo || "";
         renderLevels(
@@ -1568,7 +1574,6 @@
         d.name = document.getElementById("cellName").value.trim();
         d.label = document.getElementById("cellLabel").value.trim();
         d.bgColor = document.getElementById("cellColor").value;
-        d.sku = document.getElementById("cellSku").value.trim();
         d.status = document.getElementById("cellStatus").value;
         d.memo = document.getElementById("cellMemo").value;
         d.levels = getLevels();

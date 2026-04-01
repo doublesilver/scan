@@ -2,25 +2,30 @@ package com.scan.warehouse.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.scan.warehouse.repository.ProductRepository
-import kotlinx.coroutines.launch
 import com.google.gson.Gson
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxDetailBinding
 import com.scan.warehouse.model.BoxResponse
-import com.scan.warehouse.model.FamilyMember
+import com.scan.warehouse.model.MapLayout
+import com.scan.warehouse.repository.ProductRepository
+import kotlinx.coroutines.launch
 
 class BoxDetailActivity : AppCompatActivity() {
 
@@ -35,8 +40,8 @@ class BoxDetailActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityBoxDetailBinding
-    private var memberCount = 0
-    private var isSkuExpanded = true
+    private lateinit var repository: ProductRepository
+    private var mapLayout: MapLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,123 +50,251 @@ class BoxDetailActivity : AppCompatActivity() {
 
         val json = intent.getStringExtra(EXTRA_BOX_DATA) ?: run { finish(); return }
         val box = Gson().fromJson(json, BoxResponse::class.java)
+        repository = ProductRepository(this)
 
         binding.btnBack.setOnClickListener {
             finish()
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
         }
 
-        if (box.productMasterImage != null) {
-            binding.ivBoxImage.load(box.productMasterImage) {
-                crossfade(true)
-                placeholder(R.drawable.ic_placeholder)
-                error(R.drawable.ic_placeholder)
+        binding.tvProductMasterName.text = box.productMasterName
+        setupLocationTags(box)
+        setupOptionImages(box)
+        setupLinkButtons(box)
+        setupBottomBar(box)
+        loadMapAndPhotos(box)
+    }
+
+    private fun setupLocationTags(box: BoxResponse) {
+        val loc = box.location ?: return
+        val parts = loc.replace("층", "").split("-").map { it.trim() }
+
+        if (parts.size >= 2) {
+            val zone = parts[1]
+            binding.tvZoneTag.text = "${zone}구역"
+        }
+        if (parts.size >= 3) {
+            binding.tvShelfTag.text = "${parts[2]}번째 줄"
+        }
+    }
+
+    private fun loadMapAndPhotos(box: BoxResponse) {
+        lifecycleScope.launch {
+            repository.getMapLayout().onSuccess { layout ->
+                mapLayout = layout
+                renderInlineMap(layout, box.location)
+                loadCellPhotos(layout, box.location)
+            }.onFailure {
+                binding.layoutInlineMap.addView(TextView(this@BoxDetailActivity).apply {
+                    text = "도면 로드 실패"
+                    setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface_variant))
+                    gravity = Gravity.CENTER
+                })
             }
         }
+    }
 
-        binding.tvProductMasterName.text = box.productMasterName
-        binding.tvBoxName.text = box.boxName
-        binding.tvBoxLocation.text = box.location ?: "-"
+    private fun renderInlineMap(layout: MapLayout, location: String?) {
+        binding.layoutInlineMap.removeAllViews()
+        val density = resources.displayMetrics.density
 
-        memberCount = box.members.size
-        isSkuExpanded = memberCount <= 4
-        binding.layoutSkuTree.visibility = if (isSkuExpanded) View.VISIBLE else View.GONE
-        updateSkuHeaderIcon(isSkuExpanded)
+        val parsedZone = parseLocationZone(location)
+        val parsedShelf = parseLocationShelf(location)
 
-        binding.tvSkuHeader.setOnClickListener {
-            isSkuExpanded = !isSkuExpanded
-            binding.layoutSkuTree.visibility = if (isSkuExpanded) View.VISIBLE else View.GONE
-            updateSkuHeaderIcon(isSkuExpanded)
+        val zones = layout.zones.ifEmpty { return }
+
+        for (zone in zones) {
+            val zoneLabel = TextView(this).apply {
+                text = zone.name
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            }
+            binding.layoutInlineMap.addView(zoneLabel)
+
+            val grid = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                    bottomMargin = (4 * density).toInt()
+                }
+            }
+
+            for (r in 1..zone.rows) {
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                }
+
+                for (c in 1..zone.cols) {
+                    val cellKey = "${zone.code}-$r-$c"
+                    val cell = layout.cells[cellKey]
+                    val cellNum = (r - 1) * zone.cols + c
+                    val isHighlight = zone.code == parsedZone && cellNum.toString() == parsedShelf
+
+                    val cellView = TextView(this).apply {
+                        text = "$r-$c"
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
+                        gravity = Gravity.CENTER
+                        setTextColor(Color.WHITE)
+                        val bgColor = if (isHighlight) "#FFD700"
+                        else if (cell?.status == "used") "#2e7d32"
+                        else "#45474c"
+                        setBackgroundColor(Color.parseColor(bgColor))
+                        if (isHighlight) setTextColor(Color.BLACK)
+                        val size = (22 * density).toInt()
+                        val margin = (1 * density).toInt()
+                        layoutParams = LinearLayout.LayoutParams(0, size, 1f).apply {
+                            setMargins(margin, margin, margin, margin)
+                        }
+                        setOnClickListener {
+                            startActivity(CellDetailActivity.createIntent(
+                                this@BoxDetailActivity,
+                                layout.floor,
+                                zone.code,
+                                cellKey
+                            ))
+                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        }
+                    }
+                    row.addView(cellView)
+                }
+                grid.addView(row)
+            }
+            binding.layoutInlineMap.addView(grid)
         }
 
-        box.members.forEachIndexed { index, member ->
-            addSkuTreeItem(member, index == box.members.size - 1, index)
+        binding.blockMap.setOnClickListener {
+            val loc = mapLayout?.let { layout ->
+                WarehouseMapDialog.show(this, location, layout) { floor, zoneCode, _, _, cellKey ->
+                    startActivity(CellDetailActivity.createIntent(this, floor, zoneCode, cellKey))
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                }
+            }
         }
+    }
 
-        binding.bottomBar.visibility = View.VISIBLE
-        binding.btnBarEdit.visibility = View.VISIBLE
-        binding.btnBarEdit.setOnClickListener {
-            startActivity(MapEditorActivity.createIntent(this))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        }
+    private fun loadCellPhotos(layout: MapLayout, location: String?) {
+        val parsedZone = parseLocationZone(location) ?: return
+        val parsedShelf = parseLocationShelf(location) ?: return
 
-        if (box.location != null) {
-            binding.btnBarMap.visibility = View.VISIBLE
-            binding.btnBarMap.setOnClickListener {
-                lifecycleScope.launch {
-                    val layout = ProductRepository(this@BoxDetailActivity).getMapLayout().getOrNull()
-                    WarehouseMapDialog.show(this@BoxDetailActivity, box.location, layout) { floor, zone, _, _, cellKey ->
-                        startActivity(CellDetailActivity.createIntent(this@BoxDetailActivity, floor, zone, cellKey))
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        val zone = layout.zones.find { it.code == parsedZone } ?: return
+
+        for (r in 1..zone.rows) {
+            for (c in 1..zone.cols) {
+                val cellNum = (r - 1) * zone.cols + c
+                if (cellNum.toString() != parsedShelf) continue
+
+                val cellKey = "$parsedZone-$r-$c"
+                val cell = layout.cells[cellKey] ?: continue
+                val levels = cell.levels ?: continue
+
+                if (levels.isNotEmpty()) {
+                    val photo = levels.firstOrNull { !it.photo.isNullOrEmpty() }?.photo
+                    if (photo != null) {
+                        binding.ivShelfPhoto.load(repository.getImageUrl(photo)) {
+                            crossfade(true)
+                            placeholder(R.drawable.ic_placeholder)
+                            error(R.drawable.ic_placeholder)
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun updateSkuHeaderIcon(expanded: Boolean) {
-        val icon = if (expanded) "▼" else "▶"
-        binding.tvSkuHeader.text = "$icon 하위 SKU ($memberCount)"
-    }
+    private fun setupOptionImages(box: BoxResponse) {
+        if (box.productMasterImage == null) return
 
-    private fun addSkuTreeItem(member: FamilyMember, isLast: Boolean, index: Int = 0) {
+        binding.layoutOptionImages.removeAllViews()
         val density = resources.displayMetrics.density
-        val pad = (14 * density).toInt()
 
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = ContextCompat.getDrawable(
-                this@BoxDetailActivity,
-                if (index % 2 == 0) R.drawable.bg_info_row else R.drawable.bg_info_row_alt
-            )
-            setPadding(pad, pad, pad, pad)
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+        val mainImage = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (140 * density).toInt()).apply {
                 bottomMargin = (6 * density).toInt()
             }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
         }
+        mainImage.load(box.productMasterImage) {
+            crossfade(true)
+            placeholder(R.drawable.ic_placeholder)
+            error(R.drawable.ic_placeholder)
+        }
+        binding.layoutOptionImages.addView(mainImage)
 
-        container.addView(TextView(this).apply {
-            text = member.skuName
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.primary))
-        })
-
-        container.addView(TextView(this).apply {
-            text = "SKU: ${member.skuId}" + if (member.barcode != null) "  |  ${member.barcode}" else ""
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        val label = TextView(this).apply {
+            text = "한국 옵션"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
             setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface_variant))
-            typeface = Typeface.MONOSPACE
-            setPadding(0, (4 * density).toInt(), 0, 0)
-        })
-
-        if (member.location != null) {
-            container.addView(TextView(this).apply {
-                text = "위치: ${member.location}"
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                setTypeface(null, Typeface.BOLD)
-                setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
-                setPadding(0, (2 * density).toInt(), 0, 0)
-            })
+            gravity = Gravity.CENTER
         }
+        binding.layoutOptionImages.addView(label)
+    }
 
-        if (member.barcode != null) {
-            container.isClickable = true
-            container.isFocusable = true
-            val attrs = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
-            container.foreground = attrs.getDrawable(0)
-            attrs.recycle()
-            container.setOnClickListener {
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    putExtra("BARCODE", member.barcode)
+    private fun setupLinkButtons(box: BoxResponse) {
+        setupLinkButton(binding.btnNaver, box.naverUrl)
+        setupLinkButton(binding.btnCoupang, box.coupangUrl)
+        setupLinkButton(binding.btn1688, box.url1688)
+        setupLinkButton(binding.btnFlow, box.flowUrl)
+    }
+
+    private fun setupLinkButton(button: View, url: String?) {
+        if (url.isNullOrEmpty()) {
+            button.alpha = 0.3f
+            button.isClickable = false
+        } else {
+            button.setOnClickListener {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "링크를 열 수 없습니다", Toast.LENGTH_SHORT).show()
                 }
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            }
+        }
+    }
+
+    private fun setupBottomBar(box: BoxResponse) {
+        binding.btnBarMap.setOnClickListener {
+            lifecycleScope.launch {
+                val layout = mapLayout ?: repository.getMapLayout().getOrNull()
+                if (layout != null) {
+                    WarehouseMapDialog.show(this@BoxDetailActivity, box.location, layout) { floor, zoneCode, _, _, cellKey ->
+                        startActivity(CellDetailActivity.createIntent(this@BoxDetailActivity, floor, zoneCode, cellKey))
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    }
+                }
             }
         }
 
-        binding.layoutSkuTree.addView(container)
+        binding.btnBarBuy.setOnClickListener {
+            val url = box.coupangUrl
+            if (!url.isNullOrEmpty()) {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "링크를 열 수 없습니다", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "구매 링크가 없습니다", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnBarPrint.setOnClickListener {
+            Toast.makeText(this, "인쇄 기능 준비 중", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun parseLocationZone(location: String?): String? {
+        val loc = location ?: return null
+        val parts = loc.replace("층", "").split("-").map { it.trim() }
+        return if (parts.size >= 2) parts[1] else null
+    }
+
+    private fun parseLocationShelf(location: String?): String? {
+        val loc = location ?: return null
+        val parts = loc.replace("층", "").split("-").map { it.trim() }
+        return if (parts.size >= 3) parts[2] else null
     }
 
     @Deprecated("Deprecated in Java")

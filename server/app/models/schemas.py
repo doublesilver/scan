@@ -82,6 +82,10 @@ class BoxResponse(BaseModel):
     product_master_image: str | None = None
     location: str | None = None
     members: list[FamilyMember]
+    coupang_url: str | None = None
+    naver_url: str | None = None
+    url_1688: str | None = None
+    flow_url: str | None = None
 
 
 class HistoryItem(BaseModel):

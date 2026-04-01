@@ -59,6 +59,11 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
 
+        binding.btnMapEditor.setOnClickListener {
+            startActivity(MapEditorActivity.createIntent(this))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+
         binding.btnSave.setOnClickListener {
             val url = binding.etServerUrl.text.toString().trim()
             if (url.isEmpty()) {

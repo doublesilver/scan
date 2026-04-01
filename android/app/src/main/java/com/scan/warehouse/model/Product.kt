@@ -74,7 +74,11 @@ data class BoxResponse(
     @SerializedName("product_master_name") val productMasterName: String,
     @SerializedName("product_master_image") val productMasterImage: String? = null,
     @SerializedName("location") val location: String? = null,
-    @SerializedName("members") val members: List<FamilyMember>
+    @SerializedName("members") val members: List<FamilyMember>,
+    @SerializedName("coupang_url") val coupangUrl: String? = null,
+    @SerializedName("naver_url") val naverUrl: String? = null,
+    @SerializedName("url_1688") val url1688: String? = null,
+    @SerializedName("flow_url") val flowUrl: String? = null
 )
 
 data class ShelfItem(

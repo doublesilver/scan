@@ -285,7 +285,13 @@ class MainActivity : AppCompatActivity() {
                 val result = repository.addToCart(barcode, data.skuId, data.productName, 1)
                 Toast.makeText(this@MainActivity, result.message, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "장바구니 추가 실패", Toast.LENGTH_SHORT).show()
+                val msg = if (e is retrofit2.HttpException) {
+                    e.response()?.errorBody()?.string()?.let {
+                        try { org.json.JSONObject(it).optString("detail", "장바구니 추가 실패") }
+                        catch (_: Exception) { "장바구니 추가 실패" }
+                    } ?: "장바구니 추가 실패"
+                } else "장바구니 추가 실패: ${e.message}"
+                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
             } finally {
                 binding.btnBarCart.isEnabled = true
             }

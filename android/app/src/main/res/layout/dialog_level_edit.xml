@@ -9,6 +9,25 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <!-- 상품 검색/스캔 매칭 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSearchProduct"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="상품 검색 (바코드/SKU/상품명)"
+            android:textSize="14sp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvMatchedInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#2e7d32"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
         <ImageView
             android:id="@+id/ivLevelPhoto"
             android:layout_width="match_parent"

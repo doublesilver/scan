@@ -90,6 +90,18 @@
 
     </LinearLayout>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMapEditor"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:text="도면 편집 (웹 에디터)"
+        app:icon="@drawable/ic_map"
+        app:iconGravity="textStart" />
+
     <TextView
         android:id="@+id/tvVersion"
         android:layout_width="match_parent"

@@ -99,10 +99,10 @@ class DetailActivity : AppCompatActivity() {
             .setView(layout)
             .setPositiveButton("인쇄") { _, _ ->
                 val qty = input.text.toString().toIntOrNull() ?: 1
-                if (qty in 1..999) {
+                if (qty in 1..100) {
                     printLabel(data, qty)
                 } else {
-                    Toast.makeText(this, "1~999 사이 수량을 입력하세요", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "1~100 사이 수량을 입력하세요", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("취소", null)
@@ -200,11 +200,7 @@ class DetailActivity : AppCompatActivity() {
 
         binding.btnBarPrint.setOnClickListener { showQuantityDialog(data) }
 
-        binding.btnBarEdit.visibility = View.VISIBLE
-        binding.btnBarEdit.setOnClickListener {
-            startActivity(MapEditorActivity.createIntent(this))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        }
+        binding.btnBarEdit.visibility = View.GONE
 
         if (thumbnailUrl != null && realImageUrl != null) {
             binding.tvImageTypeChip.visibility = View.VISIBLE

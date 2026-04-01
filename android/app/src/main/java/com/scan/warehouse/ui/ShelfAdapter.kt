@@ -66,7 +66,13 @@ class ShelfAdapter(
         }
 
         if (item.photoUrl != null) {
-            holder.ivPhoto.load(item.photoUrl) {
+            val fullUrl = if (item.photoUrl.startsWith("http")) item.photoUrl
+            else {
+                val base = com.scan.warehouse.network.RetrofitClient.getBaseUrl(holder.itemView.context)
+                val b = if (base.endsWith("/")) base.dropLast(1) else base
+                "$b${item.photoUrl}"
+            }
+            holder.ivPhoto.load(fullUrl) {
                 crossfade(true)
                 placeholder(R.drawable.ic_placeholder)
                 error(R.drawable.ic_placeholder)

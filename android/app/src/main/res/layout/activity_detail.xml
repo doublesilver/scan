@@ -246,7 +246,7 @@
                 android:textSize="13sp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                app:icon="@drawable/ic_map"
+                app:icon="@drawable/ic_edit"
                 app:iconGravity="top"
                 app:iconTint="@android:color/white"
                 android:visibility="gone" />

@@ -88,4 +88,7 @@ interface ApiService {
     @PATCH("api/map-layout/cell/{cellKey}")
     suspend fun updateMapCell(@Path("cellKey") cellKey: String, @Body data: Map<String, @JvmSuppressWildcards Any>): Map<String, String>
 
+    @PATCH("api/product/{skuId}/location")
+    suspend fun updateProductLocation(@Path("skuId") skuId: String, @Body data: Map<String, String>): Map<String, String>
+
 }

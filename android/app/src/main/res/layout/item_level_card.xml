@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_level_card"
+    android:padding="16dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="12dp">
+
+    <!-- Header: 층 라벨 + 편집 버튼 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvLevelLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/orange"
+            android:textAllCaps="true"
+            android:letterSpacing="0.05" />
+
+        <ImageButton
+            android:id="@+id/btnLevelEdit"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_edit"
+            android:scaleType="centerInside"
+            android:padding="6dp"
+            android:visibility="gone"
+            android:contentDescription="편집"
+            app:tint="@color/orange" />
+
+    </LinearLayout>
+
+    <!-- 사진 영역 -->
+    <FrameLayout
+        android:id="@+id/layoutPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivLevelPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:scaleType="centerCrop"
+            android:background="@drawable/bg_photo_placeholder"
+            android:adjustViewBounds="true"
+            android:contentDescription="상품 사진" />
+
+        <!-- 업로드 오버레이 -->
+        <FrameLayout
+            android:id="@+id/layoutUploadOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_upload_overlay"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progressUpload"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/orange" />
+
+            <ImageView
+                android:id="@+id/ivUploadSuccess"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check_circle"
+                android:visibility="gone"
+                android:contentDescription="업로드 완료" />
+
+        </FrameLayout>
+
+    </FrameLayout>
+
+    <!-- 사진 없음 플레이스홀더 (편집모드) -->
+    <LinearLayout
+        android:id="@+id/layoutNoPhoto"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_photo_placeholder"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_camera"
+            app:tint="@color/on_surface_variant"
+            android:contentDescription="카메라" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="사진 없음"
+            android:textSize="12sp"
+            android:textColor="@color/on_surface_variant"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <!-- 상품명 -->
+    <TextView
+        android:id="@+id/tvItemLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:visibility="gone" />
+
+    <!-- SKU -->
+    <TextView
+        android:id="@+id/tvSku"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textSize="13sp"
+        android:textColor="@color/on_surface_variant"
+        android:visibility="gone" />
+
+</LinearLayout>

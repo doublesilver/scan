@@ -69,8 +69,11 @@ open class ProductRepository(protected val context: Context) {
             return filePath
         }
         val baseUrl = RetrofitClient.getBaseUrl(context)
-        val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
-        return "${normalized}api/image/${filePath}"
+        val base = if (baseUrl.endsWith("/")) baseUrl.dropLast(1) else baseUrl
+        if (filePath.startsWith("/static/")) {
+            return "$base$filePath"
+        }
+        return "$base/api/image/$filePath"
     }
 
     private suspend fun cacheProduct(barcode: String, response: ScanResponse) {
@@ -201,6 +204,15 @@ open class ProductRepository(protected val context: Context) {
     open suspend fun getMapLayout(): Result<MapLayout> {
         return try {
             Result.success(api.getMapLayout())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    open suspend fun updateProductLocation(skuId: String, location: String): Result<Unit> {
+        return try {
+            api.updateProductLocation(skuId, mapOf("location" to location))
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
