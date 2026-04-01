@@ -16,302 +16,290 @@
             android:layout_height="wrap_content"
             android:background="@color/primary"
             android:gravity="center_vertical"
-            android:minHeight="56dp"
+            android:minHeight="48dp"
             android:orientation="horizontal"
             android:paddingStart="52dp"
             android:paddingEnd="12dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp">
 
             <TextView
                 android:id="@+id/tvProductMasterName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
-                android:maxLines="3"
+                android:maxLines="2"
                 android:ellipsize="end" />
         </LinearLayout>
 
-        <!-- 스크롤 콘텐츠 -->
-        <ScrollView
+        <!-- 6블록 그리드: 3행 균등 분배 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
+            android:orientation="vertical"
+            android:padding="4dp">
 
+            <!-- ROW 1: 구역 위치 + 세부 위치 -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp">
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
 
-                <!-- ROW 1: 구역 위치 + 세부 위치 -->
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
+                    android:id="@+id/blockZonePhoto"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:background="@drawable/bg_block_border"
+                    android:orientation="vertical"
+                    android:padding="6dp">
 
-                    <!-- 블록1: 구역 위치 -->
-                    <LinearLayout
-                        android:id="@+id/blockZonePhoto"
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tvZoneTag"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/bg_location_tag"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:text="구역" />
+
+                    <ImageView
+                        android:id="@+id/ivZonePhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_block_border"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <TextView
-                            android:id="@+id/tvZoneTag"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_location_tag"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/on_surface"
-                            android:text="구역" />
-
-                        <ImageView
-                            android:id="@+id/ivZonePhoto"
-                            android:layout_width="match_parent"
-                            android:layout_height="120dp"
-                            android:layout_marginTop="6dp"
-                            android:scaleType="centerCrop"
-                            android:background="@drawable/bg_photo_placeholder"
-                            android:src="@drawable/ic_placeholder"
-                            android:contentDescription="구역 사진" />
-                    </LinearLayout>
-
-                    <!-- 블록2: 세부 위치 -->
-                    <LinearLayout
-                        android:id="@+id/blockShelfPhoto"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/bg_block_border"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <TextView
-                            android:id="@+id/tvShelfTag"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_location_tag"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/on_surface"
-                            android:text="위치" />
-
-                        <ImageView
-                            android:id="@+id/ivShelfPhoto"
-                            android:layout_width="match_parent"
-                            android:layout_height="120dp"
-                            android:layout_marginTop="6dp"
-                            android:scaleType="centerCrop"
-                            android:background="@drawable/bg_photo_placeholder"
-                            android:src="@drawable/ic_placeholder"
-                            android:contentDescription="선반 사진" />
-                    </LinearLayout>
-
+                        android:layout_marginTop="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/bg_photo_placeholder"
+                        android:src="@drawable/ic_placeholder"
+                        android:contentDescription="구역 사진" />
                 </LinearLayout>
 
-                <!-- ROW 2: 도면 + 옵션 이미지 -->
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
+                    android:id="@+id/blockShelfPhoto"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:background="@drawable/bg_block_border"
+                    android:orientation="vertical"
+                    android:padding="6dp">
 
-                    <!-- 블록3: 도면 인라인 -->
-                    <FrameLayout
-                        android:id="@+id/blockMap"
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tvShelfTag"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_block_border"
-                        android:minHeight="160dp"
-                        android:padding="8dp">
+                        android:background="@drawable/bg_location_tag"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:text="위치" />
 
-                        <LinearLayout
-                            android:id="@+id/layoutInlineMap"
-                            android:layout_width="match_parent"
+                    <ImageView
+                        android:id="@+id/ivShelfPhoto"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginTop="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/bg_photo_placeholder"
+                        android:src="@drawable/ic_placeholder"
+                        android:contentDescription="선반 사진" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ROW 2: 도면 + 옵션 이미지 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <FrameLayout
+                    android:id="@+id/blockMap"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:background="@drawable/bg_block_border"
+                    android:padding="6dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutInlineMap"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center" />
+
+                </FrameLayout>
+
+                <ScrollView
+                    android:id="@+id/blockOptionImages"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:background="@drawable/bg_block_border"
+                    android:padding="6dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutOptionImages"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                </ScrollView>
+
+            </LinearLayout>
+
+            <!-- ROW 3: 발주 이미지 + 외부 링크 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <ScrollView
+                    android:id="@+id/blockSourcingImages"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:background="@drawable/bg_block_border"
+                    android:padding="6dp">
+
+                    <LinearLayout
+                        android:id="@+id/layoutSourcingImages"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvSourcingPlaceholder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="발주 중국\n옵션 이미지"
+                            android:textSize="12sp"
+                            android:textColor="@color/on_surface_variant"
+                            android:gravity="center"
+                            android:layout_gravity="center" />
+
+                    </LinearLayout>
+
+                </ScrollView>
+
+                <LinearLayout
+                    android:id="@+id/blockLinks"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <FrameLayout
+                            android:id="@+id/btnNaver"
+                            android:layout_width="0dp"
                             android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            android:gravity="center" />
-
-                    </FrameLayout>
-
-                    <!-- 블록4: 한국 옵션 이미지 (세로 스크롤) -->
-                    <ScrollView
-                        android:id="@+id/blockOptionImages"
-                        android:layout_width="0dp"
-                        android:layout_height="200dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:background="@drawable/bg_block_border"
-                        android:padding="8dp">
-
-                        <LinearLayout
-                            android:id="@+id/layoutOptionImages"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical" />
-
-                    </ScrollView>
-
-                </LinearLayout>
-
-                <!-- ROW 3: 발주 이미지 + 외부 링크 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <!-- 블록5: 발주 중국 옵션 이미지 (세로 스크롤) -->
-                    <ScrollView
-                        android:id="@+id/blockSourcingImages"
-                        android:layout_width="0dp"
-                        android:layout_height="200dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:background="@drawable/bg_block_border"
-                        android:padding="8dp">
-
-                        <LinearLayout
-                            android:id="@+id/layoutSourcingImages"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center">
-
+                            android:layout_weight="1"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/bg_link_button"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
                             <TextView
-                                android:id="@+id/tvSourcingPlaceholder"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="발주 중국\n옵션 이미지"
-                                android:textSize="13sp"
-                                android:textColor="@color/on_surface_variant"
-                                android:gravity="center"
                                 android:layout_gravity="center"
-                                android:layout_marginTop="60dp" />
+                                android:text="N"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="#1EC800" />
+                        </FrameLayout>
 
-                        </LinearLayout>
+                        <FrameLayout
+                            android:id="@+id/btnCoupang"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginStart="2dp"
+                            android:background="@drawable/bg_link_button"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="C"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="#E44D2E" />
+                        </FrameLayout>
 
-                    </ScrollView>
+                    </LinearLayout>
 
-                    <!-- 블록6: 외부 링크 버튼 -->
                     <LinearLayout
-                        android:id="@+id/blockLinks"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:orientation="vertical">
+                        android:orientation="horizontal">
 
-                        <!-- 링크 1행: N + 쿠팡 -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginBottom="8dp">
+                        <FrameLayout
+                            android:id="@+id/btn1688"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/bg_link_button"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="1688"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="#FF6A00" />
+                        </FrameLayout>
 
-                            <FrameLayout
-                                android:id="@+id/btnNaver"
-                                android:layout_width="0dp"
-                                android:layout_height="80dp"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="4dp"
-                                android:background="@drawable/bg_link_button"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:text="N"
-                                    android:textSize="28sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#1EC800" />
-                            </FrameLayout>
-
-                            <FrameLayout
-                                android:id="@+id/btnCoupang"
-                                android:layout_width="0dp"
-                                android:layout_height="80dp"
-                                android:layout_weight="1"
-                                android:layout_marginStart="4dp"
-                                android:background="@drawable/bg_link_button"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:text="🚀"
-                                    android:textSize="28sp" />
-                            </FrameLayout>
-
-                        </LinearLayout>
-
-                        <!-- 링크 2행: 1688 + FLOW -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <FrameLayout
-                                android:id="@+id/btn1688"
-                                android:layout_width="0dp"
-                                android:layout_height="80dp"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="4dp"
-                                android:background="@drawable/bg_link_button"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:text="1688"
-                                    android:textSize="22sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#FF6A00" />
-                            </FrameLayout>
-
-                            <FrameLayout
-                                android:id="@+id/btnFlow"
-                                android:layout_width="0dp"
-                                android:layout_height="80dp"
-                                android:layout_weight="1"
-                                android:layout_marginStart="4dp"
-                                android:background="@drawable/bg_link_button"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:text="FLOW"
-                                    android:textSize="20sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#6C5CE7" />
-                            </FrameLayout>
-
-                        </LinearLayout>
+                        <FrameLayout
+                            android:id="@+id/btnFlow"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginStart="2dp"
+                            android:background="@drawable/bg_link_button"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="FLOW"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="#6C5CE7" />
+                        </FrameLayout>
 
                     </LinearLayout>
 
@@ -319,13 +307,13 @@
 
             </LinearLayout>
 
-        </ScrollView>
+        </LinearLayout>
 
-        <!-- 하단 바: 도면 / 구매하기 / 인쇄 -->
+        <!-- 하단 바 -->
         <LinearLayout
             android:id="@+id/bottomBar"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="48dp"
             android:background="@color/primary"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -340,7 +328,7 @@
                 android:layout_height="match_parent"
                 android:text="도면"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 app:icon="@drawable/ic_map"
@@ -355,7 +343,7 @@
                 android:layout_height="match_parent"
                 android:text="구매하기"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 app:icon="@drawable/ic_shopping_cart"
@@ -370,7 +358,7 @@
                 android:layout_height="match_parent"
                 android:text="인쇄"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 app:icon="@drawable/ic_print"
@@ -381,14 +369,13 @@
 
     </LinearLayout>
 
-    <!-- 뒤로가기 오버레이 -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="start|top"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="0dp"
         android:background="@drawable/bg_back_button"
         android:src="@drawable/ic_arrow_back"
         android:contentDescription="뒤로가기"

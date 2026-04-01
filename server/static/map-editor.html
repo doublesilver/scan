@@ -1191,7 +1191,8 @@
                 : d.status === "full"
                   ? "#ef5350"
                   : "#546e7a";
-            const dkey = d.name || `${r}-${c}`;
+            const seq = (r - 1) * z.cols + c;
+            const dkey = d.name || `${z.code}-${seq}`;
             cell.innerHTML = `<span class="cid">${esc(dkey)}</span><span class="cst" style="background:${dc}"></span><span class="clabel">${esc(d.label || "빈 선반")}</span>`;
             cell.onclick = () => openCellModal(key);
             grid.appendChild(cell);
@@ -1312,8 +1313,9 @@
       function ckey(code, r, c) {
         return `${code}-${r}-${c}`;
       }
-      function displayKey(r, c) {
-        return `${r}-${c}`;
+      function displayKey(z, r, c) {
+        const seq = (r - 1) * z.cols + c;
+        return `${z.code}-${seq}`;
       }
 
       function buildCell(z, r, c) {
@@ -1381,12 +1383,13 @@
         const lv = (d.levels && d.levels[0]) || {};
         const ph = lv.photo || d.photo_url || "";
         const parts = key.split("-");
+        const zObj = W.zones.find((z) => key.startsWith(z.code + "-"));
+        const seqNum =
+          parts.length >= 3 && zObj
+            ? (parseInt(parts[1]) - 1) * zObj.cols + parseInt(parts[2])
+            : key;
         const dkey =
-          d && d.name
-            ? d.name
-            : parts.length >= 3
-              ? `${parts[1]}-${parts[2]}`
-              : key;
+          d && d.name ? d.name : zObj ? `${zObj.code}-${seqNum}` : key;
         el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
     <span class="clabel">${d.label || "빈 선반"}</span>`;
       }
@@ -1628,8 +1631,21 @@
         const z = W.zones.find((x) => x.id === id);
         if (!z) return;
         pushH();
+        const oldCode = z.code;
+        const newCode =
+          document.getElementById("zeCode").value.trim() || z.code;
+        if (oldCode !== newCode && W.cells) {
+          const keys = Object.keys(W.cells).filter((k) =>
+            k.startsWith(oldCode + "-"),
+          );
+          for (const oldKey of keys) {
+            const newKey = newCode + oldKey.substring(oldCode.length);
+            W.cells[newKey] = W.cells[oldKey];
+            delete W.cells[oldKey];
+          }
+        }
         z.name = document.getElementById("zeName").value.trim() || z.name;
-        z.code = document.getElementById("zeCode").value.trim() || z.code;
+        z.code = newCode;
         z.rows = Math.max(
           1,
           parseInt(document.getElementById("zeRows").value) || z.rows,

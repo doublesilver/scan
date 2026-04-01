@@ -67,6 +67,7 @@ class CellDetailActivity : AppCompatActivity() {
     private var zone = ""
     private var currentCell: MapCell? = null
     private var isEditMode = false
+    private var zoneColCount = 4
 
     private var pendingLevelIndex = -1
     private var pendingPhotoUri: Uri? = null
@@ -161,6 +162,7 @@ class CellDetailActivity : AppCompatActivity() {
                     if (!isFinishing && !isDestroyed) {
                         val cell = layout.cells[cellKey]
                         currentCell = cell
+                        layout.zones.find { it.code == zone }?.let { zoneColCount = it.cols }
                         updateTitle()
                         renderLevels(cell, isEditMode)
                     }
@@ -180,8 +182,14 @@ class CellDetailActivity : AppCompatActivity() {
 
     private fun updateTitle() {
         val parts = cellKey.split("-")
-        val cellName = if (parts.size >= 3) "${parts[1]}-${parts[2]}" else cellKey
-        binding.tvTitle.text = "${floor}층 ${zone}구역 — $cellName"
+        if (parts.size >= 3) {
+            val row = parts[1].toIntOrNull() ?: 1
+            val col = parts[2].toIntOrNull() ?: 1
+            val seqNum = (row - 1) * zoneColCount + col
+            binding.tvTitle.text = "${zone}구역 ${zone}-$seqNum"
+        } else {
+            binding.tvTitle.text = "${zone}구역 — $cellKey"
+        }
     }
 
     private fun renderLevels(cell: MapCell?, editMode: Boolean) {

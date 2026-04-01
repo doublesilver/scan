@@ -53,7 +53,7 @@ router = APIRouter(prefix="/api")
 
 _map_layout_lock = asyncio.Lock()
 
-_CELL_KEY_RE = re.compile(r"^[A-Za-z]-\d{1,2}-\d{1,2}$")
+_CELL_KEY_RE = re.compile(r"^[A-Za-z0-9]-\d{1,2}-\d{1,2}$")
 _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -350,8 +350,8 @@ async def delete_shelf_photo(photo_id: int, request: Request):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 57,
-        "versionName": "4.3.0",
+        "versionCode": 61,
+        "versionName": "4.3.4",
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "최신 버전",
         "forceUpdate": False

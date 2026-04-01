@@ -1,14 +1,20 @@
 package com.scan.warehouse.ui
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams.MATCH_PARENT
@@ -42,6 +48,7 @@ class BoxDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityBoxDetailBinding
     private lateinit var repository: ProductRepository
     private var mapLayout: MapLayout? = null
+    private var currentLocation: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,11 +65,33 @@ class BoxDetailActivity : AppCompatActivity() {
         }
 
         binding.tvProductMasterName.text = box.productMasterName
+        currentLocation = box.location
         setupLocationTags(box)
         setupOptionImages(box)
         setupLinkButtons(box)
         setupBottomBar(box)
+        setupImageZoom()
+
         loadMapAndPhotos(box)
+    }
+
+    private fun setupImageZoom() {
+        binding.ivZonePhoto.setOnClickListener { showZoomDialog(binding.ivZonePhoto) }
+        binding.ivShelfPhoto.setOnClickListener { showZoomDialog(binding.ivShelfPhoto) }
+    }
+
+    private fun showZoomDialog(sourceImage: ImageView) {
+        val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val iv = ImageView(this).apply {
+            layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setBackgroundColor(Color.BLACK)
+            setImageDrawable(sourceImage.drawable)
+            setOnClickListener { dialog.dismiss() }
+        }
+        dialog.setContentView(iv)
+        dialog.show()
     }
 
     private fun setupLocationTags(box: BoxResponse) {
@@ -133,15 +162,23 @@ class BoxDetailActivity : AppCompatActivity() {
                     val isHighlight = zone.code == parsedZone && cellNum.toString() == parsedShelf
 
                     val cellView = TextView(this).apply {
-                        text = "$r-$c"
+                        text = "${zone.code}-$cellNum"
                         setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
-                        val bgColor = if (isHighlight) "#FFD700"
-                        else if (cell?.status == "used") "#2e7d32"
-                        else "#45474c"
-                        setBackgroundColor(Color.parseColor(bgColor))
-                        if (isHighlight) setTextColor(Color.BLACK)
+                        if (isHighlight) {
+                            val gd = GradientDrawable().apply {
+                                setColor(Color.parseColor("#FFD700"))
+                                setStroke((2 * density).toInt(), Color.parseColor("#FF6A00"))
+                                cornerRadius = 4 * density
+                            }
+                            background = gd
+                            setTextColor(Color.BLACK)
+                            setTypeface(null, Typeface.BOLD)
+                        } else {
+                            val bgColor = if (cell?.status == "used") "#2e7d32" else "#45474c"
+                            setBackgroundColor(Color.parseColor(bgColor))
+                        }
                         val size = (22 * density).toInt()
                         val margin = (1 * density).toInt()
                         layoutParams = LinearLayout.LayoutParams(0, size, 1f).apply {
@@ -155,6 +192,14 @@ class BoxDetailActivity : AppCompatActivity() {
                                 cellKey
                             ))
                             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        }
+                    }
+                    if (isHighlight) {
+                        ObjectAnimator.ofFloat(cellView, "alpha", 1f, 0.3f).apply {
+                            duration = 600
+                            repeatCount = ValueAnimator.INFINITE
+                            repeatMode = ValueAnimator.REVERSE
+                            start()
                         }
                     }
                     row.addView(cellView)

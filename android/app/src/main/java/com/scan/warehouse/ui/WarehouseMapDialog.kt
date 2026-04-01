@@ -1,8 +1,11 @@
 package com.scan.warehouse.ui
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -57,8 +60,7 @@ object WarehouseMapDialog {
                 setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
                 setPadding(0, (8 * density).toInt(), 0, (4 * density).toInt())
             })
-
-            val grid = createGrid(context, zone, mapLayout, parsed, floor, onCellClick) { dialog?.dismiss() }
+            val grid = createGrid(context, zone, mapLayout, parsed, floor, false, onCellClick) { dialog?.dismiss() }
             layout.addView(grid)
         }
 
@@ -99,6 +101,7 @@ object WarehouseMapDialog {
         mapLayout: MapLayout?,
         current: ParsedLocation,
         floor: Int,
+        landscape: Boolean = false,
         onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)?,
         onDismiss: () -> Unit
     ): LinearLayout {
@@ -110,18 +113,23 @@ object WarehouseMapDialog {
             orientation = LinearLayout.VERTICAL
         }
 
-        for (row in 1..zone.rows) {
+        val outerRange = if (landscape) 1..zone.cols else 1..zone.rows
+        val innerRange = if (landscape) 1..zone.rows else 1..zone.cols
+
+        for (outer in outerRange) {
             val rowLayout = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
             }
-            for (col in 1..zone.cols) {
+            for (inner in innerRange) {
+                val row = if (landscape) inner else outer
+                val col = if (landscape) outer else inner
                 val cellNum = (row - 1) * zone.cols + col
                 val shelf = String.format("%02d", cellNum)
                 val isCurrentCell = zone.code == current.zone && shelf == current.shelf
 
                 val cellKey = "${zone.code}-$row-$col"
                 val cellData = mapLayout?.cells?.get(cellKey)
-                val cellText = cellData?.name ?: "$row-$col"
+                val cellText = cellData?.name ?: "${zone.code}-$cellNum"
 
                 val cell = TextView(context).apply {
                     text = cellText
@@ -133,8 +141,13 @@ object WarehouseMapDialog {
                     }
                     when {
                         isCurrentCell -> {
-                            setBackgroundColor(ContextCompat.getColor(context, R.color.primary))
-                            setTextColor(Color.WHITE)
+                            val gd = GradientDrawable().apply {
+                                setColor(Color.parseColor("#FFD700"))
+                                setStroke(3, Color.parseColor("#FF6A00"))
+                                cornerRadius = 6f
+                            }
+                            background = gd
+                            setTextColor(Color.BLACK)
                         }
                         cellData?.status == "full" -> {
                             setBackgroundColor(Color.parseColor("#FFCDD2"))
@@ -156,6 +169,14 @@ object WarehouseMapDialog {
                             onCellClick.invoke(floor, zone.code, row, col, cellKey)
                             onDismiss()
                         }
+                    }
+                }
+                if (isCurrentCell) {
+                    ObjectAnimator.ofFloat(cell, "alpha", 1f, 0.3f).apply {
+                        duration = 600
+                        repeatCount = ValueAnimator.INFINITE
+                        repeatMode = ValueAnimator.REVERSE
+                        start()
                     }
                 }
                 rowLayout.addView(cell)
