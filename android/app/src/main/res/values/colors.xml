@@ -5,7 +5,7 @@
     <color name="secondary">#ab3500</color>
     <color name="secondary_container">#fe6a34</color>
     <color name="surface">#f8f9fa</color>
-    <color name="surface_container_low">#f3f4f5</color>
+    <color name="surface_container_low">#edeef0</color>
     <color name="surface_container_lowest">#ffffff</color>
     <color name="surface_container_high">#e7e8e9</color>
     <color name="on_surface">#191c1d</color>
@@ -16,17 +16,15 @@
     <color name="success">#2e7d32</color>
     <color name="error">#c62828</color>
 
-    <color name="navy">#040d1b</color>
-    <color name="navy_dark">#040d1b</color>
-    <color name="navy_light">#1a2332</color>
     <color name="orange">#fe6a34</color>
-    <color name="orange_dark">#ab3500</color>
-    <color name="background">#f8f9fa</color>
-    <color name="text_primary">#191c1d</color>
-    <color name="text_secondary">#45474c</color>
-    <color name="text_hint">#45474c</color>
-    <color name="text_muted">#c5c6cc</color>
-    <color name="text_dark">#191c1d</color>
-    <color name="divider">#c5c6cc</color>
-    <color name="status_bar">#040d1b</color>
+
+    <color name="cell_highlight">#FFD700</color>
+    <color name="cell_highlight_stroke">#FF6A00</color>
+    <color name="cell_used">#2e7d32</color>
+    <color name="cell_full">#ef5350</color>
+    <color name="cell_empty">#45474c</color>
+    <color name="cell_used_light">#C8E6C9</color>
+    <color name="cell_used_dark">#1B5E20</color>
+    <color name="cell_full_light">#FFCDD2</color>
+    <color name="cell_full_dark">#B71C1C</color>
 </resources>

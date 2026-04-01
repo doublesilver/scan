@@ -52,6 +52,7 @@ object WarehouseMapDialog {
         })
 
         var dialog: AlertDialog? = null
+        val animators = mutableListOf<ObjectAnimator>()
 
         for (zone in zones) {
             layout.addView(TextView(context).apply {
@@ -61,7 +62,7 @@ object WarehouseMapDialog {
                 setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
                 setPadding(0, (8 * density).toInt(), 0, (4 * density).toInt())
             })
-            val grid = createGrid(context, zone, mapLayout, parsed, floor, false, onCellClick) { dialog?.dismiss() }
+            val grid = createGrid(context, zone, mapLayout, parsed, floor, false, animators, onCellClick) { dialog?.dismiss() }
             layout.addView(grid)
         }
 
@@ -81,7 +82,13 @@ object WarehouseMapDialog {
         dialog = AlertDialog.Builder(context)
             .setView(scrollView)
             .setPositiveButton("닫기", null)
-            .show()
+            .create()
+
+        dialog!!.setOnDismissListener {
+            animators.forEach { it.cancel() }
+            animators.clear()
+        }
+        dialog!!.show()
     }
 
     private fun createGrid(
@@ -91,6 +98,7 @@ object WarehouseMapDialog {
         current: ParsedLocation,
         floor: Int,
         landscape: Boolean = false,
+        animators: MutableList<ObjectAnimator>,
         onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)?,
         onDismiss: () -> Unit
     ): LinearLayout {
@@ -131,20 +139,20 @@ object WarehouseMapDialog {
                     when {
                         isCurrentCell -> {
                             val gd = GradientDrawable().apply {
-                                setColor(Color.parseColor("#FFD700"))
-                                setStroke(3, Color.parseColor("#FF6A00"))
+                                setColor(ContextCompat.getColor(context, R.color.cell_highlight))
+                                setStroke(3, ContextCompat.getColor(context, R.color.cell_highlight_stroke))
                                 cornerRadius = 6f
                             }
                             background = gd
                             setTextColor(Color.BLACK)
                         }
                         cellData?.status == "full" -> {
-                            setBackgroundColor(Color.parseColor("#FFCDD2"))
-                            setTextColor(Color.parseColor("#B71C1C"))
+                            setBackgroundColor(ContextCompat.getColor(context, R.color.cell_full_light))
+                            setTextColor(ContextCompat.getColor(context, R.color.cell_full_dark))
                         }
                         cellData?.status == "used" -> {
-                            setBackgroundColor(Color.parseColor("#C8E6C9"))
-                            setTextColor(Color.parseColor("#1B5E20"))
+                            setBackgroundColor(ContextCompat.getColor(context, R.color.cell_used_light))
+                            setTextColor(ContextCompat.getColor(context, R.color.cell_used_dark))
                         }
                         else -> {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.surface_container_high))
@@ -166,6 +174,7 @@ object WarehouseMapDialog {
                         repeatCount = ValueAnimator.INFINITE
                         repeatMode = ValueAnimator.REVERSE
                         start()
+                        animators.add(this)
                     }
                 }
                 rowLayout.addView(cell)

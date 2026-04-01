@@ -49,6 +49,7 @@ class BoxDetailActivity : BaseActivity() {
     private lateinit var repository: ProductRepository
     private var mapLayout: MapLayout? = null
     private var currentLocation: String? = null
+    private val animators = mutableListOf<ObjectAnimator>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,6 +122,8 @@ class BoxDetailActivity : BaseActivity() {
     }
 
     private fun renderInlineMap(layout: MapLayout, location: String?) {
+        animators.forEach { it.cancel() }
+        animators.clear()
         binding.layoutInlineMap.removeAllViews()
         val density = resources.displayMetrics.density
 
@@ -164,16 +167,19 @@ class BoxDetailActivity : BaseActivity() {
                         setTextColor(Color.WHITE)
                         if (isHighlight) {
                             val gd = GradientDrawable().apply {
-                                setColor(Color.parseColor("#FFD700"))
-                                setStroke((2 * density).toInt(), Color.parseColor("#FF6A00"))
+                                setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
+                                setStroke((2 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
                                 cornerRadius = 4 * density
                             }
                             background = gd
                             setTextColor(Color.BLACK)
                             setTypeface(null, Typeface.BOLD)
                         } else {
-                            val bgColor = if (cell?.status == "used") "#2e7d32" else "#45474c"
-                            setBackgroundColor(Color.parseColor(bgColor))
+                            val bgColor = if (cell?.status == "used")
+                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
+                            else
+                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
+                            setBackgroundColor(bgColor)
                         }
                         val size = (22 * density).toInt()
                         val margin = (1 * density).toInt()
@@ -195,6 +201,7 @@ class BoxDetailActivity : BaseActivity() {
                             repeatCount = ValueAnimator.INFINITE
                             repeatMode = ValueAnimator.REVERSE
                             start()
+                            animators.add(this)
                         }
                     }
                     row.addView(cellView)
@@ -321,6 +328,12 @@ class BoxDetailActivity : BaseActivity() {
         binding.btnBarPrint.setOnClickListener {
             Toast.makeText(this, "인쇄 기능 준비 중", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onDestroy() {
+        animators.forEach { it.cancel() }
+        animators.clear()
+        super.onDestroy()
     }
 
     @Deprecated("Deprecated in Java")

@@ -12,6 +12,7 @@
 
         <!-- Header -->
         <LinearLayout
+            android:id="@+id/headerBar"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@color/primary"
@@ -54,14 +55,6 @@
                 android:visibility="gone" />
 
         </LinearLayout>
-
-        <!-- 편집모드 인디케이터 -->
-        <View
-            android:id="@+id/editModeIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@drawable/bg_edit_mode_indicator"
-            android:visibility="gone" />
 
         <!-- ScrollView for levels -->
         <ScrollView

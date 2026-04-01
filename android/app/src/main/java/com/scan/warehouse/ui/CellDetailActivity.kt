@@ -141,7 +141,9 @@ class CellDetailActivity : BaseActivity() {
     private fun setEditMode(edit: Boolean) {
         isEditMode = edit
         binding.btnDone.visibility = if (edit) View.VISIBLE else View.GONE
-        binding.editModeIndicator.visibility = if (edit) View.VISIBLE else View.GONE
+        binding.headerBar.setBackgroundColor(
+            ContextCompat.getColor(this, if (edit) R.color.secondary_container else R.color.primary)
+        )
         binding.layoutEditActions.visibility = if (edit) View.VISIBLE else View.GONE
         binding.btnBarEdit.text = if (edit) "편집 중" else "편집"
         renderLevels(currentCell, isEditMode)
@@ -379,9 +381,10 @@ class CellDetailActivity : BaseActivity() {
     }
 
     private fun showProductSearchDialog() {
+        val density = resources.displayMetrics.density
         val input = EditText(this).apply {
             hint = "바코드, SKU, 상품명 검색"
-            setPadding(48, 32, 48, 16)
+            setPadding((24 * density).toInt(), (16 * density).toInt(), (24 * density).toInt(), (8 * density).toInt())
             textSize = 16f
         }
 
