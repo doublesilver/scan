@@ -126,73 +126,54 @@ class BoxDetailActivity : BaseActivity() {
         animators.clear()
         binding.layoutInlineMap.removeAllViews()
         val density = resources.displayMetrics.density
-
         val parsed = ParsedLocation.parse(location)
-
         val zones = layout.zones.ifEmpty { return }
 
         for (zone in zones) {
-            val zoneLabel = TextView(this).apply {
+            binding.layoutInlineMap.addView(TextView(this).apply {
                 text = zone.name
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            }
-            binding.layoutInlineMap.addView(zoneLabel)
-
+            })
             val grid = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                    bottomMargin = (4 * density).toInt()
+                    bottomMargin = (2 * density).toInt()
                 }
             }
-
             for (r in 1..zone.rows) {
                 val row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
                 }
-
                 for (c in 1..zone.cols) {
-                    val cellKey = "${zone.code}-$r-$c"
-                    val cell = layout.cells[cellKey]
                     val cellNum = (r - 1) * zone.cols + c
                     val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
-
                     val cellView = TextView(this).apply {
                         text = "${zone.code}-$cellNum"
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
                         if (isHighlight) {
                             val gd = GradientDrawable().apply {
                                 setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
-                                setStroke((2 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
-                                cornerRadius = 4 * density
+                                setStroke((1 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
+                                cornerRadius = 2 * density
                             }
                             background = gd
                             setTextColor(Color.BLACK)
                             setTypeface(null, Typeface.BOLD)
+                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
                         } else {
-                            val bgColor = if (cell?.status == "used")
+                            val bgColor = if (layout.cells["${zone.code}-$r-$c"]?.status == "used")
                                 ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
-                            else
-                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
+                            else ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
                             setBackgroundColor(bgColor)
                         }
-                        val size = (22 * density).toInt()
                         val margin = (1 * density).toInt()
-                        layoutParams = LinearLayout.LayoutParams(0, size, 1f).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, (16 * density).toInt(), 1f).apply {
                             setMargins(margin, margin, margin, margin)
-                        }
-                        setOnClickListener {
-                            startWithSlide(CellDetailActivity.createIntent(
-                                this@BoxDetailActivity,
-                                layout.floor,
-                                zone.code,
-                                cellKey
-                            ))
                         }
                     }
                     if (isHighlight) {
@@ -212,11 +193,7 @@ class BoxDetailActivity : BaseActivity() {
         }
 
         binding.blockMap.setOnClickListener {
-            mapLayout?.let { layout ->
-                WarehouseMapDialog.show(this, location, layout) { floor, zoneCode, _, _, cellKey ->
-                    startWithSlide(CellDetailActivity.createIntent(this, floor, zoneCode, cellKey))
-                }
-            }
+            mapLayout?.let { ml -> showMapZoomDialog(ml, location) }
         }
     }
 
@@ -328,6 +305,126 @@ class BoxDetailActivity : BaseActivity() {
         binding.btnBarPrint.setOnClickListener {
             Toast.makeText(this, "인쇄 기능 준비 중", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showMapZoomDialog(layout: MapLayout, location: String?) {
+        val parsed = ParsedLocation.parse(location)
+        val density = resources.displayMetrics.density
+        val dialogAnimators = mutableListOf<ObjectAnimator>()
+        var zoomDialog: Dialog? = null
+
+        val scroll = android.widget.ScrollView(this)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val pad = (16 * density).toInt()
+            setPadding(pad, pad, pad, pad)
+            setBackgroundColor(Color.parseColor("#1a1a2e"))
+        }
+
+        for (zone in layout.zones) {
+            container.addView(TextView(this).apply {
+                text = "${zone.name} (${zone.code}구역)"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.WHITE)
+                setPadding(0, (8 * density).toInt(), 0, (6 * density).toInt())
+            })
+
+            val grid = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                    bottomMargin = (12 * density).toInt()
+                }
+            }
+
+            for (r in 1..zone.rows) {
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                }
+                for (c in 1..zone.cols) {
+                    val cellKey = "${zone.code}-$r-$c"
+                    val cell = layout.cells[cellKey]
+                    val cellNum = (r - 1) * zone.cols + c
+                    val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
+
+                    val cellView = TextView(this).apply {
+                        text = "${zone.code}-$cellNum"
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+                        gravity = Gravity.CENTER
+                        setTextColor(Color.WHITE)
+                        if (isHighlight) {
+                            val gd = GradientDrawable().apply {
+                                setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
+                                setStroke((3 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
+                                cornerRadius = 6 * density
+                            }
+                            background = gd
+                            setTextColor(Color.BLACK)
+                            setTypeface(null, Typeface.BOLD)
+                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                        } else {
+                            val bgColor = if (cell?.status == "used")
+                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
+                            else
+                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
+                            setBackgroundColor(bgColor)
+                        }
+                        val size = (48 * density).toInt()
+                        val margin = (2 * density).toInt()
+                        layoutParams = LinearLayout.LayoutParams(0, size, 1f).apply {
+                            setMargins(margin, margin, margin, margin)
+                        }
+                        isClickable = true
+                        isFocusable = true
+                        foreground = with(obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))) {
+                            getDrawable(0).also { recycle() }
+                        }
+                        setOnClickListener {
+                            zoomDialog?.dismiss()
+                            startWithSlide(CellDetailActivity.createIntent(
+                                this@BoxDetailActivity, layout.floor, zone.code, cellKey
+                            ))
+                        }
+                    }
+                    if (isHighlight) {
+                        ObjectAnimator.ofFloat(cellView, "alpha", 1f, 0.3f).apply {
+                            duration = 600
+                            repeatCount = ValueAnimator.INFINITE
+                            repeatMode = ValueAnimator.REVERSE
+                            start()
+                            dialogAnimators.add(this)
+                        }
+                    }
+                    row.addView(cellView)
+                }
+                grid.addView(row)
+            }
+            container.addView(grid)
+        }
+
+        if (location != null) {
+            container.addView(TextView(this).apply {
+                text = "현재 위치: $location"
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                setTypeface(null, Typeface.BOLD)
+                setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
+                gravity = Gravity.CENTER
+                setPadding(0, (8 * density).toInt(), 0, 0)
+            })
+        }
+
+        scroll.addView(container)
+
+        val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen).also { zoomDialog = it }
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(scroll)
+        dialog.setOnDismissListener {
+            dialogAnimators.forEach { it.cancel() }
+            dialogAnimators.clear()
+        }
+        scroll.setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     override fun onDestroy() {
