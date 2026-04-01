@@ -6,7 +6,6 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,7 +17,7 @@ import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import kotlinx.coroutines.launch
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var repository: ProductRepository
@@ -60,8 +59,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
 
         binding.btnMapEditor.setOnClickListener {
-            startActivity(MapEditorActivity.createIntent(this))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startWithSlide(MapEditorActivity.createIntent(this))
         }
 
         binding.btnSave.setOnClickListener {
@@ -162,8 +160,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                finish()
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                finishWithSlide()
                 true
             }
             else -> super.onOptionsItemSelected(item)

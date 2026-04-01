@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.scan.warehouse.R
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.MapZone
+import com.scan.warehouse.model.ParsedLocation
 
 object WarehouseMapDialog {
 
@@ -29,7 +30,7 @@ object WarehouseMapDialog {
         mapLayout: MapLayout? = null,
         onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)? = null
     ) {
-        val parsed = parseLocation(location)
+        val parsed = ParsedLocation.parse(location)
         val density = context.resources.displayMetrics.density
         val pad = (16 * density).toInt()
 
@@ -81,18 +82,6 @@ object WarehouseMapDialog {
             .setView(scrollView)
             .setPositiveButton("닫기", null)
             .show()
-    }
-
-    private data class ParsedLocation(val floor: Int, val zone: String, val shelf: String)
-
-    private fun parseLocation(location: String?): ParsedLocation {
-        if (location == null) return ParsedLocation(5, "", "")
-        val parts = location.replace("층", "").split("-")
-        return ParsedLocation(
-            floor = parts.getOrNull(0)?.toIntOrNull() ?: 5,
-            zone = parts.getOrNull(1) ?: "",
-            shelf = parts.getOrNull(2) ?: ""
-        )
     }
 
     private fun createGrid(

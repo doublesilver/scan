@@ -10,7 +10,10 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
+from app.api.map_routes import router as map_router
+from app.api.shelf_routes import router as shelf_router
 from app.config import settings
+from app.middleware.auth import ApiKeyMiddleware
 from app.db.database import close_db, get_db
 from app.services.file_watcher import start_watcher, stop_watcher
 from app.services.nas_sync import NasSyncService
@@ -55,9 +58,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ApiKeyMiddleware)
 
 
 app.include_router(router)
+app.include_router(map_router)
+app.include_router(shelf_router)
 
 _apk_dir = os.path.join(os.path.dirname(__file__), "..", "apk")
 os.makedirs(_apk_dir, exist_ok=True)

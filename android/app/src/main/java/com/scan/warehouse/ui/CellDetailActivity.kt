@@ -22,7 +22,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
@@ -44,7 +43,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class CellDetailActivity : AppCompatActivity() {
+class CellDetailActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_CELL_KEY = "cell_key"
@@ -118,19 +117,13 @@ class CellDetailActivity : AppCompatActivity() {
 
         repository = ProductRepository(this)
 
-        binding.btnBack.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
+        binding.btnBack.setOnClickListener { finishWithSlide() }
 
         binding.btnDone.setOnClickListener {
             setEditMode(false)
         }
 
-        binding.btnBarMap.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
+        binding.btnBarMap.setOnClickListener { finishWithSlide() }
 
         binding.btnBarEdit.setOnClickListener {
             if (currentCell == null) {

@@ -25,6 +25,14 @@ open class ProductRepository(protected val context: Context) {
     private val dao get() = AppDatabase.getInstance(context).productDao()
     private val gson = Gson()
 
+    private suspend fun <T> safeCall(block: suspend () -> T): Result<T> {
+        return try {
+            Result.success(block())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     open suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
         return try {
             val scanData = api.scanBarcode(barcode)
@@ -55,13 +63,8 @@ open class ProductRepository(protected val context: Context) {
         }
     }
 
-    open suspend fun healthCheck(): Result<Unit> {
-        return try {
-            api.healthCheck()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    open suspend fun healthCheck(): Result<Unit> = safeCall {
+        api.healthCheck()
     }
 
     open fun getImageUrl(filePath: String): String {
@@ -123,99 +126,36 @@ open class ProductRepository(protected val context: Context) {
         )
     }
 
-    open suspend fun scanBox(qrCode: String): Result<BoxResponse> {
-        return try {
-            Result.success(api.getBox(qrCode))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    open suspend fun scanBox(qrCode: String): Result<BoxResponse> = safeCall { api.getBox(qrCode) }
+
+    open suspend fun getShelves(floor: Int, zone: String): Result<ShelfListResponse> = safeCall { api.getShelves(floor, zone) }
+
+    open suspend fun updateMapCell(cellKey: String, data: Map<String, Any>): Result<Unit> = safeCall { api.updateMapCell(cellKey, data) }
+
+    open suspend fun updateShelfLabel(shelfId: Int, label: String): Result<ShelfItem> = safeCall {
+        api.updateShelfLabel(shelfId, mapOf("label" to label))
     }
 
-    open suspend fun getShelves(floor: Int, zone: String): Result<ShelfListResponse> {
-        return try {
-            Result.success(api.getShelves(floor, zone))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    open suspend fun deleteShelfLabel(shelfId: Int): Result<Unit> = safeCall { api.deleteShelfLabel(shelfId) }
+
+    open suspend fun uploadCellPhoto(cellKey: String, filePart: MultipartBody.Part): Result<String> = safeCall {
+        val result = api.uploadCellPhoto(cellKey, filePart)
+        result["photo_url"] ?: ""
     }
 
-    open suspend fun updateMapCell(cellKey: String, data: Map<String, Any>): Result<Unit> {
-        return try {
-            api.updateMapCell(cellKey, data)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    open suspend fun deleteCellPhoto(cellKey: String): Result<Unit> = safeCall { api.deleteCellPhoto(cellKey) }
+
+    open suspend fun uploadLevelPhoto(cellKey: String, levelIndex: Int, filePart: MultipartBody.Part): Result<String> = safeCall {
+        val result = api.uploadLevelPhoto(cellKey, levelIndex, filePart)
+        result["photo_url"] ?: ""
     }
 
-    open suspend fun updateShelfLabel(shelfId: Int, label: String): Result<ShelfItem> {
-        return try {
-            Result.success(api.updateShelfLabel(shelfId, mapOf("label" to label)))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    open suspend fun deleteLevelPhoto(cellKey: String, levelIndex: Int): Result<Unit> = safeCall { api.deleteLevelPhoto(cellKey, levelIndex) }
 
-    open suspend fun deleteShelfLabel(shelfId: Int): Result<Unit> {
-        return try {
-            api.deleteShelfLabel(shelfId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    open suspend fun getMapLayout(): Result<MapLayout> = safeCall { api.getMapLayout() }
 
-    open suspend fun uploadCellPhoto(cellKey: String, filePart: MultipartBody.Part): Result<String> {
-        return try {
-            val result = api.uploadCellPhoto(cellKey, filePart)
-            Result.success(result["photo_url"] ?: "")
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    open suspend fun deleteCellPhoto(cellKey: String): Result<Unit> {
-        return try {
-            api.deleteCellPhoto(cellKey)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    open suspend fun uploadLevelPhoto(cellKey: String, levelIndex: Int, filePart: MultipartBody.Part): Result<String> {
-        return try {
-            val result = api.uploadLevelPhoto(cellKey, levelIndex, filePart)
-            Result.success(result["photo_url"] ?: "")
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    open suspend fun deleteLevelPhoto(cellKey: String, levelIndex: Int): Result<Unit> {
-        return try {
-            api.deleteLevelPhoto(cellKey, levelIndex)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    open suspend fun getMapLayout(): Result<MapLayout> {
-        return try {
-            Result.success(api.getMapLayout())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    open suspend fun updateProductLocation(skuId: String, location: String): Result<Unit> {
-        return try {
-            api.updateProductLocation(skuId, mapOf("location" to location))
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    open suspend fun updateProductLocation(skuId: String, location: String): Result<Unit> = safeCall {
+        api.updateProductLocation(skuId, mapOf("location" to location))
     }
 
 }

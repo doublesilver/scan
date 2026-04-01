@@ -14,7 +14,6 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.scan.warehouse.R
@@ -23,7 +22,7 @@ import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.repository.ProductRepository
 import kotlinx.coroutines.launch
 
-class DetailActivity : AppCompatActivity() {
+class DetailActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_DATA = "extra_data"
@@ -39,10 +38,7 @@ class DetailActivity : AppCompatActivity() {
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnBack.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
+        binding.btnBack.setOnClickListener { finishWithSlide() }
 
         bindData()
     }
@@ -164,8 +160,7 @@ class DetailActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val layout = ProductRepository(this@DetailActivity).getMapLayout().getOrNull()
                 WarehouseMapDialog.show(this@DetailActivity, data.location, layout) { floor, zone, _, _, cellKey ->
-                    startActivity(CellDetailActivity.createIntent(this@DetailActivity, floor, zone, cellKey))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    startWithSlide(CellDetailActivity.createIntent(this@DetailActivity, floor, zone, cellKey))
                 }
             }
         }

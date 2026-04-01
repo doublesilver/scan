@@ -7,7 +7,6 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -27,7 +26,7 @@ import android.view.inputmethod.InputMethodManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ScanViewModel by viewModels()
@@ -81,8 +80,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startWithSlide(Intent(this, SettingsActivity::class.java))
         }
     }
 
@@ -194,8 +192,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showBoxDialog(box: com.scan.warehouse.model.BoxResponse) {
         val json = com.google.gson.Gson().toJson(box)
-        startActivity(BoxDetailActivity.createIntent(this, json))
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        startWithSlide(BoxDetailActivity.createIntent(this, json))
     }
 
     private var currentScanResult: ScanResponse? = null
@@ -226,11 +223,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.layoutScanResult.setOnClickListener {
-            val intent = Intent(this, DetailActivity::class.java).apply {
+            startWithSlide(Intent(this, DetailActivity::class.java).apply {
                 putExtra(DetailActivity.EXTRA_DATA, result)
-            }
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            })
         }
     }
 

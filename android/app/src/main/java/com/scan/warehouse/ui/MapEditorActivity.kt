@@ -13,12 +13,11 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient.FileChooserParams
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMapEditorBinding
 import com.scan.warehouse.network.RetrofitClient
 
-class MapEditorActivity : AppCompatActivity() {
+class MapEditorActivity : BaseActivity() {
 
     companion object {
         private const val EXTRA_ZONE = "extra_zone"
@@ -50,8 +49,7 @@ class MapEditorActivity : AppCompatActivity() {
             if (binding.webView.canGoBack()) {
                 binding.webView.goBack()
             } else {
-                finish()
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+                finishWithSlide()
             }
         }
 

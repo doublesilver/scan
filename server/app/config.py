@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     # 선반 사진 NAS 경로
     shelf_photo_nas_prefix: str = "shelf_photos"
 
+    # API Key 인증
+    api_key: str = ""
+
     # CORS
     cors_origins: list[str] = ["*"]
 

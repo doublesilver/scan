@@ -21,7 +21,6 @@ import android.widget.LinearLayout.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
@@ -30,10 +29,11 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxDetailBinding
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.MapLayout
+import com.scan.warehouse.model.ParsedLocation
 import com.scan.warehouse.repository.ProductRepository
 import kotlinx.coroutines.launch
 
-class BoxDetailActivity : AppCompatActivity() {
+class BoxDetailActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_BOX_DATA = "extra_box_data"
@@ -59,10 +59,7 @@ class BoxDetailActivity : AppCompatActivity() {
         val box = Gson().fromJson(json, BoxResponse::class.java)
         repository = ProductRepository(this)
 
-        binding.btnBack.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
+        binding.btnBack.setOnClickListener { finishWithSlide() }
 
         binding.tvProductMasterName.text = box.productMasterName
         currentLocation = box.location
@@ -127,8 +124,7 @@ class BoxDetailActivity : AppCompatActivity() {
         binding.layoutInlineMap.removeAllViews()
         val density = resources.displayMetrics.density
 
-        val parsedZone = parseLocationZone(location)
-        val parsedShelf = parseLocationShelf(location)
+        val parsed = ParsedLocation.parse(location)
 
         val zones = layout.zones.ifEmpty { return }
 
@@ -159,7 +155,7 @@ class BoxDetailActivity : AppCompatActivity() {
                     val cellKey = "${zone.code}-$r-$c"
                     val cell = layout.cells[cellKey]
                     val cellNum = (r - 1) * zone.cols + c
-                    val isHighlight = zone.code == parsedZone && cellNum.toString() == parsedShelf
+                    val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
 
                     val cellView = TextView(this).apply {
                         text = "${zone.code}-$cellNum"
@@ -185,13 +181,12 @@ class BoxDetailActivity : AppCompatActivity() {
                             setMargins(margin, margin, margin, margin)
                         }
                         setOnClickListener {
-                            startActivity(CellDetailActivity.createIntent(
+                            startWithSlide(CellDetailActivity.createIntent(
                                 this@BoxDetailActivity,
                                 layout.floor,
                                 zone.code,
                                 cellKey
                             ))
-                            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                         }
                     }
                     if (isHighlight) {
@@ -210,27 +205,26 @@ class BoxDetailActivity : AppCompatActivity() {
         }
 
         binding.blockMap.setOnClickListener {
-            val loc = mapLayout?.let { layout ->
+            mapLayout?.let { layout ->
                 WarehouseMapDialog.show(this, location, layout) { floor, zoneCode, _, _, cellKey ->
-                    startActivity(CellDetailActivity.createIntent(this, floor, zoneCode, cellKey))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    startWithSlide(CellDetailActivity.createIntent(this, floor, zoneCode, cellKey))
                 }
             }
         }
     }
 
     private fun loadCellPhotos(layout: MapLayout, location: String?) {
-        val parsedZone = parseLocationZone(location) ?: return
-        val parsedShelf = parseLocationShelf(location) ?: return
+        val parsed = ParsedLocation.parse(location)
+        if (parsed.zone.isEmpty() || parsed.shelf.isEmpty()) return
 
-        val zone = layout.zones.find { it.code == parsedZone } ?: return
+        val zone = layout.zones.find { it.code == parsed.zone } ?: return
 
         for (r in 1..zone.rows) {
             for (c in 1..zone.cols) {
                 val cellNum = (r - 1) * zone.cols + c
-                if (cellNum.toString() != parsedShelf) continue
+                if (cellNum.toString() != parsed.shelf) continue
 
-                val cellKey = "$parsedZone-$r-$c"
+                val cellKey = "${parsed.zone}-$r-$c"
                 val cell = layout.cells[cellKey] ?: continue
                 val levels = cell.levels ?: continue
 
@@ -305,8 +299,7 @@ class BoxDetailActivity : AppCompatActivity() {
                 val layout = mapLayout ?: repository.getMapLayout().getOrNull()
                 if (layout != null) {
                     WarehouseMapDialog.show(this@BoxDetailActivity, box.location, layout) { floor, zoneCode, _, _, cellKey ->
-                        startActivity(CellDetailActivity.createIntent(this@BoxDetailActivity, floor, zoneCode, cellKey))
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                        startWithSlide(CellDetailActivity.createIntent(this@BoxDetailActivity, floor, zoneCode, cellKey))
                     }
                 }
             }
@@ -328,18 +321,6 @@ class BoxDetailActivity : AppCompatActivity() {
         binding.btnBarPrint.setOnClickListener {
             Toast.makeText(this, "인쇄 기능 준비 중", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun parseLocationZone(location: String?): String? {
-        val loc = location ?: return null
-        val parts = loc.replace("층", "").split("-").map { it.trim() }
-        return if (parts.size >= 2) parts[1] else null
-    }
-
-    private fun parseLocationShelf(location: String?): String? {
-        val loc = location ?: return null
-        val parts = loc.replace("층", "").split("-").map { it.trim() }
-        return if (parts.size >= 3) parts[2] else null
     }
 
     @Deprecated("Deprecated in Java")

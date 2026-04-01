@@ -1,12 +1,8 @@
 import asyncio
 import logging
-import os
-import re
 import time
-import uuid
-from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 
 from app.db.database import get_db, get_read_db
@@ -17,13 +13,12 @@ from app.models.schemas import (
     HistoryItem,
     FavoriteItem, FavoriteRequest,
     RecentScanItem,
-    ShelfListResponse, ShelfUpdate,
 )
 from app.services.product_service import scan_barcode as _scan_barcode
 from app.services.print_service import print_label as _print_label
 from app.services.cart_service import add_to_cart as _add_to_cart
 from app.services.product_service import search_products as _search_products
-from app.services.image_service import get_image_data, guess_media_type, upload_to_webdav, delete_from_webdav
+from app.services.image_service import get_image_data, guess_media_type
 from app.services.stock_service import get_stock as _get_stock
 from app.services.stock_service import update_stock as _update_stock
 from app.services.stock_service import get_stock_log as _get_stock_log
@@ -37,76 +32,9 @@ from app.services.favorite_service import get_favorites as _get_favorites
 from app.services.scan_log_service import log_scan as _log_scan
 from app.services.scan_log_service import get_recent_scans as _get_recent_scans
 from app.services.url_import_service import import_purchase_urls as _import_purchase_urls
-from app.services.shelf_service import (
-    get_shelves as _get_shelves,
-    update_shelf_label as _update_shelf_label,
-    delete_shelf_label as _delete_shelf_label,
-    add_shelf_photo as _add_shelf_photo,
-    delete_shelf_photo as _delete_shelf_photo,
-)
-from app.services.map_layout_service import get_layout as _get_layout
-from app.services.map_layout_service import get_or_init_layout as _get_or_init_layout
-from app.services.map_layout_service import save_layout_only as _save_layout_only
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
-
-_map_layout_lock = asyncio.Lock()
-
-_CELL_KEY_RE = re.compile(r"^[A-Za-z0-9]-\d{1,2}-\d{1,2}$")
-_ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-_MAX_FILE_SIZE = 10 * 1024 * 1024
-
-_PHOTO_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'photos')
-
-
-def _validate_cell_key(cell_key: str) -> None:
-    if not _CELL_KEY_RE.match(cell_key):
-        raise HTTPException(status_code=400, detail="invalid cell_key format")
-
-
-def _validate_upload_file(file: UploadFile, content: bytes) -> None:
-    ext = os.path.splitext(file.filename or "")[1].lower()
-    if ext not in _ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"unsupported file type: {ext}")
-    if len(content) > _MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="file too large (max 10MB)")
-
-
-async def _do_upload_photo(cell_key: str, level_index: int, file: UploadFile, layout: dict) -> str:
-    content = await file.read()
-    _validate_upload_file(file, content)
-
-    os.makedirs(_PHOTO_DIR, exist_ok=True)
-
-    suffix = uuid.uuid4().hex[:8]
-    ext = os.path.splitext(file.filename or "")[1].lower() or ".jpg"
-    filename = f"{cell_key.replace('-', '_')}_L{level_index}_{suffix}{ext}"
-    filepath = os.path.join(_PHOTO_DIR, filename)
-
-    if "cells" not in layout:
-        layout["cells"] = {}
-    cell = layout["cells"].get(cell_key, {})
-    levels = cell.get("levels", [])
-
-    while len(levels) <= level_index:
-        levels.append({"label": f"{len(levels)+1}층", "photo": "", "itemLabel": "", "sku": ""})
-
-    old_photo = levels[level_index].get("photo", "")
-    if old_photo:
-        old_filepath = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
-        if os.path.exists(old_filepath):
-            os.remove(old_filepath)
-
-    with open(filepath, 'wb') as f:
-        f.write(content)
-
-    photo_url = f"/static/photos/{filename}"
-    levels[level_index]["photo"] = photo_url
-    cell["levels"] = levels
-    layout["cells"][cell_key] = cell
-
-    return photo_url
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)
@@ -170,7 +98,7 @@ async def status():
 
 @router.post("/print")
 async def print_label(body: PrintRequest):
-    result = _print_label(body.product_name, body.barcode, body.sku_id, body.quantity)
+    result = await asyncio.to_thread(_print_label, body.product_name, body.barcode, body.sku_id, body.quantity)
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
     db = await get_db()
@@ -180,7 +108,7 @@ async def print_label(body: PrintRequest):
 
 @router.post("/cart")
 async def add_to_cart(body: CartRequest):
-    result = _add_to_cart(body.barcode, body.sku_id, body.product_name, body.quantity)
+    result = await asyncio.to_thread(_add_to_cart, body.barcode, body.sku_id, body.product_name, body.quantity)
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
     db = await get_db()
@@ -254,199 +182,15 @@ async def import_urls(file_path: str = Query(...)):
     return result
 
 
-@router.get("/shelves/{floor}/{zone}", response_model=ShelfListResponse)
-async def get_shelves(floor: int, zone: str) -> ShelfListResponse:
-    db = await get_read_db()
-    layout = await _get_or_init_layout(db)
-    zone_def = next((z for z in layout.get("zones", []) if z["code"] == zone), None)
-    if not zone_def:
-        return ShelfListResponse(floor=floor, zone=zone, shelves=[])
-
-    from app.models.schemas import ShelfItem as ShelfItemSchema
-    shelves = []
-    for r in range(1, zone_def["rows"] + 1):
-        for c in range(1, zone_def["cols"] + 1):
-            cell_key = f"{zone}-{r}-{c}"
-            cell_key_padded = f"{zone}-{str(r).zfill(2)}-{str(c).zfill(2)}"
-            cells = layout.get("cells", {})
-            cell = cells.get(cell_key) or cells.get(cell_key_padded) or {}
-            shelf_num = (r - 1) * zone_def["cols"] + c
-            levels = cell.get("levels", [])
-            photo_url = levels[0].get("photo") if levels else None
-            shelves.append(ShelfItemSchema(
-                id=shelf_num,
-                floor=floor,
-                zone=zone,
-                shelf_number=shelf_num,
-                label=cell.get("label"),
-                photo_path=None,
-                photo_url=photo_url,
-                cell_key=cell_key,
-            ))
-    return ShelfListResponse(floor=floor, zone=zone, shelves=shelves)
-
-
-@router.patch("/shelf/{shelf_id}")
-async def update_shelf_label(shelf_id: int, body: ShelfUpdate):
-    db = await get_db()
-    result = await _update_shelf_label(db, shelf_id, body.label)
-    if result is None:
-        raise HTTPException(status_code=404, detail="shelf not found")
-    return result
-
-
-@router.delete("/shelf/{shelf_id}/label")
-async def delete_shelf_label(shelf_id: int):
-    db = await get_db()
-    found = await _delete_shelf_label(db, shelf_id)
-    if not found:
-        raise HTTPException(status_code=404, detail="shelf not found")
-    return {"status": "ok"}
-
-
-@router.post("/shelf/{shelf_id}/photo")
-async def upload_shelf_photo(shelf_id: int, file: UploadFile, request: Request):
-    from app.config import settings
-    db = await get_read_db()
-    rows = await db.execute_fetchall(
-        "SELECT floor, zone, shelf_number FROM shelf WHERE id = ?", (shelf_id,)
-    )
-    if not rows:
-        raise HTTPException(status_code=404, detail="shelf not found")
-    floor, zone, shelf_number = rows[0]
-
-    file_bytes = await file.read()
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-    filename = f"{floor}-{zone}-{shelf_number:02d}_{timestamp}.jpg"
-    remote_path = f"{settings.shelf_photo_nas_prefix}/{filename}"
-
-    http_client = request.app.state.http_client
-    await upload_to_webdav(http_client, file_bytes, remote_path)
-
-    write_db = await get_db()
-    photo_id = await _add_shelf_photo(write_db, shelf_id, remote_path)
-
-    return {
-        "id": photo_id,
-        "shelf_id": shelf_id,
-        "file_path": remote_path,
-        "photo_url": f"/api/image/{remote_path}",
-    }
-
-
-@router.delete("/shelf/photo/{photo_id}")
-async def delete_shelf_photo(photo_id: int, request: Request):
-    db = await get_db()
-    file_path = await _delete_shelf_photo(db, photo_id)
-    if file_path is None:
-        raise HTTPException(status_code=404, detail="photo not found")
-
-    http_client = request.app.state.http_client
-    await delete_from_webdav(http_client, file_path)
-
-    return {"status": "ok"}
-
-
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 61,
-        "versionName": "4.3.4",
+        "versionCode": 62,
+        "versionName": "4.4.0",
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "최신 버전",
         "forceUpdate": False
     }
-
-
-@router.get("/map-layout")
-async def get_map_layout():
-    db = await get_read_db()
-    return await _get_or_init_layout(db)
-
-
-@router.post("/map-layout")
-async def save_map_layout(request: Request):
-    body = await request.json()
-    db = await get_db()
-    async with _map_layout_lock:
-        await _save_layout_only(db, body)
-    return {"status": "ok", "message": "저장 완료"}
-
-
-@router.post("/map-layout/cell/{cell_key}/photo")
-async def upload_cell_photo(cell_key: str, file: UploadFile):
-    _validate_cell_key(cell_key)
-    db = await get_db()
-    async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        photo_url = await _do_upload_photo(cell_key, 0, file, layout)
-        await _save_layout_only(db, layout)
-    return {"status": "ok", "photo_url": photo_url}
-
-
-@router.delete("/map-layout/cell/{cell_key}/photo")
-async def delete_cell_photo(cell_key: str):
-    _validate_cell_key(cell_key)
-    db = await get_db()
-    async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        cell = layout.get("cells", {}).get(cell_key)
-        if cell is None:
-            return {"status": "ok"}
-
-        levels = cell.get("levels", [])
-        for level in levels:
-            photo = level.get("photo", "")
-            if photo:
-                filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-                level["photo"] = ""
-
-        cell["levels"] = levels
-        layout["cells"][cell_key] = cell
-        await _save_layout_only(db, layout)
-    return {"status": "ok"}
-
-
-@router.post("/map-layout/cell/{cell_key}/level/{level_index}/photo")
-async def upload_level_photo(cell_key: str, level_index: int, file: UploadFile):
-    _validate_cell_key(cell_key)
-    if level_index < 0:
-        raise HTTPException(status_code=400, detail="level_index must be >= 0")
-    db = await get_db()
-    async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        photo_url = await _do_upload_photo(cell_key, level_index, file, layout)
-        await _save_layout_only(db, layout)
-    return {"status": "ok", "photo_url": photo_url}
-
-
-@router.delete("/map-layout/cell/{cell_key}/level/{level_index}/photo")
-async def delete_level_photo(cell_key: str, level_index: int):
-    _validate_cell_key(cell_key)
-    if level_index < 0:
-        raise HTTPException(status_code=400, detail="level_index must be >= 0")
-    db = await get_db()
-    async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        cell = layout.get("cells", {}).get(cell_key)
-        if cell is None:
-            return {"status": "ok"}
-
-        levels = cell.get("levels", [])
-        if level_index < len(levels):
-            photo = levels[level_index].get("photo", "")
-            if photo:
-                filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-                levels[level_index]["photo"] = ""
-
-        cell["levels"] = levels
-        layout["cells"][cell_key] = cell
-        await _save_layout_only(db, layout)
-    return {"status": "ok"}
 
 
 @router.patch("/product/{sku_id}/location")
@@ -462,17 +206,3 @@ async def update_product_location(sku_id: str, request: Request):
     if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="product not found")
     return {"status": "ok", "location": location}
-
-
-@router.patch("/map-layout/cell/{cell_key}")
-async def update_map_cell(cell_key: str, request: Request):
-    _validate_cell_key(cell_key)
-    body = await request.json()
-    db = await get_db()
-    async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        if "cells" not in layout:
-            layout["cells"] = {}
-        layout["cells"][cell_key] = {**layout["cells"].get(cell_key, {}), **body}
-        await _save_layout_only(db, layout)
-    return {"status": "ok"}

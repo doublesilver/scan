@@ -11,7 +11,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,7 +24,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class ShelfListActivity : AppCompatActivity() {
+class ShelfListActivity : BaseActivity() {
 
     companion object {
         private const val EXTRA_FLOOR = "extra_floor"
@@ -79,14 +78,10 @@ class ShelfListActivity : AppCompatActivity() {
 
         binding.tvZoneTitle.text = "${floor}층 ${zone}구역"
 
-        binding.btnBack.setOnClickListener {
-            finish()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
+        binding.btnBack.setOnClickListener { finishWithSlide() }
 
         binding.btnBarEdit.setOnClickListener {
-            startActivity(MapEditorActivity.createIntent(this, zone))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startWithSlide(MapEditorActivity.createIntent(this, zone))
         }
 
         adapter = ShelfAdapter(
