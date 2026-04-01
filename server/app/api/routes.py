@@ -185,8 +185,8 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 67,
-        "versionName": "4.5.4",
+        "versionCode": 68,
+        "versionName": "4.5.5",
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "최신 버전",
         "forceUpdate": False

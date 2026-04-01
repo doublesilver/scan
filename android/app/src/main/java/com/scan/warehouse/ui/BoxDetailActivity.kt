@@ -30,6 +30,7 @@ import com.scan.warehouse.databinding.ActivityBoxDetailBinding
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.ParsedLocation
+import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.repository.ProductRepository
 import kotlinx.coroutines.launch
 
@@ -65,10 +66,26 @@ class BoxDetailActivity : BaseActivity() {
         binding.tvProductMasterName.text = box.productMasterName
         currentLocation = box.location
         setupLocationTags(box)
-        setupOptionImages(box)
         setupLinkButtons(box)
         setupBottomBar(box)
         setupImageZoom()
+
+        lifecycleScope.launch {
+            val (searchResult, _) = repository.searchProducts(box.productMasterName.take(10), 20)
+            searchResult.onSuccess { resp ->
+                products = resp.items.mapNotNull { item ->
+                    if (item.barcode != null) {
+                        val (scanResult, _) = repository.scanBarcode(item.barcode)
+                        scanResult.getOrNull()
+                    } else null
+                }
+                setupOptionImages(box)
+                setupSourcingImages(box)
+            }.onFailure {
+                setupOptionImages(box)
+                setupSourcingImages(box)
+            }
+        }
 
         loadMapAndPhotos(box)
     }
@@ -227,32 +244,65 @@ class BoxDetailActivity : BaseActivity() {
     }
 
     private fun setupOptionImages(box: BoxResponse) {
-        if (box.productMasterImage == null) return
-
         binding.layoutOptionImages.removeAllViews()
         val density = resources.displayMetrics.density
+        val imageUrls = mutableListOf<String>()
 
-        val mainImage = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (140 * density).toInt()).apply {
-                bottomMargin = (6 * density).toInt()
+        if (box.productMasterImage != null) imageUrls.add(box.productMasterImage)
+        box.members.forEach { m ->
+            val product = products?.find { it.skuId == m.skuId }
+            product?.images?.firstOrNull()?.filePath?.let { if (it !in imageUrls) imageUrls.add(it) }
+        }
+        if (imageUrls.isEmpty()) return
+
+        for ((i, url) in imageUrls.withIndex()) {
+            val iv = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (80 * density).toInt()).apply {
+                    bottomMargin = (4 * density).toInt()
+                }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
             }
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
+            iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
+                crossfade(true)
+                placeholder(R.drawable.ic_placeholder)
+                error(R.drawable.ic_placeholder)
+            }
+            iv.setOnClickListener { showZoomDialog(iv) }
+            binding.layoutOptionImages.addView(iv)
         }
-        mainImage.load(box.productMasterImage) {
-            crossfade(true)
-            placeholder(R.drawable.ic_placeholder)
-            error(R.drawable.ic_placeholder)
-        }
-        binding.layoutOptionImages.addView(mainImage)
+    }
 
-        val label = TextView(this).apply {
-            text = "한국 옵션"
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-            setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface_variant))
-            gravity = Gravity.CENTER
+    private var products: List<ScanResponse>? = null
+
+    private fun setupSourcingImages(box: BoxResponse) {
+        binding.layoutSourcingImages.removeAllViews()
+        val density = resources.displayMetrics.density
+        val imageUrls = mutableListOf<String>()
+
+        box.members.take(4).forEach { m ->
+            val product = products?.find { it.skuId == m.skuId }
+            product?.images?.firstOrNull()?.filePath?.let { imageUrls.add(it) }
         }
-        binding.layoutOptionImages.addView(label)
+        if (box.productMasterImage != null && imageUrls.isEmpty()) imageUrls.add(box.productMasterImage)
+        if (imageUrls.isEmpty()) return
+
+        for (url in imageUrls) {
+            val iv = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (80 * density).toInt()).apply {
+                    bottomMargin = (4 * density).toInt()
+                }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
+            }
+            iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
+                crossfade(true)
+                placeholder(R.drawable.ic_placeholder)
+                error(R.drawable.ic_placeholder)
+            }
+            iv.setOnClickListener { showZoomDialog(iv) }
+            binding.layoutSourcingImages.addView(iv)
+        }
     }
 
     private fun setupLinkButtons(box: BoxResponse) {

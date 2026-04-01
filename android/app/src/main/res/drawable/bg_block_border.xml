@@ -4,6 +4,6 @@
     <solid android:color="@color/surface_container_lowest" />
     <stroke
         android:width="2dp"
-        android:color="@color/outline_variant" />
+        android:color="@color/error" />
     <corners android:radius="8dp" />
 </shape>
