@@ -42,6 +42,9 @@ class ScanViewModel(
     private val _boxResult = MutableLiveData<BoxResponse?>()
     val boxResult: LiveData<BoxResponse?> = _boxResult
 
+    private val _boxNotFound = MutableLiveData<String?>()
+    val boxNotFound: LiveData<String?> = _boxNotFound
+
     private var lastScanTime = 0L
 
     fun scanBarcode(barcode: String) {
@@ -119,13 +122,23 @@ class ScanViewModel(
         viewModelScope.launch {
             repository.scanBox(qrCode)
                 .onSuccess { _boxResult.value = it }
-                .onFailure { _error.value = "박스 조회 실패: ${it.message}" }
+                .onFailure { e ->
+                    if (e is retrofit2.HttpException && e.code() == 404) {
+                        _boxNotFound.value = qrCode
+                    } else {
+                        _error.value = "박스 조회 실패: ${e.message}"
+                    }
+                }
             _isLoading.value = false
         }
     }
 
     fun clearBoxResult() {
         _boxResult.value = null
+    }
+
+    fun clearBoxNotFound() {
+        _boxNotFound.value = null
     }
 
     companion object {

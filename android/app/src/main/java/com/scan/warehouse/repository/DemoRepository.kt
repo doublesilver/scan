@@ -204,6 +204,33 @@ class DemoRepository(context: Context) : ProductRepository(context) {
         return Result.success(Unit)
     }
 
+    override suspend fun createBox(data: Map<String, Any>): Result<BoxResponse> {
+        delay(500)
+        val qrCode = data["qr_code"] as? String ?: "BOX-DEMO"
+        return Result.success(BoxResponse(
+            qrCode = qrCode,
+            boxName = data["box_name"] as? String ?: "외박스 $qrCode",
+            productMasterName = data["product_master_name"] as? String ?: "데모 상품",
+            location = data["location"] as? String,
+            members = emptyList()
+        ))
+    }
+
+    override suspend fun updateBox(qrCode: String, data: Map<String, String>): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun addBoxMember(qrCode: String, data: Map<String, String>): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun removeBoxMember(qrCode: String, skuId: String): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
     override suspend fun getMapLayout(): Result<MapLayout> {
         return Result.success(MapLayout(
             title = "창고 도면",

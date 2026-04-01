@@ -158,4 +158,12 @@ open class ProductRepository(protected val context: Context) {
         api.updateProductLocation(skuId, mapOf("location" to location))
     }
 
+    open suspend fun createBox(data: Map<String, Any>): Result<BoxResponse> = safeCall { api.createBox(data) }
+
+    open suspend fun updateBox(qrCode: String, data: Map<String, String>): Result<Unit> = safeCall { api.updateBox(qrCode, data); Unit }
+
+    open suspend fun addBoxMember(qrCode: String, data: Map<String, String>): Result<Unit> = safeCall { api.addBoxMember(qrCode, data); Unit }
+
+    open suspend fun removeBoxMember(qrCode: String, skuId: String): Result<Unit> = safeCall { api.removeBoxMember(qrCode, skuId); Unit }
+
 }

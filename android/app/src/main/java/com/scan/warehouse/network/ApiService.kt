@@ -91,4 +91,16 @@ interface ApiService {
     @PATCH("api/product/{skuId}/location")
     suspend fun updateProductLocation(@Path("skuId") skuId: String, @Body data: Map<String, String>): Map<String, String>
 
+    @POST("api/box")
+    suspend fun createBox(@Body data: Map<String, @JvmSuppressWildcards Any>): BoxResponse
+
+    @PATCH("api/box/{qrCode}")
+    suspend fun updateBox(@Path("qrCode") qrCode: String, @Body data: Map<String, String>): Map<String, String>
+
+    @POST("api/box/{qrCode}/member")
+    suspend fun addBoxMember(@Path("qrCode") qrCode: String, @Body data: Map<String, String>): Map<String, String>
+
+    @DELETE("api/box/{qrCode}/member/{skuId}")
+    suspend fun removeBoxMember(@Path("qrCode") qrCode: String, @Path("skuId") skuId: String): Map<String, String>
+
 }

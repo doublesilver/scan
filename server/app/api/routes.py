@@ -24,6 +24,10 @@ from app.services.stock_service import update_stock as _update_stock
 from app.services.stock_service import get_stock_log as _get_stock_log
 from app.services.status_service import get_status as _get_status
 from app.services.box_service import get_box as _get_box
+from app.services.box_service import create_box as _create_box
+from app.services.box_service import update_box as _update_box
+from app.services.box_service import add_member as _add_member
+from app.services.box_service import remove_member as _remove_member
 from app.services.history_service import log_action as _log_action
 from app.services.history_service import get_history as _get_history
 from app.services.favorite_service import add_favorite as _add_favorite
@@ -134,6 +138,63 @@ async def get_box(qr_code: str) -> BoxResponse:
     if result is None:
         raise HTTPException(status_code=404, detail="box not found")
     return result
+
+
+@router.post("/box", response_model=BoxResponse)
+async def create_box(request: Request) -> BoxResponse:
+    body = await request.json()
+    db = await get_db()
+    result = await _create_box(
+        db,
+        qr_code=body["qr_code"],
+        box_name=body["box_name"],
+        product_master_name=body["product_master_name"],
+        location=body.get("location"),
+        members=body.get("members", []),
+    )
+    return result
+
+
+@router.patch("/box/{qr_code}", response_model=BoxResponse)
+async def update_box(qr_code: str, request: Request) -> BoxResponse:
+    body = await request.json()
+    db = await get_db()
+    result = await _update_box(
+        db,
+        qr_code=qr_code,
+        box_name=body.get("box_name"),
+        product_master_name=body.get("product_master_name"),
+        location=body.get("location"),
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="box not found")
+    return result
+
+
+@router.post("/box/{qr_code}/member")
+async def add_box_member(qr_code: str, request: Request):
+    body = await request.json()
+    db = await get_db()
+    found = await _add_member(
+        db,
+        qr_code=qr_code,
+        sku_id=body["sku_id"],
+        sku_name=body["sku_name"],
+        barcode=body.get("barcode"),
+        location=body.get("location"),
+    )
+    if not found:
+        raise HTTPException(status_code=404, detail="box not found")
+    return {"status": "ok"}
+
+
+@router.delete("/box/{qr_code}/member/{sku_id}")
+async def remove_box_member(qr_code: str, sku_id: str):
+    db = await get_db()
+    found = await _remove_member(db, qr_code=qr_code, sku_id=sku_id)
+    if not found:
+        raise HTTPException(status_code=404, detail="not found")
+    return {"status": "ok"}
 
 
 @router.get("/history", response_model=list[HistoryItem])

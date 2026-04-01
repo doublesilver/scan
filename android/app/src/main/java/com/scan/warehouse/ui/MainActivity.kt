@@ -7,6 +7,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -188,11 +189,29 @@ class MainActivity : BaseActivity() {
             }
         }
 
+        viewModel.boxNotFound.observe(this) { qrCode ->
+            if (qrCode != null) {
+                showBoxNotFoundDialog(qrCode)
+                viewModel.clearBoxNotFound()
+            }
+        }
+
     }
 
     private fun showBoxDialog(box: com.scan.warehouse.model.BoxResponse) {
         val json = com.google.gson.Gson().toJson(box)
         startWithSlide(BoxDetailActivity.createIntent(this, json))
+    }
+
+    private fun showBoxNotFoundDialog(qrCode: String) {
+        AlertDialog.Builder(this)
+            .setTitle("등록되지 않은 박스")
+            .setMessage("등록되지 않은 박스입니다. 등록하시겠습니까?")
+            .setPositiveButton("등록하기") { _, _ ->
+                startWithSlide(BoxRegisterActivity.createIntent(this, qrCode))
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     private var currentScanResult: ScanResponse? = null

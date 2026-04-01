@@ -142,34 +142,40 @@ class BoxDetailActivity : BaseActivity() {
         animators.forEach { it.cancel() }
         animators.clear()
         binding.layoutInlineMap.removeAllViews()
+        binding.layoutInlineMap.orientation = LinearLayout.HORIZONTAL
         val density = resources.displayMetrics.density
         val parsed = ParsedLocation.parse(location)
         val zones = layout.zones.ifEmpty { return }
 
         for (zone in zones) {
-            binding.layoutInlineMap.addView(TextView(this).apply {
+            val zoneContainer = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, 1f).apply {
+                    marginEnd = (2 * density).toInt()
+                }
+            }
+            zoneContainer.addView(TextView(this).apply {
                 text = zone.name
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
+                gravity = Gravity.CENTER
             })
             val grid = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                    bottomMargin = (2 * density).toInt()
-                }
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
             }
             for (r in 1..zone.rows) {
                 val row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
-                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
                 }
                 for (c in 1..zone.cols) {
                     val cellNum = (r - 1) * zone.cols + c
                     val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
                     val cellView = TextView(this).apply {
                         text = "${zone.code}-$cellNum"
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 5f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
                         if (isHighlight) {
@@ -181,7 +187,7 @@ class BoxDetailActivity : BaseActivity() {
                             background = gd
                             setTextColor(Color.BLACK)
                             setTypeface(null, Typeface.BOLD)
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
+                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
                         } else {
                             val bgColor = if (layout.cells["${zone.code}-$r-$c"]?.status == "used")
                                 ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
@@ -189,7 +195,7 @@ class BoxDetailActivity : BaseActivity() {
                             setBackgroundColor(bgColor)
                         }
                         val margin = (1 * density).toInt()
-                        layoutParams = LinearLayout.LayoutParams(0, (16 * density).toInt(), 1f).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, 1f).apply {
                             setMargins(margin, margin, margin, margin)
                         }
                     }
@@ -206,7 +212,8 @@ class BoxDetailActivity : BaseActivity() {
                 }
                 grid.addView(row)
             }
-            binding.layoutInlineMap.addView(grid)
+            zoneContainer.addView(grid)
+            binding.layoutInlineMap.addView(zoneContainer)
         }
 
         binding.blockMap.setOnClickListener {
@@ -255,13 +262,13 @@ class BoxDetailActivity : BaseActivity() {
         }
         if (imageUrls.isEmpty()) return
 
-        for ((i, url) in imageUrls.withIndex()) {
+        for (url in imageUrls) {
             val iv = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (80 * density).toInt()).apply {
-                    bottomMargin = (4 * density).toInt()
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                    bottomMargin = (3 * density).toInt()
                 }
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
+                adjustViewBounds = true
+                scaleType = ImageView.ScaleType.FIT_CENTER
             }
             iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
                 crossfade(true)
@@ -289,11 +296,11 @@ class BoxDetailActivity : BaseActivity() {
 
         for (url in imageUrls) {
             val iv = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (80 * density).toInt()).apply {
-                    bottomMargin = (4 * density).toInt()
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                    bottomMargin = (3 * density).toInt()
                 }
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_photo_placeholder)
+                adjustViewBounds = true
+                scaleType = ImageView.ScaleType.FIT_CENTER
             }
             iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
                 crossfade(true)
