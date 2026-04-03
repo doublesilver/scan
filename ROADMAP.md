@@ -74,6 +74,72 @@
   - [x] EAN-8/13 바코드 형식 검증 + 300ms debounce
   - [ ] adb broadcast 실기기/에뮬레이터 테스트 (PDA 도착 후)
 
+## M9: 오프라인 캐시 + 서버 자동 발견
+
+- Status: [x] 완료
+- 완료 조건:
+  - [x] Room DB 기반 로컬 캐시 (스캔 기록 저장)
+  - [x] 네트워크 불가 시 캐시 데이터 조회
+  - [x] 내부 WiFi 서브넷 자동 스캔 → 활성 서버 감지
+  - [x] 앱 자동 업데이트: `/api/version` 체크 → APK 다운로드 유도
+
+## M10: 창고 도면 (웹 에디터 + 셀 관리)
+
+- Status: [x] 완료
+- 완료 조건:
+  - [x] `static/map-editor.html` — 드래그 앤 드롭 셀 편집
+  - [x] WarehouseMapDialog — 도면 뷰어 + 셀 터치
+  - [x] CellDetailActivity — 셀별 상품 목록 + 사진
+  - [x] 사진 업로드/삭제 (`POST/DELETE /api/cell/{key}/photo`)
+  - [x] 상품-셀 매칭 (`POST /api/cell/{key}/match`)
+
+## M11: 외박스 QR + 장바구니 + 라벨 인쇄
+
+- Status: [x] 완료
+- 완료 조건:
+  - [x] BoxDetailActivity: 6블록 그리드 + 인라인 도면 미니맵
+  - [x] 외부 링크 저장 (쿠팡 등)
+  - [x] 장바구니: 스캔 상품 추가/수량 조정 + 구글시트 내보내기
+  - [x] TSC TE10 라벨 인쇄 (`POST /api/print/label`)
+
+## M12: 도면 DB 정규화 (v5.0)
+
+- Status: [x] 완료
+- 완료 조건:
+  - [x] JSON blob → warehouse_zone/cell/cell_level/cell_level_product 4테이블 분리
+  - [x] 기존 JSON 데이터 자동 마이그레이션 (데이터 유실 없음)
+  - [x] 14개 새 API 엔드포인트 (zone/cell/level/product CRUD)
+  - [x] PDA 구역 편집 (추가/수정/삭제)
+  - [x] 이전/다음 셀 네비게이션 (27셀 연속 작업)
+  - [x] 빈 셀 진입 시 자동 편집모드
+  - [x] 위치 동기화: 도면 셀 = SSOT, product.location 자동 동기화
+  - [x] 호환 레이어: 기존 GET/POST /api/map-layout 유지
+  - [x] 배포 자동화 `scripts/deploy.sh`
+
+## M13: Hilt DI + 입출고 워크플로우 (v5.1)
+
+- Status: [x] 완료
+- 완료 조건:
+  - [x] Hilt DI: WarehouseApp, AppModule, 전 Activity @AndroidEntryPoint
+  - [x] ScanViewModel → @HiltViewModel
+  - [x] CellDetailViewModel: 셀 데이터·편집모드·네비게이션 상태 관리
+  - [x] 서버: inbound_service, outbound_service, inventory_service
+  - [x] API: POST /inbound, POST /outbound, POST /inventory-check
+  - [x] 앱 하단바 [입고][출고][장바구니] 3버튼
+  - [x] 입고: 스캔 → 도면 셀 선택 → 층 선택 → 등록 + 위치 동기화
+  - [x] 출고: 스캔 → 위치 표시 + 도면 하이라이트 → 피킹 완료
+
+## M14: PDA 실기기 E2E 테스트
+
+- Status: [ ] 대기 중
+- 완료 조건:
+  - [ ] APK v5.1.0 설치 (Mini PC C:\scanner\)
+  - [ ] DataWedge 프로파일 자동 생성 확인
+  - [ ] 실제 바코드 스캔 테스트 (0.3~0.5초 목표)
+  - [ ] 입출고 워크플로우 E2E 테스트
+  - [ ] 오프라인 모드 동작 확인
+  - [ ] 현장 WiFi 환경 테스트
+
 ## M8: 통합 테스트 + 서버 자동 시작
 
 - Status: [x] 완료

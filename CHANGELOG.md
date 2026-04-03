@@ -4,6 +4,26 @@
 
 ---
 
+## [5.1.0] - 2026-04-03
+
+### 추가
+
+- **Hilt DI 도입**: `@HiltAndroidApp`, `AppModule`, 모든 Activity `@AndroidEntryPoint`
+- **CellDetailViewModel**: 셀 데이터·편집모드·네비게이션 상태 관리, Configuration Change 대응
+- **입출고 워크플로우**:
+  - 서버: `inbound_service`, `outbound_service`, `inventory_service`
+  - API: `POST /inbound`, `POST /outbound`, `POST /inventory-check`
+  - 앱 하단바 [입고][출고][장바구니] 3버튼
+  - 입고: 스캔 → 도면 셀 선택 → 층 선택 → 자동 등록 + 위치 동기화
+  - 출고: 스캔 → 위치 표시 + 도면 하이라이트 → 피킹 완료
+
+### 변경
+
+- `ScanViewModel` → `@HiltViewModel + @Inject constructor`
+- `BuildConfig` flavor 분기 → DI Module로 이동
+
+---
+
 ## [5.0.0] - 2026-04-03
 
 ### 추가
