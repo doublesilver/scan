@@ -136,4 +136,15 @@
         android:textColor="@color/on_surface_variant"
         android:visibility="gone" />
 
+    <!-- 상품 추가 버튼 (편집 모드) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAddProduct"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:text="+ 상품 추가"
+        android:textSize="13sp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:visibility="gone" />
+
 </LinearLayout>

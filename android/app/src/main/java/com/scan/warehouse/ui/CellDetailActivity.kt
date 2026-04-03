@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -244,18 +245,19 @@ class CellDetailActivity : BaseActivity() {
             val layoutNoPhoto = card.findViewById<LinearLayout>(R.id.layoutNoPhoto)
             val tvItemLabel = card.findViewById<TextView>(R.id.tvItemLabel)
             val tvSku = card.findViewById<TextView>(R.id.tvSku)
+            val btnAddProduct = card.findViewById<Button>(R.id.btnAddProduct)
 
             tvLabel.text = level.label.ifEmpty { "층 ${i + 1}" }
 
             val levelIndex = i
 
-            // 편집 버튼
             if (editMode) {
                 btnEdit.visibility = View.VISIBLE
                 btnEdit.setOnClickListener { openLevelEditor(levelIndex, level) }
+                btnAddProduct.visibility = View.VISIBLE
+                btnAddProduct.setOnClickListener { openLevelEditor(levelIndex, level) }
             }
 
-            // 사진
             val photoUrl = level.photo
             if (!photoUrl.isNullOrEmpty()) {
                 layoutPhoto.visibility = View.VISIBLE
@@ -276,16 +278,21 @@ class CellDetailActivity : BaseActivity() {
                 layoutNoPhoto.visibility = View.VISIBLE
             }
 
-            // 상품명
             if (!level.itemLabel.isNullOrEmpty()) {
                 tvItemLabel.visibility = View.VISIBLE
                 tvItemLabel.text = level.itemLabel
             }
 
-            // SKU
             if (!level.sku.isNullOrEmpty()) {
                 tvSku.visibility = View.VISIBLE
                 tvSku.text = "SKU: ${level.sku}"
+            }
+
+            if (editMode && !level.itemLabel.isNullOrEmpty()) {
+                card.setOnLongClickListener {
+                    confirmDeleteProduct(levelIndex, level)
+                    true
+                }
             }
 
             binding.layoutLevels.addView(card)
@@ -592,6 +599,24 @@ class CellDetailActivity : BaseActivity() {
             .setPositiveButton("삭제") { _, _ -> deleteLevelPhoto(levelIndex) }
             .setNegativeButton("취소", null)
             .show()
+    }
+
+    private fun confirmDeleteProduct(levelIndex: Int, level: MapLevel) {
+        AlertDialog.Builder(this)
+            .setTitle("상품 삭제")
+            .setMessage("'${level.itemLabel}'을(를) 이 층에서 삭제하시겠습니까?")
+            .setPositiveButton("삭제") { _, _ -> deleteProduct(levelIndex) }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun deleteProduct(levelIndex: Int) {
+        val cell = currentCell ?: return
+        val levels = cell.levels?.toMutableList() ?: return
+        if (levelIndex >= levels.size) return
+        val cleared = levels[levelIndex].copy(itemLabel = null, sku = null, photo = null)
+        levels[levelIndex] = cleared
+        saveLevels(levels, "상품 삭제 실패")
     }
 
     private fun deleteLevelPhoto(levelIndex: Int) {
