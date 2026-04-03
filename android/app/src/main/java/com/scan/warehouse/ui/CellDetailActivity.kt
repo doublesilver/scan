@@ -68,6 +68,8 @@ class CellDetailActivity : BaseActivity() {
     private var currentCell: MapCell? = null
     private var isEditMode = false
     private var zoneColCount = 4
+    private var allCellKeys: ArrayList<String>? = null
+    private var currentCellIndex = -1
 
     private var pendingLevelIndex = -1
     private var pendingPhotoUri: Uri? = null
@@ -133,6 +135,16 @@ class CellDetailActivity : BaseActivity() {
             setEditMode(!isEditMode)
         }
 
+        binding.btnBarPrev.setOnClickListener {
+            val keys = allCellKeys ?: return@setOnClickListener
+            if (currentCellIndex > 0) navigateToCell(keys, currentCellIndex - 1)
+        }
+        binding.btnBarNext.setOnClickListener {
+            val keys = allCellKeys ?: return@setOnClickListener
+            if (currentCellIndex < keys.size - 1) navigateToCell(keys, currentCellIndex + 1)
+        }
+        updateNavButtons()
+
         binding.btnAddLevel.setOnClickListener { addLevel() }
         binding.btnRemoveLevel.setOnClickListener { confirmRemoveLevel() }
 
@@ -163,6 +175,28 @@ class CellDetailActivity : BaseActivity() {
                         layout.zones.find { it.code == zone }?.let { zoneColCount = it.cols }
                         updateTitle()
                         renderLevels(cell, isEditMode)
+
+                        if (allCellKeys == null) {
+                            val keys = ArrayList<String>()
+                            for (z in layout.zones) {
+                                for (r in 1..z.rows) {
+                                    for (c in 1..z.cols) {
+                                        keys.add("${z.code}-$r-$c")
+                                    }
+                                }
+                            }
+                            allCellKeys = keys
+                            currentCellIndex = keys.indexOf(cellKey)
+                            updateNavButtons()
+                        }
+
+                        val isEmpty = cell?.levels?.all { level ->
+                            level.itemLabel.isNullOrEmpty() && level.sku.isNullOrEmpty() && level.photo.isNullOrEmpty()
+                        } ?: true
+                        if (isEmpty && !isEditMode) {
+                            if (currentCell == null) currentCell = MapCell(levels = DEFAULT_LEVELS)
+                            setEditMode(true)
+                        }
                     }
                 }.onFailure {
                     if (!isFinishing && !isDestroyed) {
@@ -605,6 +639,31 @@ class CellDetailActivity : BaseActivity() {
         if (levels.isEmpty()) return
         levels.removeAt(levels.size - 1)
         saveLevels(levels, "층 삭제 실패")
+    }
+
+    private fun navigateToCell(cellKeys: ArrayList<String>, newIndex: Int) {
+        val newCellKey = cellKeys[newIndex]
+        val parts = newCellKey.split("-")
+        val newZone = if (parts.isNotEmpty()) parts[0] else zone
+        val forward = newIndex > currentCellIndex
+        val intent = createIntent(this, floor, newZone, newCellKey)
+        startActivity(intent)
+        finish()
+        overridePendingTransition(
+            if (forward) R.anim.slide_in_right else R.anim.slide_in_left,
+            if (forward) R.anim.slide_out_left else R.anim.slide_out_right
+        )
+    }
+
+    private fun updateNavButtons() {
+        val keys = allCellKeys
+        val idx = currentCellIndex
+        val hasPrev = keys != null && idx > 0
+        val hasNext = keys != null && idx < keys.size - 1
+        binding.btnBarPrev.alpha = if (hasPrev) 1f else 0.3f
+        binding.btnBarPrev.isEnabled = hasPrev
+        binding.btnBarNext.alpha = if (hasNext) 1f else 0.3f
+        binding.btnBarNext.isEnabled = hasNext
     }
 
     override fun onDestroy() {
