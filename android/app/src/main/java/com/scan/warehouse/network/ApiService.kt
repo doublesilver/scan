@@ -142,13 +142,4 @@ interface ApiService {
     @DELETE("api/level-products/{productId}/photo")
     suspend fun deleteLevelProductPhoto(@Path("productId") productId: Int): Map<String, String>
 
-    @POST("api/inbound")
-    suspend fun processInbound(@Body data: Map<String, @JvmSuppressWildcards Any>): Map<String, String>
-
-    @POST("api/outbound")
-    suspend fun processOutbound(@Body data: Map<String, @JvmSuppressWildcards Any>): Map<String, String>
-
-    @POST("api/inventory-check")
-    suspend fun inventoryCheck(@Body data: Map<String, @JvmSuppressWildcards Any>): Map<String, @JvmSuppressWildcards Any>
-
 }

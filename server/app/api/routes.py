@@ -36,9 +36,6 @@ from app.services.favorite_service import get_favorites as _get_favorites
 from app.services.scan_log_service import log_scan as _log_scan
 from app.services.scan_log_service import get_recent_scans as _get_recent_scans
 from app.services.url_import_service import import_purchase_urls as _import_purchase_urls
-from app.services.inbound_service import process_inbound as _process_inbound
-from app.services.outbound_service import process_outbound as _process_outbound
-from app.services.inventory_service import check_inventory as _check_inventory
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -269,58 +266,12 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 70,
-        "versionName": "5.0.0",
+        "versionCode": 71,
+        "versionName": "5.1.0",
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "최신 버전",
         "forceUpdate": False
     }
-
-
-@router.post("/inbound")
-async def inbound(request: Request):
-    body = await request.json()
-    barcode = body.get("barcode")
-    cell_key = body.get("cell_key")
-    if not barcode or not cell_key:
-        raise HTTPException(status_code=400, detail="barcode and cell_key are required")
-    level_index = body.get("level_index", 0)
-    quantity = body.get("quantity", 1)
-    db = await get_db()
-    async with _write_lock:
-        result = await _process_inbound(db, barcode, cell_key, level_index, quantity)
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-    return result
-
-
-@router.post("/outbound")
-async def outbound(request: Request):
-    body = await request.json()
-    barcode = body.get("barcode")
-    if not barcode:
-        raise HTTPException(status_code=400, detail="barcode is required")
-    quantity = body.get("quantity", 1)
-    db = await get_db()
-    async with _write_lock:
-        result = await _process_outbound(db, barcode, quantity)
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-    return result
-
-
-@router.post("/inventory-check")
-async def inventory_check(request: Request):
-    body = await request.json()
-    cell_key = body.get("cell_key")
-    scanned_barcodes = body.get("scanned_barcodes", [])
-    if not cell_key:
-        raise HTTPException(status_code=400, detail="cell_key is required")
-    db = await get_read_db()
-    result = await _check_inventory(db, cell_key, scanned_barcodes)
-    if result.get("status") == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-    return result
 
 
 @router.patch("/product/{sku_id}/location")

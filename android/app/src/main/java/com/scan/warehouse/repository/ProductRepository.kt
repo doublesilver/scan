@@ -181,16 +181,4 @@ open class ProductRepository(protected val context: Context) {
     open suspend fun uploadLevelProductPhoto(productId: Int, filePart: MultipartBody.Part): Result<Unit> = safeCall { api.uploadLevelProductPhoto(productId, filePart); Unit }
     open suspend fun deleteLevelProductPhoto(productId: Int): Result<Unit> = safeCall { api.deleteLevelProductPhoto(productId); Unit }
 
-    open suspend fun processInbound(barcode: String, cellKey: String, levelIndex: Int, quantity: Int = 1): Result<Map<String, String>> = safeCall {
-        api.processInbound(mapOf("barcode" to barcode, "cell_key" to cellKey, "level_index" to levelIndex, "quantity" to quantity))
-    }
-
-    open suspend fun processOutbound(barcode: String, quantity: Int = 1): Result<Map<String, String>> = safeCall {
-        api.processOutbound(mapOf("barcode" to barcode, "quantity" to quantity))
-    }
-
-    open suspend fun inventoryCheck(cellKey: String, scannedBarcodes: List<String>): Result<Map<String, Any>> = safeCall {
-        api.inventoryCheck(mapOf("cell_key" to cellKey, "scanned_barcodes" to scannedBarcodes))
-    }
-
 }

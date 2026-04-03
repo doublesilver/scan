@@ -17,7 +17,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.ScanResponse
-import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.network.UpdateManager
 import com.scan.warehouse.repository.ProductRepository
@@ -26,7 +25,6 @@ import com.scan.warehouse.viewmodel.ScanViewModel
 import android.view.inputmethod.InputMethodManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -83,14 +81,6 @@ class MainActivity : BaseActivity() {
     private fun setupHeader() {
         binding.btnBarCart.setOnClickListener {
             currentScanResult?.let { addToCart(it) }
-        }
-
-        binding.btnInbound.setOnClickListener {
-            currentScanResult?.let { startInbound(it) }
-        }
-
-        binding.btnOutbound.setOnClickListener {
-            currentScanResult?.let { startOutbound(it) }
         }
 
         binding.btnSettings.setOnClickListener {
@@ -300,99 +290,6 @@ class MainActivity : BaseActivity() {
             }
         }
         return super.dispatchKeyEvent(event)
-    }
-
-    private var cachedMapLayout: com.scan.warehouse.model.MapLayout? = null
-
-    private fun startInbound(data: ScanResponse) {
-        val barcode = data.barcodes.firstOrNull() ?: return
-        Toast.makeText(this, "위치를 선택하세요", Toast.LENGTH_SHORT).show()
-
-        lifecycleScope.launch {
-            if (cachedMapLayout == null) {
-                repository.getMapLayout().onSuccess { cachedMapLayout = it }
-            }
-            WarehouseMapDialog.show(
-                context = this@MainActivity,
-                location = data.location,
-                mapLayout = cachedMapLayout,
-                onCellClick = { _, zone, row, col, cellKey ->
-                    showLevelSelectDialog(barcode, data.productName, cellKey, zone, row, col)
-                }
-            )
-        }
-    }
-
-    private fun showLevelSelectDialog(barcode: String, productName: String, cellKey: String, zone: String, row: Int, col: Int) {
-        val levels = arrayOf("하단 (1층)", "중단 (2층)", "상단 (3층)")
-        AlertDialog.Builder(this)
-            .setTitle("층 선택")
-            .setItems(levels) { _, which ->
-                processInbound(barcode, productName, cellKey, which)
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-
-    private fun processInbound(barcode: String, productName: String, cellKey: String, levelIndex: Int) {
-        lifecycleScope.launch {
-            try {
-                val result = repository.processInbound(barcode, cellKey, levelIndex)
-                result.onSuccess { map ->
-                    val name = map["product_name"] ?: productName
-                    val loc = map["location"] ?: cellKey
-                    Toast.makeText(this@MainActivity, "입고 완료: $name → $loc", Toast.LENGTH_SHORT).show()
-                }.onFailure { e ->
-                    Toast.makeText(this@MainActivity, "입고 실패: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "입고 실패: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun startOutbound(data: ScanResponse) {
-        val barcode = data.barcodes.firstOrNull() ?: return
-        val location = data.location
-
-        if (location != null) {
-            lifecycleScope.launch {
-                if (cachedMapLayout == null) {
-                    repository.getMapLayout().onSuccess { cachedMapLayout = it }
-                }
-                WarehouseMapDialog.show(
-                    context = this@MainActivity,
-                    location = location,
-                    mapLayout = cachedMapLayout,
-                )
-            }
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("출고 확인")
-            .setMessage("${data.productName}\n위치: ${location ?: "미지정"}\n\n피킹을 완료하시겠습니까?")
-            .setPositiveButton("피킹 완료") { _, _ ->
-                processOutbound(barcode, data.productName)
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-
-    private fun processOutbound(barcode: String, productName: String) {
-        lifecycleScope.launch {
-            try {
-                val result = repository.processOutbound(barcode)
-                result.onSuccess { map ->
-                    val name = map["product_name"] ?: productName
-                    val loc = map["location"] ?: ""
-                    Toast.makeText(this@MainActivity, "출고 완료: $name ($loc)", Toast.LENGTH_SHORT).show()
-                }.onFailure { e ->
-                    Toast.makeText(this@MainActivity, "출고 실패: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "출고 실패: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     private fun addToCart(data: ScanResponse) {

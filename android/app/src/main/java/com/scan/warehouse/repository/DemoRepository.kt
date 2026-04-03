@@ -351,25 +351,6 @@ class DemoRepository(context: Context) : ProductRepository(context) {
         return Result.success(Unit)
     }
 
-    override suspend fun processInbound(barcode: String, cellKey: String, levelIndex: Int, quantity: Int): Result<Map<String, String>> {
-        delay(300)
-        val product = products.find { it.barcodes.contains(barcode) }
-        val name = product?.productName ?: "알 수 없는 상품"
-        return Result.success(mapOf("status" to "ok", "product_name" to name, "location" to "${cellKey}구역", "sku_id" to (product?.skuId ?: "")))
-    }
-
-    override suspend fun processOutbound(barcode: String, quantity: Int): Result<Map<String, String>> {
-        delay(300)
-        val product = products.find { it.barcodes.contains(barcode) }
-        val name = product?.productName ?: "알 수 없는 상품"
-        return Result.success(mapOf("status" to "ok", "product_name" to name, "location" to (product?.location ?: ""), "sku_id" to (product?.skuId ?: "")))
-    }
-
-    override suspend fun inventoryCheck(cellKey: String, scannedBarcodes: List<String>): Result<Map<String, Any>> {
-        delay(300)
-        return Result.success(mapOf("status" to "ok", "registered" to emptyList<Any>(), "missing" to emptyList<Any>(), "extra" to emptyList<Any>()))
-    }
-
     override suspend fun getMapLayout(): Result<MapLayout> {
         return Result.success(MapLayout(
             title = "창고 도면",
