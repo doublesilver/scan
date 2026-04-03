@@ -3,8 +3,11 @@ package com.scan.warehouse.repository
 import android.content.Context
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.CartResponse
+import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.FamilyMember
 import com.scan.warehouse.model.ImageItem
+import com.scan.warehouse.model.LevelDetail
+import com.scan.warehouse.model.LevelProduct
 import com.scan.warehouse.model.MapCell
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.MapLevel
@@ -15,6 +18,7 @@ import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.model.ShelfItem
 import com.scan.warehouse.model.ShelfListResponse
+import com.scan.warehouse.model.Zone
 import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 
@@ -227,6 +231,122 @@ class DemoRepository(context: Context) : ProductRepository(context) {
     }
 
     override suspend fun removeBoxMember(qrCode: String, skuId: String): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    private var demoZones = mutableListOf(
+        Zone(1, "1", "501호", 3, 4),
+        Zone(2, "2", "포장다이", 3, 2),
+        Zone(3, "3", "502호", 3, 3)
+    )
+    private var nextZoneId = 4
+
+    override suspend fun getZones(): Result<List<Zone>> {
+        delay(200)
+        return Result.success(demoZones.toList())
+    }
+
+    override suspend fun createZone(data: Map<String, Any>): Result<Zone> {
+        delay(300)
+        val zone = Zone(
+            id = nextZoneId++,
+            code = data["code"]?.toString() ?: "",
+            name = data["name"]?.toString() ?: "",
+            rows = (data["rows"] as? Number)?.toInt() ?: 3,
+            cols = (data["cols"] as? Number)?.toInt() ?: 4
+        )
+        demoZones.add(zone)
+        return Result.success(zone)
+    }
+
+    override suspend fun updateZone(zoneId: Int, data: Map<String, Any>): Result<Zone> {
+        delay(300)
+        val idx = demoZones.indexOfFirst { it.id == zoneId }
+        if (idx < 0) return Result.failure(Exception("구역을 찾을 수 없습니다"))
+        val old = demoZones[idx]
+        val updated = old.copy(
+            name = data["name"]?.toString() ?: old.name,
+            code = data["code"]?.toString() ?: old.code,
+            rows = (data["rows"] as? Number)?.toInt() ?: old.rows,
+            cols = (data["cols"] as? Number)?.toInt() ?: old.cols
+        )
+        demoZones[idx] = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun deleteZone(zoneId: Int): Result<Unit> {
+        delay(300)
+        demoZones.removeAll { it.id == zoneId }
+        return Result.success(Unit)
+    }
+
+    override suspend fun getZoneCells(zoneId: Int): Result<List<CellDetail>> {
+        delay(300)
+        val zone = demoZones.find { it.id == zoneId }
+            ?: return Result.failure(Exception("구역을 찾을 수 없습니다"))
+        val cells = mutableListOf<CellDetail>()
+        var cellId = zoneId * 100
+        for (r in 1..zone.rows) {
+            for (c in 1..zone.cols) {
+                cells.add(CellDetail(
+                    id = cellId++,
+                    zoneId = zoneId,
+                    zoneCode = zone.code,
+                    row = r, col = c,
+                    label = "${zone.code}-${(r - 1) * zone.cols + c}",
+                    status = "empty",
+                    levels = listOf(
+                        LevelDetail(id = cellId * 10, levelIndex = 0, label = "하단 (1층)"),
+                        LevelDetail(id = cellId * 10 + 1, levelIndex = 1, label = "중단 (2층)"),
+                        LevelDetail(id = cellId * 10 + 2, levelIndex = 2, label = "상단 (3층)")
+                    )
+                ))
+            }
+        }
+        return Result.success(cells)
+    }
+
+    override suspend fun getCellDetail(cellId: Int): Result<CellDetail> {
+        delay(300)
+        return Result.success(CellDetail(
+            id = cellId, row = 1, col = 1, label = "데모 셀",
+            levels = listOf(
+                LevelDetail(id = 1, levelIndex = 0, label = "하단 (1층)", products = listOf(
+                    LevelProduct(id = 1, productMasterName = "매트 그레인 스트랩", photo = IMG_STRAP)
+                )),
+                LevelDetail(id = 2, levelIndex = 1, label = "중단 (2층)"),
+                LevelDetail(id = 3, levelIndex = 2, label = "상단 (3층)")
+            )
+        ))
+    }
+
+    override suspend fun addCellLevel(cellId: Int, label: String): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun deleteLevel(levelId: Int): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun addLevelProduct(levelId: Int, data: Map<String, String>): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun removeLevelProduct(productId: Int): Result<Unit> {
+        delay(300)
+        return Result.success(Unit)
+    }
+
+    override suspend fun uploadLevelProductPhoto(productId: Int, filePart: MultipartBody.Part): Result<Unit> {
+        delay(500)
+        return Result.success(Unit)
+    }
+
+    override suspend fun deleteLevelProductPhoto(productId: Int): Result<Unit> {
         delay(300)
         return Result.success(Unit)
     }

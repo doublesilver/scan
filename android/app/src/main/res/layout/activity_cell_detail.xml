@@ -123,6 +123,18 @@
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBarPrev"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="◀ 이전"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="13sp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBarMap"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
@@ -149,6 +161,18 @@
                 android:insetBottom="0dp"
                 app:icon="@drawable/ic_edit"
                 app:iconTint="@color/orange" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBarNext"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="다음 ▶"
+                android:textColor="@color/orange"
+                android:textSize="13sp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
 
         </LinearLayout>
 

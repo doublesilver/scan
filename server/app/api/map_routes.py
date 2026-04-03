@@ -6,7 +6,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 
 from app.db.database import get_db, get_read_db
-from app.services.map_layout_service import get_or_init_layout as _get_or_init_layout
+from app.services import warehouse_service as ws
 from app.services.map_layout_service import save_layout_only as _save_layout_only
 
 router = APIRouter(prefix="/api")
@@ -33,7 +33,41 @@ def _validate_upload_file(file: UploadFile, content: bytes) -> None:
         raise HTTPException(status_code=400, detail="file too large (max 10MB)")
 
 
-async def _do_upload_photo(cell_key: str, level_index: int, file: UploadFile, layout: dict) -> str:
+async def _find_or_create_cell_and_level(db, cell_key: str, level_index: int) -> tuple[int, int]:
+    parts = cell_key.split("-")
+    zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
+
+    zone_row = await db.execute_fetchall(
+        "SELECT id FROM warehouse_zone WHERE code = ?", (zone_code,)
+    )
+    if not zone_row:
+        raise HTTPException(status_code=404, detail="zone not found")
+    zone_id = zone_row[0][0]
+
+    await db.execute(
+        "INSERT OR IGNORE INTO warehouse_cell (zone_id, row, col) VALUES (?, ?, ?)",
+        (zone_id, row_num, col_num),
+    )
+    cell_row = await db.execute_fetchall(
+        "SELECT id FROM warehouse_cell WHERE zone_id = ? AND row = ? AND col = ?",
+        (zone_id, row_num, col_num),
+    )
+    cell_id = cell_row[0][0]
+
+    await db.execute(
+        "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
+        (cell_id, level_index, f"{level_index + 1}층"),
+    )
+    level_row = await db.execute_fetchall(
+        "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+        (cell_id, level_index),
+    )
+    level_id = level_row[0][0]
+
+    return cell_id, level_id
+
+
+async def _do_upload_photo_to_table(cell_key: str, level_index: int, file: UploadFile, db) -> str:
     content = await file.read()
     _validate_upload_file(file, content)
 
@@ -44,36 +78,48 @@ async def _do_upload_photo(cell_key: str, level_index: int, file: UploadFile, la
     filename = f"{cell_key.replace('-', '_')}_L{level_index}_{suffix}{ext}"
     filepath = os.path.join(_PHOTO_DIR, filename)
 
-    if "cells" not in layout:
-        layout["cells"] = {}
-    cell = layout["cells"].get(cell_key, {})
-    levels = cell.get("levels", [])
+    _cell_id, level_id = await _find_or_create_cell_and_level(db, cell_key, level_index)
 
-    while len(levels) <= level_index:
-        levels.append({"label": f"{len(levels)+1}층", "photo": "", "itemLabel": "", "sku": ""})
+    prod_rows = await db.execute_fetchall(
+        "SELECT id, photo FROM cell_level_product WHERE level_id = ? ORDER BY sort_order LIMIT 1",
+        (level_id,),
+    )
 
-    old_photo = levels[level_index].get("photo", "")
-    if old_photo:
-        old_filepath = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
-        resolved = os.path.realpath(old_filepath)
-        if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
-            os.remove(resolved)
+    if prod_rows:
+        product_id = prod_rows[0][0]
+        old_photo = prod_rows[0][1]
+        if old_photo:
+            old_path = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
+            resolved = os.path.realpath(old_path)
+            if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
+                os.remove(resolved)
+        photo_url = f"/static/photos/{filename}"
+        await db.execute(
+            "UPDATE cell_level_product SET photo = ?, updated_at = datetime('now') WHERE id = ?",
+            (photo_url, product_id),
+        )
+    else:
+        photo_url = f"/static/photos/{filename}"
+        await db.execute(
+            "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, '')",
+            (level_id, photo_url),
+        )
 
     with open(filepath, 'wb') as f:
         f.write(content)
 
-    photo_url = f"/static/photos/{filename}"
-    levels[level_index]["photo"] = photo_url
-    cell["levels"] = levels
-    layout["cells"][cell_key] = cell
-
+    await db.commit()
     return photo_url
 
 
 @router.get("/map-layout")
 async def get_map_layout():
     db = await get_read_db()
-    return await _get_or_init_layout(db)
+    zones = await db.execute_fetchall("SELECT COUNT(*) FROM warehouse_zone")
+    if zones and zones[0][0] > 0:
+        return await ws.get_layout_as_json(db)
+    from app.services.map_layout_service import get_or_init_layout
+    return await get_or_init_layout(db)
 
 
 @router.post("/map-layout")
@@ -81,6 +127,7 @@ async def save_map_layout(request: Request):
     body = await request.json()
     db = await get_db()
     async with _map_layout_lock:
+        await ws.save_layout_from_json(db, body)
         await _save_layout_only(db, body)
     return {"status": "ok", "message": "저장 완료"}
 
@@ -90,9 +137,7 @@ async def upload_cell_photo(cell_key: str, file: UploadFile):
     _validate_cell_key(cell_key)
     db = await get_db()
     async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        photo_url = await _do_upload_photo(cell_key, 0, file, layout)
-        await _save_layout_only(db, layout)
+        photo_url = await _do_upload_photo_to_table(cell_key, 0, file, db)
     return {"status": "ok", "photo_url": photo_url}
 
 
@@ -101,24 +146,37 @@ async def delete_cell_photo(cell_key: str):
     _validate_cell_key(cell_key)
     db = await get_db()
     async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        cell = layout.get("cells", {}).get(cell_key)
-        if cell is None:
-            return {"status": "ok"}
+        parts = cell_key.split("-")
+        zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
 
-        levels = cell.get("levels", [])
-        for level in levels:
-            photo = level.get("photo", "")
+        cell_row = await db.execute_fetchall(
+            "SELECT wc.id FROM warehouse_cell wc "
+            "JOIN warehouse_zone wz ON wc.zone_id = wz.id "
+            "WHERE wz.code = ? AND wc.row = ? AND wc.col = ?",
+            (zone_code, row_num, col_num),
+        )
+        if not cell_row:
+            return {"status": "ok"}
+        cell_id = cell_row[0][0]
+
+        prod_rows = await db.execute_fetchall(
+            "SELECT clp.id, clp.photo FROM cell_level_product clp "
+            "JOIN cell_level cl ON clp.level_id = cl.id "
+            "WHERE cl.cell_id = ?",
+            (cell_id,),
+        )
+        for pr in prod_rows:
+            photo = pr[1]
             if photo:
                 filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
                 resolved = os.path.realpath(filepath)
                 if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                     os.remove(resolved)
-                level["photo"] = ""
-
-        cell["levels"] = levels
-        layout["cells"][cell_key] = cell
-        await _save_layout_only(db, layout)
+            await db.execute(
+                "UPDATE cell_level_product SET photo = '', updated_at = datetime('now') WHERE id = ?",
+                (pr[0],),
+            )
+        await db.commit()
     return {"status": "ok"}
 
 
@@ -129,9 +187,7 @@ async def upload_level_photo(cell_key: str, level_index: int, file: UploadFile):
         raise HTTPException(status_code=400, detail="level_index must be >= 0")
     db = await get_db()
     async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        photo_url = await _do_upload_photo(cell_key, level_index, file, layout)
-        await _save_layout_only(db, layout)
+        photo_url = await _do_upload_photo_to_table(cell_key, level_index, file, db)
     return {"status": "ok", "photo_url": photo_url}
 
 
@@ -142,24 +198,36 @@ async def delete_level_photo(cell_key: str, level_index: int):
         raise HTTPException(status_code=400, detail="level_index must be >= 0")
     db = await get_db()
     async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        cell = layout.get("cells", {}).get(cell_key)
-        if cell is None:
-            return {"status": "ok"}
+        parts = cell_key.split("-")
+        zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
 
-        levels = cell.get("levels", [])
-        if level_index < len(levels):
-            photo = levels[level_index].get("photo", "")
+        level_row = await db.execute_fetchall(
+            "SELECT cl.id FROM cell_level cl "
+            "JOIN warehouse_cell wc ON cl.cell_id = wc.id "
+            "JOIN warehouse_zone wz ON wc.zone_id = wz.id "
+            "WHERE wz.code = ? AND wc.row = ? AND wc.col = ? AND cl.level_index = ?",
+            (zone_code, row_num, col_num, level_index),
+        )
+        if not level_row:
+            return {"status": "ok"}
+        level_id = level_row[0][0]
+
+        prod_rows = await db.execute_fetchall(
+            "SELECT id, photo FROM cell_level_product WHERE level_id = ? ORDER BY sort_order LIMIT 1",
+            (level_id,),
+        )
+        if prod_rows:
+            photo = prod_rows[0][1]
             if photo:
                 filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
                 resolved = os.path.realpath(filepath)
                 if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                     os.remove(resolved)
-                levels[level_index]["photo"] = ""
-
-        cell["levels"] = levels
-        layout["cells"][cell_key] = cell
-        await _save_layout_only(db, layout)
+            await db.execute(
+                "UPDATE cell_level_product SET photo = '', updated_at = datetime('now') WHERE id = ?",
+                (prod_rows[0][0],),
+            )
+            await db.commit()
     return {"status": "ok"}
 
 
@@ -169,9 +237,59 @@ async def update_map_cell(cell_key: str, request: Request):
     body = await request.json()
     db = await get_db()
     async with _map_layout_lock:
-        layout = await _get_or_init_layout(db)
-        if "cells" not in layout:
-            layout["cells"] = {}
-        layout["cells"][cell_key] = {**layout["cells"].get(cell_key, {}), **body}
-        await _save_layout_only(db, layout)
+        parts = cell_key.split("-")
+        zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
+
+        cell_row = await db.execute_fetchall(
+            "SELECT wc.id FROM warehouse_cell wc "
+            "JOIN warehouse_zone wz ON wc.zone_id = wz.id "
+            "WHERE wz.code = ? AND wc.row = ? AND wc.col = ?",
+            (zone_code, row_num, col_num),
+        )
+        if not cell_row:
+            raise HTTPException(status_code=404, detail="cell not found")
+        cell_id = cell_row[0][0]
+
+        update_kwargs = {}
+        if "label" in body:
+            update_kwargs["label"] = body["label"]
+        if "status" in body:
+            update_kwargs["status"] = body["status"]
+        if "bgColor" in body:
+            update_kwargs["bg_color"] = body["bgColor"]
+        if "bg_color" in body:
+            update_kwargs["bg_color"] = body["bg_color"]
+
+        if update_kwargs:
+            await ws.update_cell(db, cell_id, **update_kwargs)
+
+        if "levels" in body:
+            await db.execute(
+                "DELETE FROM cell_level WHERE cell_id = ?", (cell_id,)
+            )
+            for lv in body["levels"]:
+                level_index = lv.get("index", 0)
+                label = lv.get("label", "")
+                await db.execute(
+                    "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
+                    (cell_id, level_index, label),
+                )
+                level_row = await db.execute_fetchall(
+                    "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+                    (cell_id, level_index),
+                )
+                if not level_row:
+                    continue
+                level_id = level_row[0][0]
+
+                item_label = lv.get("itemLabel", "")
+                photo = lv.get("photo", "")
+                if item_label or photo:
+                    await db.execute(
+                        "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
+                        (level_id, photo, item_label),
+                    )
+
+            await db.commit()
+
     return {"status": "ok"}

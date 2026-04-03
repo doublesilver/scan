@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -185,5 +185,52 @@ MIGRATIONS = {
             data TEXT NOT NULL,
             updated_at TEXT DEFAULT (datetime('now'))
         )""",
+    ],
+    9: [
+        """CREATE TABLE IF NOT EXISTS warehouse_zone (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL,
+            rows INTEGER NOT NULL DEFAULT 3,
+            cols INTEGER NOT NULL DEFAULT 4,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
+        )""",
+        """CREATE TABLE IF NOT EXISTS warehouse_cell (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            zone_id INTEGER NOT NULL REFERENCES warehouse_zone(id) ON DELETE CASCADE,
+            row INTEGER NOT NULL,
+            col INTEGER NOT NULL,
+            label TEXT DEFAULT '',
+            status TEXT DEFAULT 'empty',
+            bg_color TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(zone_id, row, col)
+        )""",
+        """CREATE TABLE IF NOT EXISTS cell_level (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cell_id INTEGER NOT NULL REFERENCES warehouse_cell(id) ON DELETE CASCADE,
+            level_index INTEGER NOT NULL DEFAULT 0,
+            label TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(cell_id, level_index)
+        )""",
+        """CREATE TABLE IF NOT EXISTS cell_level_product (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            level_id INTEGER NOT NULL REFERENCES cell_level(id) ON DELETE CASCADE,
+            product_master_id INTEGER REFERENCES product_master(id),
+            photo TEXT DEFAULT '',
+            memo TEXT DEFAULT '',
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_zone_code ON warehouse_zone(code)",
+        "CREATE INDEX IF NOT EXISTS idx_cell_zone ON warehouse_cell(zone_id)",
+        "CREATE INDEX IF NOT EXISTS idx_level_cell ON cell_level(cell_id)",
+        "CREATE INDEX IF NOT EXISTS idx_lp_level ON cell_level_product(level_id)",
+        "CREATE INDEX IF NOT EXISTS idx_lp_master ON cell_level_product(product_master_id)",
     ],
 }

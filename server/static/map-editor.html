@@ -5,15 +5,31 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title id="pageTitle">창고 도면 에디터</title>
     <style>
+      :root {
+        --primary: #040d1b;
+        --secondary: #fe6a34;
+        --surface: #f8f9fa;
+        --surface-low: #edeef0;
+        --surface-lowest: #ffffff;
+        --on-surface: #191c1d;
+        --on-surface-variant: #45474c;
+        --outline-variant: #c5c6cc;
+        --success: #2e7d32;
+        --error: #c62828;
+      }
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
       body {
-        font-family: -apple-system, "Malgun Gothic", sans-serif;
-        background: #0a0f1a;
-        color: #e0e0e0;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Malgun Gothic",
+          sans-serif;
+        background: var(--surface);
+        color: var(--on-surface);
         display: flex;
         flex-direction: column;
         height: 100vh;
@@ -24,8 +40,8 @@
         align-items: center;
         gap: 6px;
         padding: 8px 12px;
-        background: #111827;
-        border-bottom: 1px solid #1e2d40;
+        background: var(--primary);
+        border-bottom: 1px solid var(--outline-variant);
         flex-shrink: 0;
         flex-wrap: wrap;
       }
@@ -36,7 +52,7 @@
         margin-right: 8px;
       }
       .tg span {
-        color: #4fc3f7;
+        color: var(--secondary);
         font-size: 15px;
         font-weight: 700;
         cursor: pointer;
@@ -45,57 +61,60 @@
         border: 1px solid transparent;
       }
       .tg span:hover {
-        border-color: #4fc3f7;
+        border-color: var(--secondary);
       }
       .sep {
         width: 1px;
         height: 24px;
-        background: #2a3040;
+        background: rgba(255, 255, 255, 0.15);
         margin: 0 4px;
       }
       .tb {
         padding: 5px 10px;
-        background: #1e2d40;
-        border: 1px solid #2a3a50;
-        border-radius: 5px;
-        color: #ccd6f6;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #fff;
         font-size: 12px;
         cursor: pointer;
         white-space: nowrap;
         transition: background 0.15s;
       }
       .tb:hover {
-        background: #263850;
+        background: var(--secondary);
         color: #fff;
       }
       #zoomLabel {
         font-size: 12px;
-        color: #607080;
+        color: rgba(255, 255, 255, 0.5);
         min-width: 38px;
         text-align: center;
       }
       #searchBox {
         padding: 5px 10px;
-        background: #1e2d40;
-        border: 1px solid #2a3a50;
-        border-radius: 5px;
-        color: #e0e0e0;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #fff;
         font-size: 12px;
         width: 160px;
       }
       #searchBox:focus {
         outline: none;
-        border-color: #4fc3f7;
+        border-color: var(--secondary);
+      }
+      #searchBox::placeholder {
+        color: rgba(255, 255, 255, 0.4);
       }
       #statusBar {
         display: flex;
         align-items: center;
         gap: 20px;
         padding: 5px 16px;
-        background: #0d1420;
-        border-top: 1px solid #1e2d40;
+        background: var(--surface-low);
+        border-top: 1px solid var(--outline-variant);
         font-size: 11px;
-        color: #607080;
+        color: var(--on-surface-variant);
         flex-shrink: 0;
       }
       .dot {
@@ -106,13 +125,13 @@
         margin-right: 4px;
       }
       .dg {
-        background: #4caf50;
+        background: var(--success);
       }
       .dr {
-        background: #f44336;
+        background: var(--error);
       }
       .dy {
-        background: #ff9800;
+        background: var(--secondary);
       }
       #main {
         display: flex;
@@ -131,15 +150,15 @@
         min-height: 100%;
       }
       .zone {
-        background: #1a1f2e;
-        border-radius: 10px;
-        padding: 14px;
-        border: 1px solid #2a3040;
+        background: var(--surface-lowest);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid var(--outline-variant);
         position: relative;
       }
       .zone.dzover {
-        border-color: #ff9800;
-        box-shadow: 0 0 0 2px #ff980044;
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 2px rgba(254, 106, 52, 0.25);
       }
       .zone-header {
         display: flex;
@@ -148,7 +167,7 @@
         margin-bottom: 10px;
       }
       .zone-title {
-        color: #81d4fa;
+        color: var(--on-surface);
         font-size: 15px;
         font-weight: 700;
         cursor: pointer;
@@ -157,18 +176,18 @@
         border: 1px solid transparent;
       }
       .zone-title:hover {
-        border-color: #4fc3f7;
+        border-color: var(--secondary);
       }
       .zbadge {
-        background: #1565c0;
-        color: #90caf9;
+        background: var(--primary);
+        color: #fff;
         font-size: 11px;
         padding: 2px 7px;
         border-radius: 10px;
         cursor: pointer;
       }
       .zbadge:hover {
-        background: #1976d2;
+        background: var(--secondary);
       }
       .za {
         margin-left: auto;
@@ -177,23 +196,25 @@
       }
       .zab {
         padding: 3px 8px;
-        background: #1e2d40;
-        border: 1px solid #2a3a50;
-        border-radius: 4px;
-        color: #90a4ae;
+        background: var(--surface-low);
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        color: var(--on-surface-variant);
         font-size: 11px;
         cursor: pointer;
       }
       .zab:hover {
-        background: #263850;
+        background: var(--secondary);
         color: #fff;
+        border-color: var(--secondary);
       }
       .zab.del {
-        border-color: #5a2020;
-        color: #ef5350;
+        border-color: var(--error);
+        color: var(--error);
       }
       .zab.del:hover {
-        background: #3a1515;
+        background: var(--error);
+        color: #fff;
       }
       .grid {
         display: grid;
@@ -202,9 +223,9 @@
       .cell {
         width: 90px;
         height: 75px;
-        background: #1e2635;
-        border: 2px solid #2d3748;
-        border-radius: 7px;
+        background: var(--surface-lowest);
+        border: 2px solid var(--outline-variant);
+        border-radius: 8px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -220,33 +241,33 @@
         user-select: none;
       }
       .cell:hover {
-        border-color: #4fc3f7;
-        background: #1f2f45;
+        border-color: var(--secondary);
+        background: var(--surface-low);
       }
       .cell.active {
-        border-color: #4fc3f7;
-        background: #162540;
-        box-shadow: 0 0 0 2px #4fc3f755;
+        border-color: var(--secondary);
+        background: var(--surface-low);
+        box-shadow: 0 0 0 2px rgba(254, 106, 52, 0.3);
       }
       .cell.smatch {
-        border-color: #ffd600;
-        background: #2a2500;
+        border-color: var(--secondary);
+        background: #fff3e0;
       }
       .cell.sused {
-        background: #1a2a1a;
-        border-color: #4caf50;
+        background: #e8f5e9;
+        border-color: var(--success);
       }
       .cell.sfull {
-        background: #2a1a1a;
-        border-color: #ef5350;
+        background: #ffebee;
+        border-color: var(--error);
       }
       .cell.dcover {
-        border-color: #ff9800;
-        background: #251e10;
+        border-color: var(--secondary);
+        background: #fff3e0;
       }
       .cid {
         font-size: 9px;
-        color: #546e7a;
+        color: var(--on-surface-variant);
         position: absolute;
         top: 2px;
         left: 4px;
@@ -261,7 +282,7 @@
       }
       .clabel {
         font-size: 11px;
-        color: #b0bec5;
+        color: var(--on-surface);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -270,7 +291,7 @@
       }
       .csku {
         font-size: 9px;
-        color: #546e7a;
+        color: var(--on-surface-variant);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -288,23 +309,23 @@
         margin-top: 5px;
         height: 30px;
         background: transparent;
-        border: 1px dashed #2a3040;
-        border-radius: 5px;
-        color: #546e7a;
+        border: 1px dashed var(--outline-variant);
+        border-radius: 8px;
+        color: var(--on-surface-variant);
         cursor: pointer;
         font-size: 18px;
       }
       .add-row-btn:hover {
-        border-color: #4fc3f7;
-        color: #4fc3f7;
+        border-color: var(--secondary);
+        color: var(--secondary);
       }
       .add-zone-btn {
         height: 80px;
         min-width: 120px;
         background: transparent;
-        border: 2px dashed #2a3040;
-        border-radius: 10px;
-        color: #546e7a;
+        border: 2px dashed var(--outline-variant);
+        border-radius: 12px;
+        color: var(--on-surface-variant);
         cursor: pointer;
         font-size: 13px;
         display: flex;
@@ -314,8 +335,8 @@
         gap: 4px;
       }
       .add-zone-btn:hover {
-        border-color: #4fc3f7;
-        color: #4fc3f7;
+        border-color: var(--secondary);
+        color: var(--secondary);
       }
       .overlay {
         display: none;
@@ -330,10 +351,10 @@
         display: flex;
       }
       .modal {
-        background: #1a1f2e;
-        border-radius: 10px;
+        background: var(--surface-lowest);
+        border-radius: 12px;
         padding: 20px;
-        border: 1px solid #2a3040;
+        border: 1px solid var(--outline-variant);
         min-width: 340px;
         max-width: 520px;
         width: 100%;
@@ -341,7 +362,7 @@
         overflow-y: auto;
       }
       .modal h3 {
-        color: #4fc3f7;
+        color: var(--primary);
         font-size: 15px;
         margin-bottom: 14px;
         display: flex;
@@ -351,42 +372,42 @@
       .mclose {
         background: none;
         border: none;
-        color: #607080;
+        color: var(--on-surface-variant);
         font-size: 18px;
         cursor: pointer;
       }
       .mclose:hover {
-        color: #e0e0e0;
+        color: var(--on-surface);
       }
       #ctxMenu {
         display: none;
         position: fixed;
-        background: #1a1f2e;
-        border: 1px solid #2a3040;
-        border-radius: 7px;
+        background: var(--surface-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
         z-index: 500;
         min-width: 140px;
-        box-shadow: 0 4px 16px #0008;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         overflow: hidden;
       }
       .ci {
         padding: 8px 16px;
         font-size: 13px;
         cursor: pointer;
-        color: #ccd6f6;
+        color: var(--on-surface);
       }
       .ci:hover {
-        background: #263850;
+        background: var(--surface-low);
       }
       .ci.danger {
-        color: #ef5350;
+        color: var(--error);
       }
       .ci.danger:hover {
-        background: #2a1515;
+        background: #ffebee;
       }
       .csep {
         height: 1px;
-        background: #2a3040;
+        background: var(--outline-variant);
         margin: 2px 0;
       }
       .fg {
@@ -395,7 +416,7 @@
       .fg label {
         display: block;
         font-size: 11px;
-        color: #90a4ae;
+        color: var(--on-surface-variant);
         margin-bottom: 3px;
       }
       .fg input,
@@ -403,17 +424,17 @@
       .fg select {
         width: 100%;
         padding: 7px 10px;
-        background: #252b3d;
-        border: 1px solid #3a4050;
-        border-radius: 5px;
-        color: #e0e0e0;
+        background: var(--surface-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        color: var(--on-surface);
         font-size: 13px;
       }
       .fg input:focus,
       .fg textarea:focus,
       .fg select:focus {
         outline: none;
-        border-color: #4fc3f7;
+        border-color: var(--secondary);
       }
       .fg textarea {
         resize: vertical;
@@ -431,13 +452,13 @@
         margin-bottom: 8px;
       }
       .lrow {
-        background: #252b3d;
-        border-radius: 6px;
+        background: var(--surface);
+        border-radius: 8px;
         padding: 8px 10px;
         display: flex;
         flex-direction: column;
         gap: 6px;
-        border: 1px solid #2a3040;
+        border: 1px solid var(--outline-variant);
       }
       .lrow-top {
         display: flex;
@@ -445,8 +466,8 @@
         gap: 8px;
       }
       .lbadge {
-        background: #1565c0;
-        color: #90caf9;
+        background: var(--primary);
+        color: #fff;
         font-size: 10px;
         padding: 2px 7px;
         border-radius: 9px;
@@ -456,32 +477,32 @@
         text-align: center;
       }
       .lbadge:hover {
-        background: #1976d2;
+        background: var(--secondary);
       }
       .linput {
         flex: 1;
         padding: 5px 8px;
-        background: #1a1f2e;
-        border: 1px solid #3a4050;
-        border-radius: 4px;
-        color: #e0e0e0;
+        background: var(--surface-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        color: var(--on-surface);
         font-size: 12px;
       }
       .linput:focus {
         outline: none;
-        border-color: #4fc3f7;
+        border-color: var(--secondary);
       }
       .ldel {
         background: none;
         border: none;
-        color: #546e7a;
+        color: var(--on-surface-variant);
         cursor: pointer;
         font-size: 16px;
         line-height: 1;
         padding: 0 2px;
       }
       .ldel:hover {
-        color: #ef5350;
+        color: var(--error);
       }
       .lphoto-row {
         display: flex;
@@ -493,24 +514,25 @@
         height: 38px;
         object-fit: cover;
         border-radius: 4px;
-        background: #1a1f2e;
-        border: 1px solid #2a3040;
+        background: var(--surface-low);
+        border: 1px solid var(--outline-variant);
       }
       .lphoto.hid {
         display: none;
       }
       .lfbtn {
         padding: 4px 8px;
-        background: #1e2d40;
-        border: 1px solid #2a3a50;
-        border-radius: 4px;
-        color: #90a4ae;
+        background: var(--surface-low);
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        color: var(--on-surface-variant);
         font-size: 11px;
         cursor: pointer;
       }
       .lfbtn:hover {
-        background: #263850;
+        background: var(--secondary);
         color: #fff;
+        border-color: var(--secondary);
       }
       .btn-row {
         display: flex;
@@ -521,51 +543,51 @@
       .btn {
         padding: 7px 14px;
         border: none;
-        border-radius: 5px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 12px;
         font-weight: 600;
         transition: background 0.15s;
       }
       .bp {
-        background: #1565c0;
+        background: var(--secondary);
         color: #fff;
       }
       .bp:hover {
-        background: #1976d2;
+        background: #e55a28;
       }
       .bd {
-        background: #b71c1c;
+        background: var(--error);
         color: #fff;
       }
       .bd:hover {
-        background: #c62828;
+        background: #d32f2f;
       }
       .bs {
-        background: #37474f;
+        background: var(--primary);
         color: #fff;
       }
       .bs:hover {
-        background: #455a64;
+        background: #0a1a30;
       }
       .bg {
         background: transparent;
-        border: 1px solid #2a3a50;
-        color: #90a4ae;
+        border: 1px solid var(--outline-variant);
+        color: var(--on-surface-variant);
       }
       .bg:hover {
-        background: #1e2d40;
-        color: #fff;
+        background: var(--surface-low);
+        color: var(--on-surface);
       }
       .bsm {
         padding: 4px 8px;
         font-size: 11px;
       }
       .iedit {
-        background: #1a1f2e;
-        border: 1px solid #4fc3f7;
+        background: var(--surface-lowest);
+        border: 1px solid var(--secondary);
         border-radius: 4px;
-        color: #e0e0e0;
+        color: var(--on-surface);
         font-size: inherit;
         padding: 1px 6px;
         outline: none;
@@ -622,7 +644,7 @@
         flex-direction: column;
         overflow-y: auto;
         padding: 12px;
-        background: #0a0f1a;
+        background: var(--surface);
       }
       .m-level {
         display: flex;
@@ -633,13 +655,13 @@
         align-items: center;
         gap: 12px;
         padding: 10px 0 12px;
-        border-bottom: 1px solid #2a3040;
+        border-bottom: 1px solid var(--outline-variant);
         margin-bottom: 12px;
       }
       .m-back {
-        background: #252b3d;
+        background: var(--surface-low);
         border: none;
-        color: #4fc3f7;
+        color: var(--secondary);
         font-size: 20px;
         width: 44px;
         height: 44px;
@@ -650,11 +672,11 @@
       .m-header span {
         font-size: 18px;
         font-weight: bold;
-        color: #e0e0e0;
+        color: var(--on-surface);
       }
       .zone-card {
-        background: #1a1f2e;
-        border: 1px solid #2a3040;
+        background: var(--surface-lowest);
+        border: 1px solid var(--outline-variant);
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
@@ -665,21 +687,21 @@
         min-height: 64px;
       }
       .zone-card:active {
-        background: #252b3d;
+        background: var(--surface-low);
       }
       .zc-name {
         font-size: 17px;
         font-weight: bold;
-        color: #e0e0e0;
+        color: var(--on-surface);
       }
       .zc-info {
         font-size: 13px;
-        color: #607080;
+        color: var(--on-surface-variant);
         margin-top: 3px;
       }
       .zc-arrow {
         font-size: 20px;
-        color: #4fc3f7;
+        color: var(--secondary);
       }
       .m-grid {
         display: grid;
@@ -701,7 +723,7 @@
         position: static !important;
         font-size: 12px !important;
         font-weight: bold;
-        color: #90a4ae;
+        color: var(--on-surface-variant);
       }
       .m-grid .cell .cst {
         position: static !important;
@@ -1004,7 +1026,7 @@
             justify-content: space-between;
           "
         >
-          <span style="color: #81d4fa; font-size: 13px; font-weight: 700"
+          <span style="color: var(--primary); font-size: 13px; font-weight: 700"
             >선반 층 상세</span
           >
           <div style="display: flex; gap: 6px">
@@ -1104,10 +1126,10 @@
         bottom: 24px;
         left: 50%;
         transform: translateX(-50%);
-        background: #1565c0;
+        background: var(--primary);
         color: #fff;
         padding: 10px 22px;
-        border-radius: 7px;
+        border-radius: 8px;
         font-size: 13px;
         display: none;
         z-index: 999;
@@ -1150,7 +1172,7 @@
       function renderMobileZoneList() {
         const el = document.getElementById("mLevel0");
         el.innerHTML =
-          '<h2 style="color:#4fc3f7;margin-bottom:16px">' +
+          '<h2 style="color:var(--primary);margin-bottom:16px">' +
           esc(W.title || "창고 도면") +
           "</h2>";
         W.zones.forEach((z, i) => {
@@ -1187,10 +1209,10 @@
             if (d.bgColor) cell.style.background = d.bgColor;
             const dc =
               d.status === "used"
-                ? "#4caf50"
+                ? "#2e7d32"
                 : d.status === "full"
-                  ? "#ef5350"
-                  : "#546e7a";
+                  ? "#c62828"
+                  : "#45474c";
             const seq = (r - 1) * z.cols + c;
             const dkey = d.name || `${z.code}-${seq}`;
             cell.innerHTML = `<span class="cid">${esc(dkey)}</span><span class="cst" style="background:${dc}"></span><span class="clabel">${esc(d.label || "빈 선반")}</span>`;
@@ -1376,10 +1398,10 @@
         el.style.background = d.bgColor || "";
         const dc =
           d.status === "used"
-            ? "#4caf50"
+            ? "#2e7d32"
             : d.status === "full"
-              ? "#ef5350"
-              : "#546e7a";
+              ? "#c62828"
+              : "#45474c";
         const lv = (d.levels && d.levels[0]) || {};
         const ph = lv.photo || d.photo_url || "";
         const parts = key.split("-");
@@ -1454,7 +1476,7 @@
     <div class="lphoto-row">
       <img class="lphoto${lv.photo ? "" : " hid"}" src="${lv.photo || ""}"/>
       <button class="lfbtn" onclick="pickPhoto(${i})">📷 사진</button>
-      ${lv.photo ? `<button class="lfbtn" style="color:#ef5350" onclick="rmPhoto(${i})">✕ 삭제</button>` : ""}
+      ${lv.photo ? `<button class="lfbtn" style="color:#c62828" onclick="rmPhoto(${i})">✕ 삭제</button>` : ""}
     </div>`;
           list.appendChild(row);
         });
@@ -1551,7 +1573,7 @@
           if (!rb) {
             rb = document.createElement("button");
             rb.className = "lfbtn rm-ph";
-            rb.style.color = "#ef5350";
+            rb.style.color = "#c62828";
             rb.textContent = "✕ 삭제";
             rb.onclick = () => rmPhoto(i);
             row.querySelector(".lphoto-row").appendChild(rb);

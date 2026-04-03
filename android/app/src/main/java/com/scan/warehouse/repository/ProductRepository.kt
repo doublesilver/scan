@@ -6,6 +6,7 @@ import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.db.CachedProduct
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.CartRequest
+import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.ImageItem
@@ -16,6 +17,7 @@ import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.model.ShelfItem
 import com.scan.warehouse.model.ShelfListResponse
+import com.scan.warehouse.model.Zone
 import com.scan.warehouse.network.RetrofitClient
 import okhttp3.MultipartBody
 
@@ -165,5 +167,18 @@ open class ProductRepository(protected val context: Context) {
     open suspend fun addBoxMember(qrCode: String, data: Map<String, String>): Result<Unit> = safeCall { api.addBoxMember(qrCode, data); Unit }
 
     open suspend fun removeBoxMember(qrCode: String, skuId: String): Result<Unit> = safeCall { api.removeBoxMember(qrCode, skuId); Unit }
+
+    open suspend fun getZones(): Result<List<Zone>> = safeCall { api.getZones() }
+    open suspend fun createZone(data: Map<String, Any>): Result<Zone> = safeCall { api.createZone(data) }
+    open suspend fun updateZone(zoneId: Int, data: Map<String, Any>): Result<Zone> = safeCall { api.updateZone(zoneId, data) }
+    open suspend fun deleteZone(zoneId: Int): Result<Unit> = safeCall { api.deleteZone(zoneId); Unit }
+    open suspend fun getZoneCells(zoneId: Int): Result<List<CellDetail>> = safeCall { api.getZoneCells(zoneId) }
+    open suspend fun getCellDetail(cellId: Int): Result<CellDetail> = safeCall { api.getCellDetail(cellId) }
+    open suspend fun addCellLevel(cellId: Int, label: String): Result<Unit> = safeCall { api.addCellLevel(cellId, mapOf("label" to label)); Unit }
+    open suspend fun deleteLevel(levelId: Int): Result<Unit> = safeCall { api.deleteLevel(levelId); Unit }
+    open suspend fun addLevelProduct(levelId: Int, data: Map<String, String>): Result<Unit> = safeCall { api.addLevelProduct(levelId, data); Unit }
+    open suspend fun removeLevelProduct(productId: Int): Result<Unit> = safeCall { api.removeLevelProduct(productId); Unit }
+    open suspend fun uploadLevelProductPhoto(productId: Int, filePart: MultipartBody.Part): Result<Unit> = safeCall { api.uploadLevelProductPhoto(productId, filePart); Unit }
+    open suspend fun deleteLevelProductPhoto(productId: Int): Result<Unit> = safeCall { api.deleteLevelProductPhoto(productId); Unit }
 
 }
