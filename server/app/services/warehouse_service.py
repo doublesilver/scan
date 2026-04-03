@@ -281,10 +281,31 @@ async def add_level_product(
     }
 
 
-async def remove_level_product(db, product_id: int) -> bool:
+async def remove_level_product(db, product_id: int) -> tuple[bool, int | None]:
+    row = await db.execute_fetchall(
+        "SELECT product_master_id FROM cell_level_product WHERE id = ?", (product_id,)
+    )
+    master_id = row[0][0] if row else None
+
     cursor = await db.execute("DELETE FROM cell_level_product WHERE id = ?", (product_id,))
     await db.commit()
-    return cursor.rowcount > 0
+    return cursor.rowcount > 0, master_id
+
+
+async def clear_product_location(db, product_master_id: int):
+    still_placed = await db.execute_fetchall(
+        "SELECT 1 FROM cell_level_product WHERE product_master_id = ? LIMIT 1",
+        (product_master_id,),
+    )
+    if still_placed:
+        return
+
+    await db.execute(
+        "UPDATE product SET location = NULL WHERE sku_id IN "
+        "(SELECT sku_id FROM product_master_sku WHERE product_master_id = ?)",
+        (product_master_id,),
+    )
+    await db.commit()
 
 
 async def update_level_product_photo(db, product_id: int, photo: str) -> dict | None:

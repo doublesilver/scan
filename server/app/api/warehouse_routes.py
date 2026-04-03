@@ -150,9 +150,13 @@ async def add_level_product(level_id: int, request: Request):
 async def remove_level_product(product_id: int):
     db = await get_db()
     async with _zone_lock:
-        found = await ws.remove_level_product(db, product_id)
+        found, master_id = await ws.remove_level_product(db, product_id)
     if not found:
         raise HTTPException(status_code=404, detail="product not found")
+
+    if master_id:
+        await ws.clear_product_location(db, master_id)
+
     return {"status": "ok"}
 
 
