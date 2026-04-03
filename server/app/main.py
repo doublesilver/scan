@@ -12,9 +12,11 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import router
 from app.api.map_routes import router as map_router
 from app.api.shelf_routes import router as shelf_router
+from app.api.warehouse_routes import router as warehouse_router
 from app.config import settings
 from app.middleware.auth import ApiKeyMiddleware
 from app.db.database import close_db, get_db
+from app.db.migrate_map import migrate_json_to_tables
 from app.services.file_watcher import start_watcher, stop_watcher
 from app.services.nas_sync import NasSyncService
 from app.services.status_service import record_start_time
@@ -30,8 +32,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     record_start_time()
     logger.info("서버 시작 — DB 초기화")
-    await get_db()
+    write_db = await get_db()
     logger.info("DB 준비 완료: %s", settings.db_path)
+    await migrate_json_to_tables(write_db)
     app.state.http_client = httpx.AsyncClient(timeout=30.0)
     start_watcher()
     nas_sync = NasSyncService(app.state.http_client)
@@ -64,6 +67,7 @@ app.add_middleware(ApiKeyMiddleware)
 app.include_router(router)
 app.include_router(map_router)
 app.include_router(shelf_router)
+app.include_router(warehouse_router)
 
 _apk_dir = os.path.join(os.path.dirname(__file__), "..", "apk")
 os.makedirs(_apk_dir, exist_ok=True)
