@@ -19,10 +19,11 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxRegisterBinding
 import com.scan.warehouse.model.SearchItem
 import com.scan.warehouse.repository.ProductRepository
-import com.scan.warehouse.BuildConfig
-import com.scan.warehouse.repository.DemoRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class BoxRegisterActivity : BaseActivity() {
 
     companion object {
@@ -36,7 +37,7 @@ class BoxRegisterActivity : BaseActivity() {
     }
 
     private lateinit var binding: ActivityBoxRegisterBinding
-    private lateinit var repository: ProductRepository
+    @Inject lateinit var repository: ProductRepository
     private var qrCode = ""
     private var selectedLocation: String? = null
     private val members = mutableListOf<SearchItem>()
@@ -46,7 +47,6 @@ class BoxRegisterActivity : BaseActivity() {
         binding = ActivityBoxRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        repository = if (BuildConfig.FLAVOR == "demo") DemoRepository(this) else ProductRepository(this)
         qrCode = intent.getStringExtra(EXTRA_QR_CODE) ?: run { finish(); return }
 
         binding.tvQrCode.text = qrCode

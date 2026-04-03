@@ -11,18 +11,17 @@ import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -36,8 +35,9 @@ import com.scan.warehouse.databinding.DialogLevelEditBinding
 import com.scan.warehouse.model.MapCell
 import com.scan.warehouse.model.MapLevel
 import com.scan.warehouse.model.ScanResponse
-import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
+import com.scan.warehouse.viewmodel.CellDetailViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -45,6 +45,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
+@AndroidEntryPoint
 class CellDetailActivity : BaseActivity() {
 
     companion object {
@@ -62,15 +63,7 @@ class CellDetailActivity : BaseActivity() {
     }
 
     private lateinit var binding: ActivityCellDetailBinding
-    private lateinit var repository: ProductRepository
-    private var cellKey = ""
-    private var floor = 0
-    private var zone = ""
-    private var currentCell: MapCell? = null
-    private var isEditMode = false
-    private var zoneColCount = 4
-    private var allCellKeys: ArrayList<String>? = null
-    private var currentCellIndex = -1
+    private val viewModel: CellDetailViewModel by viewModels()
 
     private var pendingLevelIndex = -1
     private var pendingPhotoUri: Uri? = null
@@ -106,8 +99,6 @@ class CellDetailActivity : BaseActivity() {
         binding = ActivityCellDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        currentCell = null
-        isEditMode = false
         pendingLevelIndex = -1
         pendingPhotoUri = null
         uploadingLevelIndex = -1
@@ -115,110 +106,76 @@ class CellDetailActivity : BaseActivity() {
         activeLevelDialog = null
         activeLevelBinding = null
 
-        cellKey = intent.getStringExtra(EXTRA_CELL_KEY) ?: run { finish(); return }
-        floor = intent.getIntExtra(EXTRA_FLOOR, 5)
-        zone = intent.getStringExtra(EXTRA_ZONE) ?: ""
-
-        repository = ProductRepository(this)
-
         binding.btnBack.setOnClickListener { finishWithSlide() }
 
         binding.btnDone.setOnClickListener {
-            setEditMode(false)
+            viewModel.setEditMode(false)
         }
 
         binding.btnBarMap.setOnClickListener { finishWithSlide() }
 
         binding.btnBarEdit.setOnClickListener {
-            if (currentCell == null) {
-                currentCell = MapCell(levels = DEFAULT_LEVELS)
+            if (viewModel.cellData.value == null) {
+                viewModel.saveLevels(CellDetailViewModel.DEFAULT_LEVELS)
             }
-            setEditMode(!isEditMode)
+            viewModel.setEditMode(viewModel.isEditMode.value != true)
         }
 
         binding.btnBarPrev.setOnClickListener {
-            val keys = allCellKeys ?: return@setOnClickListener
-            if (currentCellIndex > 0) navigateToCell(keys, currentCellIndex - 1)
+            val keys = viewModel.allCellKeys.value ?: return@setOnClickListener
+            val idx = viewModel.currentCellIndex.value ?: return@setOnClickListener
+            if (idx > 0) navigateToCell(keys, idx, idx - 1)
         }
         binding.btnBarNext.setOnClickListener {
-            val keys = allCellKeys ?: return@setOnClickListener
-            if (currentCellIndex < keys.size - 1) navigateToCell(keys, currentCellIndex + 1)
+            val keys = viewModel.allCellKeys.value ?: return@setOnClickListener
+            val idx = viewModel.currentCellIndex.value ?: return@setOnClickListener
+            if (idx < keys.size - 1) navigateToCell(keys, idx, idx + 1)
         }
-        updateNavButtons()
 
-        binding.btnAddLevel.setOnClickListener { addLevel() }
+        binding.btnAddLevel.setOnClickListener { viewModel.addLevel() }
         binding.btnRemoveLevel.setOnClickListener { confirmRemoveLevel() }
 
-        loadCellData()
+        observeViewModel()
+        viewModel.loadCellData()
     }
 
-    private fun setEditMode(edit: Boolean) {
-        isEditMode = edit
-        binding.btnDone.visibility = if (edit) View.VISIBLE else View.GONE
-        binding.btnDone.setTextColor(if (edit) Color.BLACK else Color.WHITE)
-        binding.headerBar.setBackgroundColor(
-            ContextCompat.getColor(this, if (edit) R.color.secondary_container else R.color.primary)
-        )
-        binding.tvTitle.setTextColor(if (edit) Color.BLACK else Color.WHITE)
-        binding.layoutEditActions.visibility = if (edit) View.VISIBLE else View.GONE
-        binding.btnBarEdit.text = if (edit) "편집 중" else "편집"
-        renderLevels(currentCell, isEditMode)
-    }
+    private fun observeViewModel() {
+        viewModel.cellData.observe(this) { cell ->
+            updateTitle()
+            renderLevels(cell, viewModel.isEditMode.value == true)
+        }
 
-    private fun loadCellData() {
-        if (isFinishing || isDestroyed) return
-        lifecycleScope.launch {
-            try {
-                repository.getMapLayout().onSuccess { layout ->
-                    if (!isFinishing && !isDestroyed) {
-                        val cell = layout.cells[cellKey]
-                        currentCell = cell
-                        layout.zones.find { it.code == zone }?.let { zoneColCount = it.cols }
-                        updateTitle()
-                        renderLevels(cell, isEditMode)
+        viewModel.isEditMode.observe(this) { edit ->
+            binding.btnDone.visibility = if (edit) View.VISIBLE else View.GONE
+            binding.btnDone.setTextColor(if (edit) Color.BLACK else Color.WHITE)
+            binding.headerBar.setBackgroundColor(
+                ContextCompat.getColor(this, if (edit) R.color.secondary_container else R.color.primary)
+            )
+            binding.tvTitle.setTextColor(if (edit) Color.BLACK else Color.WHITE)
+            binding.layoutEditActions.visibility = if (edit) View.VISIBLE else View.GONE
+            binding.btnBarEdit.text = if (edit) "편집 중" else "편집"
+            renderLevels(viewModel.cellData.value, edit)
+        }
 
-                        if (allCellKeys == null) {
-                            val keys = ArrayList<String>()
-                            for (z in layout.zones) {
-                                for (r in 1..z.rows) {
-                                    for (c in 1..z.cols) {
-                                        keys.add("${z.code}-$r-$c")
-                                    }
-                                }
-                            }
-                            allCellKeys = keys
-                            currentCellIndex = keys.indexOf(cellKey)
-                            updateNavButtons()
-                        }
+        viewModel.allCellKeys.observe(this) { updateNavButtons() }
+        viewModel.currentCellIndex.observe(this) { updateNavButtons() }
 
-                        val isEmpty = cell?.levels?.all { level ->
-                            level.itemLabel.isNullOrEmpty() && level.sku.isNullOrEmpty() && level.photo.isNullOrEmpty()
-                        } ?: true
-                        if (isEmpty && !isEditMode) {
-                            if (currentCell == null) currentCell = MapCell(levels = DEFAULT_LEVELS)
-                            setEditMode(true)
-                        }
-                    }
-                }.onFailure {
-                    if (!isFinishing && !isDestroyed) {
-                        Toast.makeText(this@CellDetailActivity, "셀 정보를 불러오지 못했습니다", Toast.LENGTH_SHORT).show()
-                        renderLevels(null, isEditMode)
-                    }
-                }
-            } catch (e: Exception) {
-                if (!isFinishing && !isDestroyed) {
-                    Toast.makeText(this@CellDetailActivity, "데이터 로드 오류", Toast.LENGTH_SHORT).show()
-                }
+        viewModel.loadError.observe(this) { error ->
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+                renderLevels(null, viewModel.isEditMode.value == true)
             }
         }
     }
 
     private fun updateTitle() {
+        val cellKey = viewModel.cellKey
+        val zone = viewModel.zone
         val parts = cellKey.split("-")
         if (parts.size >= 3) {
             val row = parts[1].toIntOrNull() ?: 1
             val col = parts[2].toIntOrNull() ?: 1
-            val seqNum = (row - 1) * zoneColCount + col
+            val seqNum = (row - 1) * viewModel.zoneColCount + col
             binding.tvTitle.text = "${zone}구역 ${zone}-$seqNum"
         } else {
             binding.tvTitle.text = "${zone}구역 — $cellKey"
@@ -229,7 +186,7 @@ class CellDetailActivity : BaseActivity() {
         binding.layoutLevels.removeAllViews()
         val inflater = LayoutInflater.from(this)
 
-        val levels = cell?.levels?.takeIf { it.isNotEmpty() } ?: DEFAULT_LEVELS
+        val levels = cell?.levels?.takeIf { it.isNotEmpty() } ?: CellDetailViewModel.DEFAULT_LEVELS
 
         for (i in levels.indices.reversed()) {
             val level = levels[i]
@@ -262,7 +219,7 @@ class CellDetailActivity : BaseActivity() {
             if (!photoUrl.isNullOrEmpty()) {
                 layoutPhoto.visibility = View.VISIBLE
                 val fullUrl = if (photoUrl.startsWith("http")) photoUrl
-                else repository.getImageUrl(photoUrl)
+                else viewModel.getImageUrl(photoUrl)
                 ivPhoto.load(fullUrl) {
                     crossfade(true)
                     placeholder(R.drawable.ic_placeholder)
@@ -355,7 +312,7 @@ class CellDetailActivity : BaseActivity() {
         val photoUrl = level.photo
         if (!photoUrl.isNullOrEmpty()) {
             val fullUrl = if (photoUrl.startsWith("http")) photoUrl
-            else repository.getImageUrl(photoUrl)
+            else viewModel.getImageUrl(photoUrl)
             dialogBinding.ivLevelPhoto.load(fullUrl) {
                 crossfade(true)
                 placeholder(R.drawable.ic_placeholder)
@@ -401,11 +358,10 @@ class CellDetailActivity : BaseActivity() {
     }
 
     private fun matchProductFromBarcode(barcode: String) {
-        lifecycleScope.launch {
-            val (result, _) = repository.scanBarcode(barcode)
+        viewModel.scanBarcode(barcode) { result ->
             result.onSuccess { scan -> applyMatchedProduct(scan) }
                 .onFailure {
-                    Toast.makeText(this@CellDetailActivity, "상품을 찾을 수 없습니다: $barcode", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "상품을 찾을 수 없습니다: $barcode", Toast.LENGTH_SHORT).show()
                 }
         }
     }
@@ -421,7 +377,7 @@ class CellDetailActivity : BaseActivity() {
         val imageUrl = scan.images.firstOrNull()?.filePath
         if (imageUrl != null) {
             matchedPhotoUrl = imageUrl
-            val fullUrl = repository.getImageUrl(imageUrl)
+            val fullUrl = viewModel.getImageUrl(imageUrl)
             dlg.ivLevelPhoto.load(fullUrl) {
                 crossfade(true)
                 placeholder(R.drawable.ic_placeholder)
@@ -445,19 +401,18 @@ class CellDetailActivity : BaseActivity() {
             .setPositiveButton("검색") { _, _ ->
                 val query = input.text.toString().trim()
                 if (query.isEmpty()) return@setPositiveButton
-                lifecycleScope.launch {
-                    val barcodePattern = Regex("^\\d{8,13}$")
-                    if (barcodePattern.matches(query)) {
-                        matchProductFromBarcode(query)
-                    } else {
-                        val (result, _) = repository.searchProducts(query)
+                val barcodePattern = Regex("^\\d{8,13}$")
+                if (barcodePattern.matches(query)) {
+                    matchProductFromBarcode(query)
+                } else {
+                    viewModel.searchProducts(query) { result ->
                         result.onSuccess { response ->
                             if (response.items.isEmpty()) {
-                                Toast.makeText(this@CellDetailActivity, "검색 결과 없음", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "검색 결과 없음", Toast.LENGTH_SHORT).show()
                                 return@onSuccess
                             }
                             val names = response.items.map { "${it.productName} (${it.skuId})" }
-                            AlertDialog.Builder(this@CellDetailActivity)
+                            AlertDialog.Builder(this)
                                 .setTitle("상품 선택 (${response.total}건)")
                                 .setItems(names.toTypedArray()) { _, which ->
                                     val selected = response.items[which]
@@ -474,7 +429,7 @@ class CellDetailActivity : BaseActivity() {
                                 .setNegativeButton("취소", null)
                                 .show()
                         }.onFailure {
-                            Toast.makeText(this@CellDetailActivity, "검색 실패", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "검색 실패", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -483,57 +438,11 @@ class CellDetailActivity : BaseActivity() {
             .show()
     }
 
-    private fun List<MapLevel>.toApiPayload(): List<Map<String, Any>> = map { lv ->
-        mapOf(
-            "index" to lv.index,
-            "label" to lv.label,
-            "itemLabel" to (lv.itemLabel ?: ""),
-            "sku" to (lv.sku ?: ""),
-            "photo" to (lv.photo ?: "")
-        )
-    }
-
-    private fun saveLevels(levels: List<MapLevel>, errorMsg: String = "저장 실패") {
-        lifecycleScope.launch {
-            repository.updateMapCell(cellKey, mapOf("levels" to levels.toApiPayload()))
-                .onSuccess { loadCellData() }
-                .onFailure { Toast.makeText(this@CellDetailActivity, errorMsg, Toast.LENGTH_SHORT).show() }
-        }
-    }
-
     private fun saveLevelChanges(levelIndex: Int) {
         val binding = activeLevelBinding
         val productName = binding?.etProductName?.text?.toString()?.trim() ?: ""
         val sku = binding?.etSku?.text?.toString()?.trim() ?: ""
-
-        if (currentCell == null) {
-            currentCell = MapCell(levels = listOf(MapLevel(index = 0, label = "하단 (1층)")))
-        }
-        val cell = currentCell ?: return
-        val levels = cell.levels?.toMutableList() ?: DEFAULT_LEVELS.toMutableList()
-
-        if (levelIndex < levels.size) {
-            val updated = levels[levelIndex].copy(
-                itemLabel = productName.ifEmpty { null },
-                sku = sku.ifEmpty { null },
-                photo = matchedPhotoUrl ?: levels[levelIndex].photo
-            )
-            levels[levelIndex] = updated
-        }
-
-        saveLevels(levels)
-
-        val skuId = matchedSkuId
-        if (skuId != null) {
-            val parts = cellKey.split("-")
-            val row = parts.getOrElse(1) { "1" }.toIntOrNull() ?: 1
-            val col = parts.getOrElse(2) { "1" }.toIntOrNull() ?: 1
-            val seqNum = (row - 1) * zoneColCount + col
-            val location = "${floor}층-$zone-$seqNum"
-            lifecycleScope.launch {
-                repository.updateProductLocation(skuId, location)
-            }
-        }
+        viewModel.saveLevelChanges(levelIndex, productName, sku, matchedPhotoUrl, matchedSkuId)
     }
 
     private fun launchCamera() {
@@ -546,7 +455,7 @@ class CellDetailActivity : BaseActivity() {
 
     private fun doLaunchCamera() {
         val photoFile = File(cacheDir, "photos").also { it.mkdirs() }.let {
-            File(it, "level_${cellKey}_${pendingLevelIndex}_${System.currentTimeMillis()}.jpg")
+            File(it, "level_${viewModel.cellKey}_${pendingLevelIndex}_${System.currentTimeMillis()}.jpg")
         }
         val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
         pendingPhotoUri = uri
@@ -566,27 +475,26 @@ class CellDetailActivity : BaseActivity() {
                     .getExtensionFromMimeType(mimeType) ?: "jpg"
                 val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", "photo.$ext", requestBody)
-                repository.uploadLevelPhoto(cellKey, levelIndex, part)
-                    .onSuccess {
-                        hideUploadProgress()
-                        repository.getMapLayout().onSuccess { layout ->
-                            if (!isFinishing && !isDestroyed) {
-                                currentCell = layout.cells[cellKey]
-                                updateTitle()
-                                renderLevels(currentCell, isEditMode)
-                                showUploadSuccess(levelIndex)
-                            }
+                if (viewModel.cellKey.isEmpty()) return@launch
+                viewModel.uploadLevelPhoto(levelIndex, part,
+                    onSuccess = {
+                        if (!isFinishing && !isDestroyed) {
+                            hideUploadProgress()
+                            updateTitle()
+                            renderLevels(viewModel.cellData.value, viewModel.isEditMode.value == true)
+                            showUploadSuccess(levelIndex)
+                            Toast.makeText(this@CellDetailActivity, "업로드 완료", Toast.LENGTH_SHORT).show()
                         }
-                        Toast.makeText(this@CellDetailActivity, "업로드 완료", Toast.LENGTH_SHORT).show()
-                    }
-                    .onFailure { e ->
+                    },
+                    onFailure = { msg ->
                         hideUploadProgress()
-                        renderLevels(currentCell, isEditMode)
-                        Toast.makeText(this@CellDetailActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+                        renderLevels(viewModel.cellData.value, viewModel.isEditMode.value == true)
+                        Toast.makeText(this@CellDetailActivity, "업로드 실패: $msg", Toast.LENGTH_SHORT).show()
                     }
+                )
             } catch (e: Exception) {
                 hideUploadProgress()
-                renderLevels(currentCell, isEditMode)
+                renderLevels(viewModel.cellData.value, viewModel.isEditMode.value == true)
                 Toast.makeText(this@CellDetailActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
@@ -596,7 +504,17 @@ class CellDetailActivity : BaseActivity() {
         AlertDialog.Builder(this)
             .setTitle("사진 삭제")
             .setMessage("이 사진을 삭제하시겠습니까?")
-            .setPositiveButton("삭제") { _, _ -> deleteLevelPhoto(levelIndex) }
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteLevelPhoto(levelIndex,
+                    onSuccess = {
+                        activeLevelBinding?.ivLevelPhoto?.setImageResource(R.drawable.ic_placeholder)
+                        Toast.makeText(this, "사진 삭제 완료", Toast.LENGTH_SHORT).show()
+                    },
+                    onFailure = { msg ->
+                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
             .setNegativeButton("취소", null)
             .show()
     }
@@ -605,73 +523,30 @@ class CellDetailActivity : BaseActivity() {
         AlertDialog.Builder(this)
             .setTitle("상품 삭제")
             .setMessage("'${level.itemLabel}'을(를) 이 층에서 삭제하시겠습니까?")
-            .setPositiveButton("삭제") { _, _ -> deleteProduct(levelIndex) }
+            .setPositiveButton("삭제") { _, _ -> viewModel.deleteProduct(levelIndex) }
             .setNegativeButton("취소", null)
             .show()
     }
 
-    private fun deleteProduct(levelIndex: Int) {
-        val cell = currentCell ?: return
-        val levels = cell.levels?.toMutableList() ?: return
-        if (levelIndex >= levels.size) return
-        val cleared = levels[levelIndex].copy(itemLabel = null, sku = null, photo = null)
-        levels[levelIndex] = cleared
-        saveLevels(levels, "상품 삭제 실패")
-    }
-
-    private fun deleteLevelPhoto(levelIndex: Int) {
-        lifecycleScope.launch {
-            repository.deleteLevelPhoto(cellKey, levelIndex)
-                .onSuccess {
-                    activeLevelBinding?.ivLevelPhoto?.setImageResource(R.drawable.ic_placeholder)
-                    loadCellData()
-                    Toast.makeText(this@CellDetailActivity, "사진 삭제 완료", Toast.LENGTH_SHORT).show()
-                }
-                .onFailure { Toast.makeText(this@CellDetailActivity, "사진 삭제 실패", Toast.LENGTH_SHORT).show() }
-        }
-    }
-
-    private fun addLevel() {
-        val cell = currentCell ?: return
-        val levels = cell.levels?.toMutableList() ?: mutableListOf()
-        val newIndex = levels.size
-        val label = when (newIndex) {
-            0 -> "하단 (1층)"
-            1 -> "중단 (2층)"
-            2 -> "상단 (3층)"
-            else -> "${newIndex + 1}층"
-        }
-        levels.add(MapLevel(index = newIndex, label = label))
-        saveLevels(levels, "층 추가 실패")
-    }
-
     private fun confirmRemoveLevel() {
-        val cell = currentCell ?: return
+        val cell = viewModel.cellData.value ?: return
         val levels = cell.levels ?: return
         if (levels.isEmpty()) return
         val lastLevel = levels.last()
         AlertDialog.Builder(this)
             .setTitle("층 삭제")
             .setMessage("'${lastLevel.label}'을 삭제하시겠습니까?")
-            .setPositiveButton("삭제") { _, _ -> removeLevel() }
+            .setPositiveButton("삭제") { _, _ -> viewModel.removeLevel() }
             .setNegativeButton("취소", null)
             .show()
     }
 
-    private fun removeLevel() {
-        val cell = currentCell ?: return
-        val levels = cell.levels?.toMutableList() ?: return
-        if (levels.isEmpty()) return
-        levels.removeAt(levels.size - 1)
-        saveLevels(levels, "층 삭제 실패")
-    }
-
-    private fun navigateToCell(cellKeys: ArrayList<String>, newIndex: Int) {
+    private fun navigateToCell(cellKeys: ArrayList<String>, currentIndex: Int, newIndex: Int) {
         val newCellKey = cellKeys[newIndex]
         val parts = newCellKey.split("-")
-        val newZone = if (parts.isNotEmpty()) parts[0] else zone
-        val forward = newIndex > currentCellIndex
-        val intent = createIntent(this, floor, newZone, newCellKey)
+        val newZone = if (parts.isNotEmpty()) parts[0] else viewModel.zone
+        val forward = newIndex > currentIndex
+        val intent = createIntent(this, viewModel.floor, newZone, newCellKey)
         startActivity(intent)
         finish()
         overridePendingTransition(
@@ -681,10 +556,10 @@ class CellDetailActivity : BaseActivity() {
     }
 
     private fun updateNavButtons() {
-        val keys = allCellKeys
-        val idx = currentCellIndex
+        val keys = viewModel.allCellKeys.value
+        val idx = viewModel.currentCellIndex.value ?: -1
         val hasPrev = keys != null && idx > 0
-        val hasNext = keys != null && idx < keys.size - 1
+        val hasNext = keys != null && idx < (keys.size - 1)
         binding.btnBarPrev.alpha = if (hasPrev) 1f else 0.3f
         binding.btnBarPrev.isEnabled = hasPrev
         binding.btnBarNext.alpha = if (hasNext) 1f else 0.3f
@@ -704,9 +579,3 @@ class CellDetailActivity : BaseActivity() {
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 }
-
-private val DEFAULT_LEVELS = listOf(
-    MapLevel(index = 0, label = "하단 (1층)"),
-    MapLevel(index = 1, label = "중단 (2층)"),
-    MapLevel(index = 2, label = "상단 (3층)")
-)

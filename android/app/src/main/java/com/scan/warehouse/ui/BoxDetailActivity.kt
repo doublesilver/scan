@@ -31,8 +31,11 @@ import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.ParsedLocation
 import com.scan.warehouse.repository.ProductRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class BoxDetailActivity : BaseActivity() {
 
     companion object {
@@ -46,7 +49,7 @@ class BoxDetailActivity : BaseActivity() {
     }
 
     private lateinit var binding: ActivityBoxDetailBinding
-    private lateinit var repository: ProductRepository
+    @Inject lateinit var repository: ProductRepository
     private var mapLayout: MapLayout? = null
     private var currentLocation: String? = null
     private val animators = mutableListOf<ObjectAnimator>()
@@ -58,7 +61,6 @@ class BoxDetailActivity : BaseActivity() {
 
         val json = intent.getStringExtra(EXTRA_BOX_DATA) ?: run { finish(); return }
         val box = Gson().fromJson(json, BoxResponse::class.java)
-        repository = ProductRepository(this)
 
         binding.btnBack.setOnClickListener { finishWithSlide() }
 

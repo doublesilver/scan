@@ -14,21 +14,22 @@ import com.scan.warehouse.databinding.ActivitySplashBinding
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
-    private lateinit var repository: ProductRepository
+    @Inject lateinit var repository: ProductRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        repository = ProductRepository(applicationContext)
 
         binding.btnRetry.setOnClickListener { checkServer() }
         binding.btnSettings.setOnClickListener {

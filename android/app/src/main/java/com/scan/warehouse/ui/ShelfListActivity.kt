@@ -18,12 +18,15 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityShelfListBinding
 import com.scan.warehouse.model.ShelfItem
 import com.scan.warehouse.repository.ProductRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ShelfListActivity : BaseActivity() {
 
     companion object {
@@ -48,7 +51,7 @@ class ShelfListActivity : BaseActivity() {
 
     private lateinit var binding: ActivityShelfListBinding
     private lateinit var adapter: ShelfAdapter
-    private lateinit var repository: ProductRepository
+    @Inject lateinit var repository: ProductRepository
     private var floor = 0
     private var zone = ""
     private var currentShelfNumber: Int? = null
@@ -73,8 +76,6 @@ class ShelfListActivity : BaseActivity() {
         zone = intent.getStringExtra(EXTRA_ZONE) ?: ""
         val currentLocation = intent.getStringExtra(EXTRA_CURRENT_LOCATION)
         currentShelfNumber = parseShelfNumber(currentLocation)
-
-        repository = ProductRepository(this)
 
         binding.tvZoneTitle.text = "${floor}층 ${zone}구역"
 

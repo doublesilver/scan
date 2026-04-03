@@ -20,8 +20,11 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityDetailBinding
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.repository.ProductRepository
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class DetailActivity : BaseActivity() {
 
     companion object {
@@ -29,6 +32,7 @@ class DetailActivity : BaseActivity() {
     }
 
     private lateinit var binding: ActivityDetailBinding
+    @Inject lateinit var repository: ProductRepository
     private var showingThumbnail = true
     private var thumbnailUrl: String? = null
     private var realImageUrl: String? = null
@@ -107,7 +111,6 @@ class DetailActivity : BaseActivity() {
 
     private fun printLabel(data: ScanResponse, quantity: Int) {
         val barcode = data.barcodes.firstOrNull() ?: return
-        val repository = ProductRepository(this)
         binding.btnBarPrint.isEnabled = false
         Toast.makeText(this, "인쇄 요청 중...", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
@@ -158,7 +161,7 @@ class DetailActivity : BaseActivity() {
         binding.btnBarMap.visibility = View.VISIBLE
         binding.btnBarMap.setOnClickListener {
             lifecycleScope.launch {
-                val layout = ProductRepository(this@DetailActivity).getMapLayout().getOrNull()
+                val layout = repository.getMapLayout().getOrNull()
                 WarehouseMapDialog.show(this@DetailActivity, data.location, layout) { floor, zone, _, _, cellKey ->
                     startWithSlide(CellDetailActivity.createIntent(this@DetailActivity, floor, zone, cellKey))
                 }
@@ -173,8 +176,6 @@ class DetailActivity : BaseActivity() {
                 Toast.makeText(this, "구매 링크가 없습니다", Toast.LENGTH_SHORT).show()
             }
         }
-
-        val repository = ProductRepository(this)
 
         val thumbImg = data.images.firstOrNull { it.filePath.startsWith("img/") }
             ?: data.images.firstOrNull()

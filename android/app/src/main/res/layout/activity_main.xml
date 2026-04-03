@@ -279,6 +279,38 @@
             android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInbound"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="입고"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/success"
+                app:icon="@drawable/ic_inbound"
+                app:iconGravity="top"
+                app:iconTint="@color/success" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOutbound"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="출고"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/orange"
+                app:icon="@drawable/ic_outbound"
+                app:iconGravity="top"
+                app:iconTint="@color/orange" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBarCart"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"

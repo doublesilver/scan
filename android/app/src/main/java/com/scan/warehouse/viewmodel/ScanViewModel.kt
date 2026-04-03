@@ -1,29 +1,23 @@
 package com.scan.warehouse.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchResponse
-import com.scan.warehouse.BuildConfig
-import com.scan.warehouse.repository.DemoRepository
 import com.scan.warehouse.repository.ProductRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ScanViewModel(
-    application: Application,
+@HiltViewModel
+class ScanViewModel @Inject constructor(
+    private val repository: ProductRepository,
     private val savedStateHandle: SavedStateHandle
-) : AndroidViewModel(application) {
-
-    private val repository: ProductRepository = if (BuildConfig.FLAVOR == "demo") {
-        DemoRepository(application)
-    } else {
-        ProductRepository(application)
-    }
+) : ViewModel() {
 
     val scanResult: LiveData<ScanResponse?> = savedStateHandle.getLiveData(KEY_SCAN_RESULT)
 

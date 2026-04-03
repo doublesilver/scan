@@ -15,12 +15,15 @@ import com.scan.warehouse.databinding.ActivitySettingsBinding
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SettingsActivity : BaseActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
-    private lateinit var repository: ProductRepository
+    @Inject lateinit var repository: ProductRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +32,6 @@ class SettingsActivity : BaseActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "서버 설정"
-
-        repository = ProductRepository(applicationContext)
 
         binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
 

@@ -16,7 +16,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMapEditorBinding
 import com.scan.warehouse.network.RetrofitClient
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MapEditorActivity : BaseActivity() {
 
     companion object {
