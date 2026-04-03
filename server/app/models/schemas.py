@@ -9,8 +9,8 @@ class ImageItem(BaseModel):
 class ScanResponse(BaseModel):
     sku_id: str
     product_name: str
-    category: str
-    brand: str
+    category: str | None = None
+    brand: str | None = None
     barcodes: list[str]
     images: list[ImageItem]
     quantity: int | None = None

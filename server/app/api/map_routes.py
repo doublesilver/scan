@@ -55,8 +55,9 @@ async def _do_upload_photo(cell_key: str, level_index: int, file: UploadFile, la
     old_photo = levels[level_index].get("photo", "")
     if old_photo:
         old_filepath = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
-        if os.path.exists(old_filepath):
-            os.remove(old_filepath)
+        resolved = os.path.realpath(old_filepath)
+        if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
+            os.remove(resolved)
 
     with open(filepath, 'wb') as f:
         f.write(content)
@@ -110,8 +111,9 @@ async def delete_cell_photo(cell_key: str):
             photo = level.get("photo", "")
             if photo:
                 filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
-                if os.path.exists(filepath):
-                    os.remove(filepath)
+                resolved = os.path.realpath(filepath)
+                if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
+                    os.remove(resolved)
                 level["photo"] = ""
 
         cell["levels"] = levels
@@ -150,8 +152,9 @@ async def delete_level_photo(cell_key: str, level_index: int):
             photo = levels[level_index].get("photo", "")
             if photo:
                 filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
-                if os.path.exists(filepath):
-                    os.remove(filepath)
+                resolved = os.path.realpath(filepath)
+                if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
+                    os.remove(resolved)
                 levels[level_index]["photo"] = ""
 
         cell["levels"] = levels

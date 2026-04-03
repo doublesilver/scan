@@ -258,10 +258,16 @@ class CellDetailActivity : BaseActivity() {
         }
     }
 
-    private fun showUploadSuccess(levelIndex: Int) {
+    private fun levelToViewIndex(levelIndex: Int): Int {
         val levelCount = binding.layoutLevels.childCount
-        if (levelIndex >= levelCount) return
-        val card = binding.layoutLevels.getChildAt(levelIndex) ?: return
+        return levelCount - 1 - levelIndex
+    }
+
+    private fun showUploadSuccess(levelIndex: Int) {
+        val viewIndex = levelToViewIndex(levelIndex)
+        val levelCount = binding.layoutLevels.childCount
+        if (viewIndex < 0 || viewIndex >= levelCount) return
+        val card = binding.layoutLevels.getChildAt(viewIndex) ?: return
 
         val layoutOverlay = card.findViewById<FrameLayout>(R.id.layoutUploadOverlay) ?: return
         val progress = card.findViewById<ProgressBar>(R.id.progressUpload) ?: return
@@ -278,9 +284,10 @@ class CellDetailActivity : BaseActivity() {
 
     private fun showUploadProgress(levelIndex: Int) {
         uploadingLevelIndex = levelIndex
+        val viewIndex = levelToViewIndex(levelIndex)
         val levelCount = binding.layoutLevels.childCount
-        if (levelIndex >= levelCount) return
-        val card = binding.layoutLevels.getChildAt(levelIndex) ?: return
+        if (viewIndex < 0 || viewIndex >= levelCount) return
+        val card = binding.layoutLevels.getChildAt(viewIndex) ?: return
 
         val layoutPhoto = card.findViewById<FrameLayout>(R.id.layoutPhoto) ?: return
         val layoutOverlay = card.findViewById<FrameLayout>(R.id.layoutUploadOverlay) ?: return
@@ -478,8 +485,10 @@ class CellDetailActivity : BaseActivity() {
         val skuId = matchedSkuId
         if (skuId != null) {
             val parts = cellKey.split("-")
-            val shelfNum = if (parts.size >= 3) parts[2] else "01"
-            val location = "${floor}층-$zone-${shelfNum.padStart(2, '0')}"
+            val row = parts.getOrElse(1) { "1" }.toIntOrNull() ?: 1
+            val col = parts.getOrElse(2) { "1" }.toIntOrNull() ?: 1
+            val seqNum = (row - 1) * zoneColCount + col
+            val location = "${floor}층-$zone-$seqNum"
             lifecycleScope.launch {
                 repository.updateProductLocation(skuId, location)
             }

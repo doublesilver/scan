@@ -61,7 +61,7 @@ class BoxRegisterActivity : BaseActivity() {
             repository.getMapLayout().onSuccess { layout ->
                 WarehouseMapDialog.show(this@BoxRegisterActivity, selectedLocation, layout) { floor, zoneCode, row, col, _ ->
                     val cellNum = (row - 1) * layout.zones.find { it.code == zoneCode }!!.cols + col
-                    selectedLocation = "${floor}층-${zoneCode}-${String.format("%02d", cellNum)}"
+                    selectedLocation = "${floor}층-${zoneCode}-${cellNum}"
                     binding.tvLocation.text = selectedLocation
                     binding.tvLocation.setTextColor(ContextCompat.getColor(this@BoxRegisterActivity, R.color.primary))
                 }
@@ -206,7 +206,12 @@ class BoxRegisterActivity : BaseActivity() {
             "qr_code" to qrCode,
             "box_name" to "외박스 $qrCode",
             "product_master_name" to productMasterName,
-            "member_sku_ids" to members.map { it.skuId }
+            "members" to members.map { mapOf(
+                "sku_id" to it.skuId,
+                "sku_name" to it.productName,
+                "barcode" to (it.barcode ?: ""),
+                "location" to ""
+            ) }
         )
         if (selectedLocation != null) {
             data["location"] = selectedLocation!!

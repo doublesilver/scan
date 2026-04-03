@@ -121,7 +121,7 @@ object WarehouseMapDialog {
                 val row = if (landscape) inner else outer
                 val col = if (landscape) outer else inner
                 val cellNum = (row - 1) * zone.cols + col
-                val shelf = String.format("%02d", cellNum)
+                val shelf = cellNum.toString()
                 val isCurrentCell = zone.code == current.zone && shelf == current.shelf
 
                 val cellKey = "${zone.code}-$row-$col"

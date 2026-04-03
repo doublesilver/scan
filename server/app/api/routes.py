@@ -39,6 +39,7 @@ from app.services.url_import_service import import_purchase_urls as _import_purc
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
+_write_lock = asyncio.Lock()
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)
@@ -143,15 +144,23 @@ async def get_box(qr_code: str) -> BoxResponse:
 @router.post("/box", response_model=BoxResponse)
 async def create_box(request: Request) -> BoxResponse:
     body = await request.json()
+    qr_code = body.get("qr_code")
+    if not qr_code:
+        raise HTTPException(status_code=400, detail="qr_code is required")
+    raw_members = body.get("members", [])
+    member_sku_ids = body.get("member_sku_ids", [])
+    if not raw_members and member_sku_ids:
+        raw_members = [{"sku_id": sid, "sku_name": sid} for sid in member_sku_ids]
     db = await get_db()
-    result = await _create_box(
-        db,
-        qr_code=body["qr_code"],
-        box_name=body["box_name"],
-        product_master_name=body["product_master_name"],
-        location=body.get("location"),
-        members=body.get("members", []),
-    )
+    async with _write_lock:
+        result = await _create_box(
+            db,
+            qr_code=qr_code,
+            box_name=body.get("box_name", ""),
+            product_master_name=body.get("product_master_name", ""),
+            location=body.get("location"),
+            members=raw_members,
+        )
     return result
 
 
@@ -159,13 +168,14 @@ async def create_box(request: Request) -> BoxResponse:
 async def update_box(qr_code: str, request: Request) -> BoxResponse:
     body = await request.json()
     db = await get_db()
-    result = await _update_box(
-        db,
-        qr_code=qr_code,
-        box_name=body.get("box_name"),
-        product_master_name=body.get("product_master_name"),
-        location=body.get("location"),
-    )
+    async with _write_lock:
+        result = await _update_box(
+            db,
+            qr_code=qr_code,
+            box_name=body.get("box_name"),
+            product_master_name=body.get("product_master_name"),
+            location=body.get("location"),
+        )
     if result is None:
         raise HTTPException(status_code=404, detail="box not found")
     return result
@@ -174,15 +184,22 @@ async def update_box(qr_code: str, request: Request) -> BoxResponse:
 @router.post("/box/{qr_code}/member")
 async def add_box_member(qr_code: str, request: Request):
     body = await request.json()
+    sku_id = body.get("sku_id")
+    if not sku_id:
+        raise HTTPException(status_code=400, detail="sku_id is required")
+    sku_name = body.get("sku_name")
+    if not sku_name:
+        raise HTTPException(status_code=400, detail="sku_name is required")
     db = await get_db()
-    found = await _add_member(
-        db,
-        qr_code=qr_code,
-        sku_id=body["sku_id"],
-        sku_name=body["sku_name"],
-        barcode=body.get("barcode"),
-        location=body.get("location"),
-    )
+    async with _write_lock:
+        found = await _add_member(
+            db,
+            qr_code=qr_code,
+            sku_id=sku_id,
+            sku_name=sku_name,
+            barcode=body.get("barcode"),
+            location=body.get("location"),
+        )
     if not found:
         raise HTTPException(status_code=404, detail="box not found")
     return {"status": "ok"}
@@ -191,7 +208,8 @@ async def add_box_member(qr_code: str, request: Request):
 @router.delete("/box/{qr_code}/member/{sku_id}")
 async def remove_box_member(qr_code: str, sku_id: str):
     db = await get_db()
-    found = await _remove_member(db, qr_code=qr_code, sku_id=sku_id)
+    async with _write_lock:
+        found = await _remove_member(db, qr_code=qr_code, sku_id=sku_id)
     if not found:
         raise HTTPException(status_code=404, detail="not found")
     return {"status": "ok"}
@@ -236,6 +254,8 @@ async def get_recent_scans(limit: int = Query(20, ge=1, le=100)) -> list[RecentS
 
 @router.post("/import/urls")
 async def import_urls(file_path: str = Query(...)):
+    if ".." in file_path:
+        raise HTTPException(status_code=400, detail="invalid file path")
     db = await get_db()
     result = await _import_purchase_urls(db, file_path)
     if result["status"] == "error":
@@ -259,11 +279,12 @@ async def update_product_location(sku_id: str, request: Request):
     body = await request.json()
     location = body.get("location", "")
     db = await get_db()
-    result = await db.execute(
-        "UPDATE product SET location = ? WHERE sku_id = ?",
-        (location, sku_id)
-    )
-    await db.commit()
+    async with _write_lock:
+        result = await db.execute(
+            "UPDATE product SET location = ? WHERE sku_id = ?",
+            (location, sku_id)
+        )
+        await db.commit()
     if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="product not found")
     return {"status": "ok", "location": location}

@@ -30,7 +30,6 @@ import com.scan.warehouse.databinding.ActivityBoxDetailBinding
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.ParsedLocation
-import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.repository.ProductRepository
 import kotlinx.coroutines.launch
 
@@ -70,22 +69,8 @@ class BoxDetailActivity : BaseActivity() {
         setupBottomBar(box)
         setupImageZoom()
 
-        lifecycleScope.launch {
-            val (searchResult, _) = repository.searchProducts(box.productMasterName.take(10), 20)
-            searchResult.onSuccess { resp ->
-                products = resp.items.mapNotNull { item ->
-                    if (item.barcode != null) {
-                        val (scanResult, _) = repository.scanBarcode(item.barcode)
-                        scanResult.getOrNull()
-                    } else null
-                }
-                setupOptionImages(box)
-                setupSourcingImages(box)
-            }.onFailure {
-                setupOptionImages(box)
-                setupSourcingImages(box)
-            }
-        }
+        setupOptionImages(box)
+        setupSourcingImages(box)
 
         loadMapAndPhotos(box)
     }
@@ -111,14 +96,15 @@ class BoxDetailActivity : BaseActivity() {
 
     private fun setupLocationTags(box: BoxResponse) {
         val loc = box.location ?: return
-        val parts = loc.replace("층", "").split("-").map { it.trim() }
+        val parsed = ParsedLocation.parse(loc)
 
-        if (parts.size >= 2) {
-            val zone = parts[1]
-            binding.tvZoneTag.text = "${zone}구역"
+        if (parsed.zone.isNotEmpty() && parsed.shelf.isNotEmpty()) {
+            binding.tvZoneTag.text = "${parsed.zone}구역 ${parsed.zone}-${parsed.shelf}"
+        } else if (parsed.zone.isNotEmpty()) {
+            binding.tvZoneTag.text = "${parsed.zone}구역"
         }
-        if (parts.size >= 3) {
-            binding.tvShelfTag.text = "${parts[2]}번째 줄"
+        if (parsed.shelf.isNotEmpty()) {
+            binding.tvShelfTag.text = "${parsed.shelf}번 선반"
         }
     }
 
@@ -142,54 +128,55 @@ class BoxDetailActivity : BaseActivity() {
         animators.forEach { it.cancel() }
         animators.clear()
         binding.layoutInlineMap.removeAllViews()
-        binding.layoutInlineMap.orientation = LinearLayout.HORIZONTAL
+        binding.layoutInlineMap.orientation = LinearLayout.VERTICAL
         val density = resources.displayMetrics.density
         val parsed = ParsedLocation.parse(location)
         val zones = layout.zones.ifEmpty { return }
 
-        for (zone in zones) {
-            val zoneContainer = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, 1f).apply {
-                    marginEnd = (2 * density).toInt()
-                }
-            }
-            zoneContainer.addView(TextView(this).apply {
-                text = zone.name
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
-                setTypeface(null, Typeface.BOLD)
-                setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
-                gravity = Gravity.CENTER
-            })
+        val locationZone = zones.find { it.code == parsed.zone }
+        val cellNum = parsed.shelf
+
+        // 위치 텍스트 (큰 글씨)
+        binding.layoutInlineMap.addView(TextView(this).apply {
+            text = "📍 ${locationZone?.name ?: parsed.zone}구역 ${parsed.zone}-$cellNum"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, (6 * density).toInt())
+        })
+
+        // 해당 zone만 그리드로 표시
+        if (locationZone != null) {
             val grid = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
             }
-            for (r in 1..zone.rows) {
+            for (r in 1..locationZone.rows) {
                 val row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
                 }
-                for (c in 1..zone.cols) {
-                    val cellNum = (r - 1) * zone.cols + c
-                    val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
+                for (c in 1..locationZone.cols) {
+                    val cn = (r - 1) * locationZone.cols + c
+                    val isHighlight = cn.toString() == parsed.shelf
                     val cellView = TextView(this).apply {
-                        text = "${zone.code}-$cellNum"
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 5f)
+                        text = "${parsed.zone}-$cn"
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
                         if (isHighlight) {
                             val gd = GradientDrawable().apply {
                                 setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
-                                setStroke((1 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
-                                cornerRadius = 2 * density
+                                setStroke((2 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
+                                cornerRadius = 4 * density
                             }
                             background = gd
                             setTextColor(Color.BLACK)
                             setTypeface(null, Typeface.BOLD)
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 6f)
+                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                         } else {
-                            val bgColor = if (layout.cells["${zone.code}-$r-$c"]?.status == "used")
+                            val bgColor = if (layout.cells["${locationZone.code}-$r-$c"]?.status == "used")
                                 ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
                             else ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
                             setBackgroundColor(bgColor)
@@ -212,9 +199,17 @@ class BoxDetailActivity : BaseActivity() {
                 }
                 grid.addView(row)
             }
-            zoneContainer.addView(grid)
-            binding.layoutInlineMap.addView(zoneContainer)
+            binding.layoutInlineMap.addView(grid)
         }
+
+        // 전체 도면 안내
+        binding.layoutInlineMap.addView(TextView(this).apply {
+            text = "터치 → 전체 도면"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
+            setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface_variant))
+            gravity = Gravity.CENTER
+            setPadding(0, (4 * density).toInt(), 0, 0)
+        })
 
         binding.blockMap.setOnClickListener {
             mapLayout?.let { ml -> showMapZoomDialog(ml, location) }
@@ -252,64 +247,44 @@ class BoxDetailActivity : BaseActivity() {
 
     private fun setupOptionImages(box: BoxResponse) {
         binding.layoutOptionImages.removeAllViews()
+        val url = box.productMasterImage ?: return
         val density = resources.displayMetrics.density
-        val imageUrls = mutableListOf<String>()
 
-        if (box.productMasterImage != null) imageUrls.add(box.productMasterImage)
-        box.members.forEach { m ->
-            val product = products?.find { it.skuId == m.skuId }
-            product?.images?.firstOrNull()?.filePath?.let { if (it !in imageUrls) imageUrls.add(it) }
-        }
-        if (imageUrls.isEmpty()) return
-
-        for (url in imageUrls) {
-            val iv = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                    bottomMargin = (3 * density).toInt()
-                }
-                adjustViewBounds = true
-                scaleType = ImageView.ScaleType.FIT_CENTER
+        val iv = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                bottomMargin = (3 * density).toInt()
             }
-            iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
-                crossfade(true)
-                placeholder(R.drawable.ic_placeholder)
-                error(R.drawable.ic_placeholder)
-            }
-            iv.setOnClickListener { showZoomDialog(iv) }
-            binding.layoutOptionImages.addView(iv)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
         }
+        iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
+            crossfade(true)
+            placeholder(R.drawable.ic_placeholder)
+            error(R.drawable.ic_placeholder)
+        }
+        iv.setOnClickListener { showZoomDialog(iv) }
+        binding.layoutOptionImages.addView(iv)
     }
-
-    private var products: List<ScanResponse>? = null
 
     private fun setupSourcingImages(box: BoxResponse) {
         binding.layoutSourcingImages.removeAllViews()
+        val url = box.productMasterImage ?: return
         val density = resources.displayMetrics.density
-        val imageUrls = mutableListOf<String>()
 
-        box.members.take(4).forEach { m ->
-            val product = products?.find { it.skuId == m.skuId }
-            product?.images?.firstOrNull()?.filePath?.let { imageUrls.add(it) }
-        }
-        if (box.productMasterImage != null && imageUrls.isEmpty()) imageUrls.add(box.productMasterImage)
-        if (imageUrls.isEmpty()) return
-
-        for (url in imageUrls) {
-            val iv = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                    bottomMargin = (3 * density).toInt()
-                }
-                adjustViewBounds = true
-                scaleType = ImageView.ScaleType.FIT_CENTER
+        val iv = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                bottomMargin = (3 * density).toInt()
             }
-            iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
-                crossfade(true)
-                placeholder(R.drawable.ic_placeholder)
-                error(R.drawable.ic_placeholder)
-            }
-            iv.setOnClickListener { showZoomDialog(iv) }
-            binding.layoutSourcingImages.addView(iv)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
         }
+        iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
+            crossfade(true)
+            placeholder(R.drawable.ic_placeholder)
+            error(R.drawable.ic_placeholder)
+        }
+        iv.setOnClickListener { showZoomDialog(iv) }
+        binding.layoutSourcingImages.addView(iv)
     }
 
     private fun setupLinkButtons(box: BoxResponse) {
