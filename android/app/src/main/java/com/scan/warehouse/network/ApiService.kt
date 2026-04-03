@@ -2,6 +2,7 @@ package com.scan.warehouse.network
 
 import com.scan.warehouse.model.AppVersion
 import com.scan.warehouse.model.BoxResponse
+import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.model.CartResponse
@@ -11,6 +12,7 @@ import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.model.SearchResponse
 import com.scan.warehouse.model.ShelfItem
 import com.scan.warehouse.model.ShelfListResponse
+import com.scan.warehouse.model.Zone
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -102,5 +104,42 @@ interface ApiService {
 
     @DELETE("api/box/{qrCode}/member/{skuId}")
     suspend fun removeBoxMember(@Path("qrCode") qrCode: String, @Path("skuId") skuId: String): Map<String, String>
+
+    @GET("api/zones")
+    suspend fun getZones(): List<Zone>
+
+    @POST("api/zones")
+    suspend fun createZone(@Body data: Map<String, @JvmSuppressWildcards Any>): Zone
+
+    @PATCH("api/zones/{zoneId}")
+    suspend fun updateZone(@Path("zoneId") zoneId: Int, @Body data: Map<String, @JvmSuppressWildcards Any>): Zone
+
+    @DELETE("api/zones/{zoneId}")
+    suspend fun deleteZone(@Path("zoneId") zoneId: Int): Map<String, String>
+
+    @GET("api/zones/{zoneId}/cells")
+    suspend fun getZoneCells(@Path("zoneId") zoneId: Int): List<CellDetail>
+
+    @GET("api/cells/{cellId}")
+    suspend fun getCellDetail(@Path("cellId") cellId: Int): CellDetail
+
+    @POST("api/cells/{cellId}/levels")
+    suspend fun addCellLevel(@Path("cellId") cellId: Int, @Body data: Map<String, String>): Map<String, @JvmSuppressWildcards Any>
+
+    @DELETE("api/levels/{levelId}")
+    suspend fun deleteLevel(@Path("levelId") levelId: Int): Map<String, String>
+
+    @POST("api/levels/{levelId}/products")
+    suspend fun addLevelProduct(@Path("levelId") levelId: Int, @Body data: Map<String, String>): Map<String, @JvmSuppressWildcards Any>
+
+    @DELETE("api/level-products/{productId}")
+    suspend fun removeLevelProduct(@Path("productId") productId: Int): Map<String, String>
+
+    @Multipart
+    @POST("api/level-products/{productId}/photo")
+    suspend fun uploadLevelProductPhoto(@Path("productId") productId: Int, @Part file: MultipartBody.Part): Map<String, String>
+
+    @DELETE("api/level-products/{productId}/photo")
+    suspend fun deleteLevelProductPhoto(@Path("productId") productId: Int): Map<String, String>
 
 }

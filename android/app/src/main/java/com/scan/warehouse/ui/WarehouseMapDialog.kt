@@ -6,15 +6,23 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.InputType
 import android.view.Gravity
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.scan.warehouse.R
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.MapZone
 import com.scan.warehouse.model.ParsedLocation
+import com.scan.warehouse.model.Zone
+import com.scan.warehouse.repository.ProductRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object WarehouseMapDialog {
 
@@ -28,6 +36,8 @@ object WarehouseMapDialog {
         context: Context,
         location: String?,
         mapLayout: MapLayout? = null,
+        repository: ProductRepository? = null,
+        onRefresh: (() -> Unit)? = null,
         onCellClick: ((floor: Int, zone: String, row: Int, col: Int, cellKey: String) -> Unit)? = null
     ) {
         val parsed = ParsedLocation.parse(location)
@@ -42,26 +52,62 @@ object WarehouseMapDialog {
             setPadding(pad, pad, pad, pad)
         }
 
-        layout.addView(TextView(context).apply {
+        val headerRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, (12 * density).toInt())
+        }
+        headerRow.addView(TextView(context).apply {
             text = "${floor}층 창고 도면"
             textSize = 18f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(ContextCompat.getColor(context, R.color.on_surface))
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, (12 * density).toInt())
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
+        if (repository != null) {
+            headerRow.addView(TextView(context).apply {
+                text = "+ 구역"
+                textSize = 13f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(ContextCompat.getColor(context, R.color.primary))
+                setPadding((8 * density).toInt(), (4 * density).toInt(), (8 * density).toInt(), (4 * density).toInt())
+                val bg = GradientDrawable().apply {
+                    setStroke((1 * density).toInt(), ContextCompat.getColor(context, R.color.primary))
+                    cornerRadius = 4 * density
+                }
+                background = bg
+                setOnClickListener { showZoneCreateDialog(context, repository, onRefresh) }
+            })
+        }
+        layout.addView(headerRow)
 
         var dialog: AlertDialog? = null
         val animators = mutableListOf<ObjectAnimator>()
 
         for (zone in zones) {
-            layout.addView(TextView(context).apply {
+            val zoneHeader = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, (8 * density).toInt(), 0, (4 * density).toInt())
+            }
+            zoneHeader.addView(TextView(context).apply {
                 text = "${zone.name} (${zone.code}구역)"
                 textSize = 13f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
-                setPadding(0, (8 * density).toInt(), 0, (4 * density).toInt())
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             })
+            if (repository != null) {
+                zoneHeader.addView(TextView(context).apply {
+                    text = "✏"
+                    textSize = 16f
+                    setPadding((8 * density).toInt(), 0, (8 * density).toInt(), 0)
+                    setOnClickListener {
+                        showZoneEditDialog(context, zone, repository, onRefresh)
+                    }
+                })
+            }
+            layout.addView(zoneHeader)
             val grid = createGrid(context, zone, mapLayout, parsed, floor, false, animators, onCellClick) { dialog?.dismiss() }
             layout.addView(grid)
         }
@@ -182,5 +228,132 @@ object WarehouseMapDialog {
             grid.addView(rowLayout)
         }
         return grid
+    }
+
+    private fun showZoneEditDialog(context: Context, zone: MapZone, repository: ProductRepository, onRefresh: (() -> Unit)?) {
+        val density = context.resources.displayMetrics.density
+        val pad = (16 * density).toInt()
+
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, pad)
+        }
+
+        val nameEdit = EditText(context).apply { setText(zone.name); hint = "이름" }
+        val codeEdit = EditText(context).apply { setText(zone.code); hint = "코드" }
+        val rowsEdit = EditText(context).apply { setText(zone.rows.toString()); hint = "행"; inputType = InputType.TYPE_CLASS_NUMBER }
+        val colsEdit = EditText(context).apply { setText(zone.cols.toString()); hint = "열"; inputType = InputType.TYPE_CLASS_NUMBER }
+
+        fun addField(label: String, edit: EditText) {
+            layout.addView(TextView(context).apply { text = label; textSize = 13f; setPadding(0, (8 * density).toInt(), 0, (2 * density).toInt()) })
+            layout.addView(edit)
+        }
+        addField("이름", nameEdit)
+        addField("코드", codeEdit)
+        addField("행", rowsEdit)
+        addField("열", colsEdit)
+
+        val zoneIdFromCode = zone.code.toIntOrNull()
+
+        AlertDialog.Builder(context)
+            .setTitle("구역 설정")
+            .setView(layout)
+            .setPositiveButton("저장") { _, _ ->
+                val data = mutableMapOf<String, Any>()
+                val newName = nameEdit.text.toString().trim()
+                val newCode = codeEdit.text.toString().trim()
+                val newRows = rowsEdit.text.toString().toIntOrNull() ?: zone.rows
+                val newCols = colsEdit.text.toString().toIntOrNull() ?: zone.cols
+                if (newName.isNotEmpty()) data["name"] = newName
+                if (newCode.isNotEmpty()) data["code"] = newCode
+                data["rows"] = newRows
+                data["cols"] = newCols
+
+                if (zoneIdFromCode != null) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        val result = repository.updateZone(zoneIdFromCode, data)
+                        if (result.isSuccess) {
+                            Toast.makeText(context, "구역 수정 완료", Toast.LENGTH_SHORT).show()
+                            onRefresh?.invoke()
+                        } else {
+                            Toast.makeText(context, "수정 실패: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("취소", null)
+            .setNeutralButton("삭제") { _, _ ->
+                if (zoneIdFromCode != null) {
+                    AlertDialog.Builder(context)
+                        .setTitle("구역 삭제")
+                        .setMessage("'${zone.name}' 구역을 삭제하시겠습니까?\n하위 셀/층/상품이 모두 삭제됩니다.")
+                        .setPositiveButton("삭제") { _, _ ->
+                            CoroutineScope(Dispatchers.Main).launch {
+                                val result = repository.deleteZone(zoneIdFromCode)
+                                if (result.isSuccess) {
+                                    Toast.makeText(context, "구역 삭제 완료", Toast.LENGTH_SHORT).show()
+                                    onRefresh?.invoke()
+                                } else {
+                                    Toast.makeText(context, "삭제 실패: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        .setNegativeButton("취소", null)
+                        .show()
+                }
+            }
+            .show()
+    }
+
+    private fun showZoneCreateDialog(context: Context, repository: ProductRepository, onRefresh: (() -> Unit)?) {
+        val density = context.resources.displayMetrics.density
+        val pad = (16 * density).toInt()
+
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, pad)
+        }
+
+        val nameEdit = EditText(context).apply { hint = "이름 (예: 501호)" }
+        val codeEdit = EditText(context).apply { hint = "코드 (예: 4)" }
+        val rowsEdit = EditText(context).apply { hint = "행"; inputType = InputType.TYPE_CLASS_NUMBER; setText("3") }
+        val colsEdit = EditText(context).apply { hint = "열"; inputType = InputType.TYPE_CLASS_NUMBER; setText("4") }
+
+        fun addField(label: String, edit: EditText) {
+            layout.addView(TextView(context).apply { text = label; textSize = 13f; setPadding(0, (8 * density).toInt(), 0, (2 * density).toInt()) })
+            layout.addView(edit)
+        }
+        addField("이름", nameEdit)
+        addField("코드", codeEdit)
+        addField("행", rowsEdit)
+        addField("열", colsEdit)
+
+        AlertDialog.Builder(context)
+            .setTitle("새 구역 추가")
+            .setView(layout)
+            .setPositiveButton("추가") { _, _ ->
+                val name = nameEdit.text.toString().trim()
+                val code = codeEdit.text.toString().trim()
+                val rows = rowsEdit.text.toString().toIntOrNull() ?: 3
+                val cols = colsEdit.text.toString().toIntOrNull() ?: 4
+
+                if (name.isEmpty() || code.isEmpty()) {
+                    Toast.makeText(context, "이름과 코드를 입력하세요", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                val data = mapOf<String, Any>("name" to name, "code" to code, "rows" to rows, "cols" to cols)
+                CoroutineScope(Dispatchers.Main).launch {
+                    val result = repository.createZone(data)
+                    if (result.isSuccess) {
+                        Toast.makeText(context, "구역 추가 완료", Toast.LENGTH_SHORT).show()
+                        onRefresh?.invoke()
+                    } else {
+                        Toast.makeText(context, "추가 실패: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 }
