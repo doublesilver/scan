@@ -4,6 +4,30 @@
 
 ---
 
+## [5.0.0] - 2026-04-03
+
+### 추가
+
+- 도면 DB 정규화: JSON blob → warehouse_zone/cell/cell_level/cell_level_product 4개 테이블
+- 14개 새 API 엔드포인트 (zone/cell/level/product CRUD)
+- PDA에서 구역 편집 (추가/수정/삭제)
+- 셀 상세: [+ 상품 추가] 버튼, 상품 롱프레스 삭제
+- 이전/다음 셀 네비게이션 (27셀 연속 작업)
+- 빈 셀 진입 시 자동 편집모드
+- 배포 자동화 스크립트 (scripts/deploy.sh)
+
+### 변경
+
+- 위치 동기화: 도면 셀 = SSOT, product.location 자동 동기화
+- 웹 에디터: PDA 앱과 디자인 통일 (네이비+오렌지)
+- 호환 레이어: 기존 GET/POST /api/map-layout 인터페이스 유지
+
+### 수정
+
+- 기존 JSON 데이터 자동 마이그레이션 (데이터 유실 없음)
+
+---
+
 ## [4.3.0] - 2026-03-31
 
 ### 추가

@@ -382,6 +382,22 @@ async def resolve_product_master(db, barcode: str = "", sku_id: str = "", produc
         if pm:
             return pm[0][0]
 
+        pr = await db.execute_fetchall(
+            "SELECT product_name FROM product WHERE sku_id = ? LIMIT 1", (target_sku,)
+        )
+        product_name = pr[0][0] if pr else target_sku
+
+        cursor = await db.execute(
+            "INSERT INTO product_master (name) VALUES (?)", (product_name,)
+        )
+        master_id = cursor.lastrowid
+        await db.execute(
+            "INSERT OR IGNORE INTO product_master_sku (product_master_id, sku_id, sku_name) VALUES (?, ?, ?)",
+            (master_id, target_sku, product_name),
+        )
+        await db.commit()
+        return master_id
+
     return None
 
 
