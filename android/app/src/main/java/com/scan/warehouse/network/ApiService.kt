@@ -95,7 +95,7 @@ interface ApiService {
     suspend fun createBox(@Body data: Map<String, @JvmSuppressWildcards Any>): BoxResponse
 
     @PATCH("api/box/{qrCode}")
-    suspend fun updateBox(@Path("qrCode") qrCode: String, @Body data: Map<String, String>): Map<String, String>
+    suspend fun updateBox(@Path("qrCode") qrCode: String, @Body data: Map<String, String>): BoxResponse
 
     @POST("api/box/{qrCode}/member")
     suspend fun addBoxMember(@Path("qrCode") qrCode: String, @Body data: Map<String, String>): Map<String, String>

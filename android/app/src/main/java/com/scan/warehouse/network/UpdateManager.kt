@@ -91,7 +91,7 @@ object UpdateManager {
             .create()
         dialog.show()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        val job = CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (destFile.exists()) destFile.delete()
 
@@ -127,19 +127,21 @@ object UpdateManager {
 
                 // 최소 1초 표시 (너무 빨리 사라지지 않게)
                 withContext(Dispatchers.Main) {
-                    progressBar.progress = 100
-                    percentText.text = "100%"
-                    statusText.text = "다운로드 완료! 설치 진행 중..."
+                    if (dialog.isShowing) {
+                        progressBar.progress = 100
+                        percentText.text = "100%"
+                        statusText.text = "다운로드 완료! 설치 진행 중..."
+                    }
                 }
                 delay(1000)
 
                 withContext(Dispatchers.Main) {
-                    dialog.dismiss()
+                    if (dialog.isShowing) dialog.dismiss()
                     installApk(context, destFile)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    dialog.dismiss()
+                    if (dialog.isShowing) dialog.dismiss()
                     Toast.makeText(context, "다운로드 실패: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
