@@ -55,6 +55,7 @@ class SettingsActivity : BaseActivity() {
             binding.btnSave.isEnabled = false
             binding.btnTest.isEnabled = false
             binding.btnAutoDiscover.isEnabled = false
+            binding.btnProductPlacement.isEnabled = false
             return
         }
 
@@ -83,6 +84,10 @@ class SettingsActivity : BaseActivity() {
 
         binding.btnMapEditor.setOnClickListener {
             startWithSlide(MapEditorActivity.createIntent(this))
+        }
+
+        binding.btnProductPlacement.setOnClickListener {
+            startWithSlide(ProductPlacementActivity.createIntent(this))
         }
 
         binding.btnSave.setOnClickListener {
