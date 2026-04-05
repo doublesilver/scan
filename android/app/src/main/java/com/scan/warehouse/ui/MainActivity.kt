@@ -34,6 +34,7 @@ class MainActivity : BaseActivity() {
     private val viewModel: ScanViewModel by viewModels()
     private lateinit var productAdapter: ProductAdapter
     private var lastKeystrokeTime = 0L
+    private var lastIntentScanTime = 0L
 
     @Inject lateinit var repository: ProductRepository
 
@@ -62,6 +63,7 @@ class MainActivity : BaseActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 DataWedgeManager.scanFlow.collect { barcode ->
+                    lastIntentScanTime = System.currentTimeMillis()
                     binding.etSearch.setText(barcode)
                     binding.etSearch.setSelection(barcode.length)
                     hideKeyboard()
@@ -266,6 +268,10 @@ class MainActivity : BaseActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
+            // intent 스캔이 1초 이내에 발생했으면 keystroke 무시 (DataWedge 중복 출력 방지)
+            if (System.currentTimeMillis() - lastIntentScanTime < 1000) {
+                return super.dispatchKeyEvent(event)
+            }
             if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
                 val query = binding.etSearch.text.toString().trim()
                 if (query.isNotBlank()) {
