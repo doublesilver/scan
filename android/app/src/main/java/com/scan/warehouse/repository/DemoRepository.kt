@@ -94,7 +94,13 @@ class DemoRepository(context: Context) : ProductRepository(context) {
     override suspend fun scanBarcode(barcode: String): Pair<Result<ScanResponse>, Boolean> {
         delay(300)
         val product = products.find { it.barcodes.contains(barcode) }
-            ?: return Pair(Result.failure(Exception("등록되지 않은 바코드입니다")), false)
+            ?: ScanResponse(
+                skuId = "DEMO-$barcode",
+                productName = "데모 상품 (${barcode.takeLast(6)})",
+                category = "데모",
+                barcodes = listOf(barcode),
+                images = listOf(ImageItem(filePath = IMG_STRAP, imageType = "thumb"))
+            )
         return Pair(Result.success(product), false)
     }
 
