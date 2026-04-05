@@ -566,6 +566,9 @@ class CellDetailActivity : BaseActivity() {
         binding.btnBarNext.isEnabled = hasNext
     }
 
+    override fun onResume() { super.onResume(); DataWedgeManager.register(this) }
+    override fun onPause() { super.onPause(); DataWedgeManager.unregister(this) }
+
     override fun onDestroy() {
         activeLevelDialog?.dismiss()
         activeLevelDialog = null

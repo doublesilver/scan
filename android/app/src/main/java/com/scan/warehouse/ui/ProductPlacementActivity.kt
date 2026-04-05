@@ -325,6 +325,7 @@ class ProductPlacementActivity : BaseActivity() {
     private fun resetToScan() {
         scannedProduct = null; scannedBox = null; pendingTarget = null
         pendingCellPhotoUri = null; pendingBoxPhotoUri = null
+        mapLayout = null
         binding.layoutContent.visibility = View.GONE
         binding.layoutScanHint.visibility = View.VISIBLE
         binding.btnSelectCell.isEnabled = false
@@ -365,7 +366,7 @@ class ProductPlacementActivity : BaseActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
-            if (event.keyCode == KeyEvent.KEYCODE_ENTER && keystrokeBuffer.isNotBlank()) {
+            if (event.keyCode == KeyEvent.KEYCODE_ENTER && keystrokeBuffer.length >= 4) {
                 val barcode = keystrokeBuffer.toString()
                 keystrokeBuffer.clear()
                 handleScan(barcode)
@@ -395,6 +396,13 @@ class ProductPlacementActivity : BaseActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
+        if (binding.layoutConfirm.visibility == View.VISIBLE) {
+            pendingTarget = null
+            pendingCellPhotoUri = null
+            pendingBoxPhotoUri = null
+            showContentArea()
+            return
+        }
         super.onBackPressed()
         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
