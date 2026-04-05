@@ -1,6 +1,8 @@
 import logging
 import platform
 
+import httpx
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -31,7 +33,17 @@ def generate_tspl(product_name: str, barcode: str, sku_id: str, quantity: int) -
 
 
 def print_label(product_name: str, barcode: str, sku_id: str, quantity: int) -> dict:
-    tspl = generate_tspl(product_name, barcode, sku_id, quantity)
+    if settings.print_agent_url:
+        try:
+            resp = httpx.post(
+                settings.print_agent_url,
+                json={"barcode": barcode, "quantity": quantity, "printer_name": settings.printer_name or "TSC TE210"},
+                timeout=30,
+            )
+            return resp.json()
+        except Exception as e:
+            logger.error("print agent 호출 실패: %s", e)
+            return {"status": "error", "message": str(e)}
 
     if platform.system() != "Windows":
         logger.warning("프린터 미지원 OS (%s) — dry run", platform.system())
@@ -42,6 +54,7 @@ def print_label(product_name: str, barcode: str, sku_id: str, quantity: int) -> 
     except ImportError:
         return {"status": "error", "message": "pywin32 미설치 — pip install pywin32"}
 
+    tspl = generate_tspl(product_name, barcode, sku_id, quantity)
     printer_name = settings.printer_name
     if not printer_name:
         printers = [p[2] for p in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL)]

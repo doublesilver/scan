@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     label_height_mm: int = 40
     label_gap_mm: int = 3
     label_density: int = 8
+    print_agent_url: str = ""
 
     # 구글시트 장바구니
     gsheet_credentials: str = "./credentials.json"
