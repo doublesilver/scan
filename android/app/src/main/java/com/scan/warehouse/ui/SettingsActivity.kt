@@ -52,14 +52,34 @@ class SettingsActivity : BaseActivity() {
             binding.tvConnectionStatus.text = "데모 모드 - 서버 연결 불필요"
             binding.tvConnectionStatus.visibility = View.VISIBLE
             binding.etServerUrl.isEnabled = false
-            binding.etApiKey.isEnabled = false
             binding.btnSave.isEnabled = false
             binding.btnTest.isEnabled = false
+            binding.btnAutoDiscover.isEnabled = false
             return
         }
 
         binding.etServerUrl.setText(RetrofitClient.getBaseUrl(this))
-        binding.etApiKey.setText(RetrofitClient.getApiKey(this))
+
+        binding.btnAutoDiscover.setOnClickListener {
+            binding.btnAutoDiscover.isEnabled = false
+            binding.btnAutoDiscover.text = "감지 중..."
+            binding.tvConnectionStatus.visibility = View.GONE
+            lifecycleScope.launch {
+                val found = com.scan.warehouse.network.ServerDiscovery.findServer()
+                binding.btnAutoDiscover.isEnabled = true
+                binding.btnAutoDiscover.text = "서버 자동 감지"
+                binding.tvConnectionStatus.visibility = View.VISIBLE
+                if (found != null) {
+                    binding.etServerUrl.setText(found)
+                    RetrofitClient.saveBaseUrl(this@SettingsActivity, found)
+                    binding.tvConnectionStatus.text = "감지 완료: $found"
+                    binding.tvConnectionStatus.setTextColor(getColor(R.color.success))
+                } else {
+                    binding.tvConnectionStatus.text = "서버를 찾을 수 없습니다"
+                    binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
+                }
+            }
+        }
 
         binding.btnMapEditor.setOnClickListener {
             startWithSlide(MapEditorActivity.createIntent(this))
@@ -78,7 +98,6 @@ class SettingsActivity : BaseActivity() {
                 return@setOnClickListener
             }
             RetrofitClient.saveBaseUrl(this, url)
-            RetrofitClient.saveApiKey(this, binding.etApiKey.text.toString().trim())
             Toast.makeText(this, "저장되었습니다", Toast.LENGTH_SHORT).show()
         }
 
