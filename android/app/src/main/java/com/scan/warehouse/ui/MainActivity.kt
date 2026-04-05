@@ -33,6 +33,7 @@ class MainActivity : BaseActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ScanViewModel by viewModels()
     private lateinit var productAdapter: ProductAdapter
+    private val keystrokeBuffer = StringBuilder()
     private var lastKeystrokeTime = 0L
     private var lastIntentScanTime = 0L
 
@@ -268,29 +269,31 @@ class MainActivity : BaseActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
-            // intent 스캔이 1초 이내에 발생했으면 keystroke 무시 (DataWedge 중복 출력 방지)
             if (System.currentTimeMillis() - lastIntentScanTime < 1000) {
                 return super.dispatchKeyEvent(event)
             }
             if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
-                val query = binding.etSearch.text.toString().trim()
-                if (query.isNotBlank()) {
-                    performSearch(query)
+                val barcode = keystrokeBuffer.toString().trim()
+                keystrokeBuffer.clear()
+                lastKeystrokeTime = 0L
+                if (barcode.matches(Regex(DataWedgeManager.BARCODE_PATTERN)) || barcode.startsWith("BOX-")) {
+                    binding.etSearch.setText(barcode)
+                    binding.etSearch.setSelection(barcode.length)
+                    hideKeyboard()
+                    performSearch(barcode)
+                    return true
                 }
-                hideKeyboard()
-                return true
+                return super.dispatchKeyEvent(event)
             }
             val char = event.unicodeChar.toChar()
             if (char.isDigit() || char.isLetter()) {
                 val now = System.currentTimeMillis()
-                if (now - lastKeystrokeTime > 300) {
-                    binding.etSearch.setText("")
+                if (now - lastKeystrokeTime > 2000) {
+                    keystrokeBuffer.clear()
                 }
                 lastKeystrokeTime = now
-                if (!binding.etSearch.hasFocus()) {
-                    binding.etSearch.requestFocus()
-                }
-                binding.etSearch.append(char.toString())
+                keystrokeBuffer.append(char)
+                if (!binding.etSearch.hasFocus()) binding.etSearch.requestFocus()
                 hideKeyboard()
                 return true
             }
