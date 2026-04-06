@@ -18,7 +18,13 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
     )
     row = await cursor.fetchone()
     if not row:
-        return None
+        cursor = await db.execute(
+            "SELECT sku_id FROM product_master_sku WHERE barcode = ? AND sku_id IS NOT NULL",
+            (barcode,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return None
 
     sku_id = row["sku_id"]
 
@@ -53,6 +59,33 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
     if not product:
         return None
 
+    pm_id = None
+    pm_name = None
+    pm_location = None
+    cursor = await db.execute(
+        "SELECT pms.product_master_id, pms.location as sku_location, pm.name "
+        "FROM product_master_sku pms "
+        "JOIN product_master pm ON pm.id = pms.product_master_id "
+        "WHERE pms.sku_id = ?",
+        (sku_id,),
+    )
+    pm_row = await cursor.fetchone()
+    if pm_row:
+        pm_id = pm_row["product_master_id"]
+        pm_name = pm_row["name"]
+        cursor = await db.execute(
+            "SELECT wz.code || '-' || wc.label as cell_location "
+            "FROM cell_level_product clp "
+            "JOIN cell_level cl ON cl.id = clp.level_id "
+            "JOIN warehouse_cell wc ON wc.id = cl.cell_id "
+            "JOIN warehouse_zone wz ON wz.id = wc.zone_id "
+            "WHERE clp.product_master_id = ? "
+            "LIMIT 1",
+            (pm_id,),
+        )
+        loc_row = await cursor.fetchone()
+        pm_location = loc_row["cell_location"] if loc_row else pm_row["sku_location"]
+
     cursor = await db.execute(
         "SELECT DISTINCT i.file_path, i.image_type "
         "FROM image i JOIN barcode b ON b.barcode = i.barcode "
@@ -76,6 +109,9 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
         quantity=product["quantity"],
         coupang_url=product["purchase_url"],
         location=product["location"],
+        product_master_id=pm_id,
+        product_master_name=pm_name,
+        product_master_location=pm_location,
     )
 
 

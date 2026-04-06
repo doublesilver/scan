@@ -16,6 +16,9 @@ class ScanResponse(BaseModel):
     quantity: int | None = None
     coupang_url: str | None = None
     location: str | None = None
+    product_master_id: int | None = None
+    product_master_name: str | None = None
+    product_master_location: str | None = None
 
 
 class StockUpdate(BaseModel):

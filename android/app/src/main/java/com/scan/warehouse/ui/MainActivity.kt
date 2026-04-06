@@ -247,6 +247,22 @@ class MainActivity : BaseActivity() {
             binding.ivProductImage.setImageResource(R.drawable.ic_placeholder)
         }
 
+        if (!result.productMasterName.isNullOrBlank()) {
+            binding.tvProductMasterName.text = "그룹: ${result.productMasterName}"
+            binding.tvProductMasterName.visibility = View.VISIBLE
+        } else {
+            binding.tvProductMasterName.visibility = View.GONE
+        }
+
+        val displayLocation = result.productMasterLocation?.takeIf { it.isNotBlank() }
+            ?: result.location?.takeIf { it.isNotBlank() }
+        if (displayLocation != null) {
+            binding.tvLocation.text = displayLocation
+            binding.tvLocation.visibility = View.VISIBLE
+        } else {
+            binding.tvLocation.visibility = View.GONE
+        }
+
         binding.layoutScanResult.setOnClickListener {
             startWithSlide(Intent(this, DetailActivity::class.java).apply {
                 putExtra(DetailActivity.EXTRA_DATA, result)

@@ -22,3 +22,27 @@ Supplier Hub.html
 Supplier Hub_files/
 supplier_hub_skus_*.json
 credentials.json
+
+# 데이터 파일
+*.xlsx
+*.csv
+kakao_chat_extract/
+test-barcode.png
+test-barcodes/
+
+# QR/홍보 이미지
+apk-*-qr.png
+apk-download-qr.png
+
+# 작업 문서
+BRIEFING_*.md
+REPORT_*.md
+WORK_STATUS.md
+
+# 개인 문서 (이력서, 제안서)
+*.html
+*_files/
+
+# 카카오톡 스크린샷
+docs/KakaoTalk_*.png
+docs/app-demo.zip

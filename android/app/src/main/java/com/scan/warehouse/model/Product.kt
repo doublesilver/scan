@@ -15,6 +15,8 @@ data class ScanResponse(
     @SerializedName("quantity") val quantity: Int? = null,
     @SerializedName("coupang_url") val coupangUrl: String? = null,
     @SerializedName("location") val location: String? = null,
+    @SerializedName("product_master_name") val productMasterName: String? = null,
+    @SerializedName("product_master_location") val productMasterLocation: String? = null,
 ) : Parcelable
 
 @Parcelize
