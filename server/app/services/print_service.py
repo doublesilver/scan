@@ -37,6 +37,9 @@ def _friendly_agent_error(message: str, barcode: str) -> str:
     """bartender agent에서 돌아온 에러를 작업자 친화 문구로 바꿔준다."""
     lower = message.lower()
     tail5 = barcode[-5:] if barcode else "?????"
+    # 상품명 불일치 (agent의 2단 방어가 잡은 케이스)
+    if "product name mismatch" in lower or "name mismatch" in lower:
+        return f"상품명과 라벨이 다름 — 끝{tail5} 템플릿 확인 필요"
     if "template" in lower or "btw" in lower or "파일" in message:
         return f"라벨 템플릿 없음 ({tail5}.btw)"
     if "printer" in lower and ("offline" in lower or "not found" in lower):
@@ -58,6 +61,10 @@ def print_label(product_name: str, barcode: str, sku_id: str, quantity: int) -> 
                     "barcode": barcode,
                     "quantity": quantity,
                     "printer_name": settings.printer_name or "TSC TE210",
+                    # 2단 방어: agent 쪽에서 DB 상품명과 파일명 키워드 비교로
+                    # 끝5자리 충돌 '지뢰 바코드'를 잡는다
+                    "product_name": product_name,
+                    "sku_id": sku_id,
                 },
                 timeout=30,
             )

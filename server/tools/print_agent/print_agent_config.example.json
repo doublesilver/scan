@@ -1,0 +1,9 @@
+{
+  "port": 7777,
+  "template_dirs": ["C:\\Users\\User\\Desktop\\[02] 양식"],
+  "bartender_exe": "C:\\Program Files\\Seagull\\BarTender 2022\\BarTend.exe",
+  "default_printer": "TSC TE210 USB001",
+  "log_file": "C:\\print_agent.log",
+  "temp_btw": "C:\\print_agent_temp.btw",
+  "print_timeout_sec": 30
+}
