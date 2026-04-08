@@ -4,6 +4,14 @@
 
 ---
 
+## [5.3.5] - 2026-04-08
+
+### 변경
+
+- **스캔 결과 카드의 "그룹" 표시 UI 숨김**: `tvProductMasterName` 을 `showScanResult` 에서 무조건 `GONE` 처리. 서버 `ScanResponse.product_master_name` 필드와 DB 의 `product_master` 테이블은 그대로 유지(나중에 다시 활성화할 수 있게).
+
+---
+
 ## [5.3.4] - 2026-04-08
 
 ### 수정 (회귀)

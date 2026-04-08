@@ -379,12 +379,8 @@ class MainActivity : BaseActivity() {
             binding.ivProductImage.setImageResource(R.drawable.ic_placeholder)
         }
 
-        if (!result.productMasterName.isNullOrBlank()) {
-            binding.tvProductMasterName.text = "그룹: ${result.productMasterName}"
-            binding.tvProductMasterName.visibility = View.VISIBLE
-        } else {
-            binding.tvProductMasterName.visibility = View.GONE
-        }
+        // 그룹 필드는 UI에서 숨김 (서버·DB는 그대로, 나중에 다시 켤 수 있음)
+        binding.tvProductMasterName.visibility = View.GONE
 
         binding.layoutScanResult.setOnClickListener {
             startWithSlide(Intent(this, DetailActivity::class.java).apply {
