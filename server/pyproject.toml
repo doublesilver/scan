@@ -1,0 +1,52 @@
+[project]
+name = "scan-server"
+version = "0.1.0"
+description = "Warehouse scanner FastAPI server"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.115.12",
+    "python-multipart>=0.0.9",
+    "uvicorn[standard]==0.34.2",
+    "aiosqlite==0.21.0",
+    "openpyxl==3.1.5",
+    "pydantic-settings==2.9.1",
+    "python-dotenv==1.1.0",
+    "lxml==5.4.0",
+    "httpx==0.28.1",
+    "watchdog==6.0.0",
+    "Pillow==12.1.1",
+    "gspread==6.2.1",
+    "pywin32; sys_platform == 'win32'",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.5",
+    "pytest-asyncio==0.25.3",
+    "pytest-watch>=4.2.0",
+    "ruff>=0.7.0",
+    "pyright>=1.1.380",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "apk", "static", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+include = ["app", "tests"]
+exclude = ["data", "apk", "static", "**/__pycache__"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingImports = "warning"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
