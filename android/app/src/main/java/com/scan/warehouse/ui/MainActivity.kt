@@ -1,7 +1,5 @@
 package com.scan.warehouse.ui
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -36,6 +34,7 @@ import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -48,7 +47,7 @@ class MainActivity : BaseActivity() {
     private val keystrokeBuffer = StringBuilder()
     private var lastKeystrokeTime = 0L
     private var lastIntentScanTime = 0L
-    private val mapAnimators = mutableListOf<ObjectAnimator>()
+    private var serverStatusJob: Job? = null
 
     @Inject lateinit var repository: ProductRepository
 
@@ -97,10 +96,6 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupHeader() {
-        binding.btnBarCart.setOnClickListener {
-            currentScanResult?.let { addToCart(it) }
-        }
-
         binding.btnSettings.setOnClickListener {
             startWithSlide(Intent(this, SettingsActivity::class.java))
         }
@@ -109,6 +104,14 @@ class MainActivity : BaseActivity() {
     private fun setupBottomNav() {
         binding.btnNavPlacement.setOnClickListener {
             startWithSlide(ProductPlacementActivity.createIntent(this))
+        }
+        binding.btnBarCart.setOnClickListener {
+            val result = currentScanResult
+            if (result != null) {
+                addToCart(result)
+            } else {
+                Toast.makeText(this, "스캔한 상품이 없습니다", Toast.LENGTH_SHORT).show()
+            }
         }
         binding.btnBarCart.isEnabled = false
     }
@@ -128,19 +131,27 @@ class MainActivity : BaseActivity() {
 
     private fun renderMap(mapLayout: MapLayout?) {
         binding.mapContainer.removeAllViews()
-        mapAnimators.forEach { it.cancel() }
-        mapAnimators.clear()
 
         val density = resources.displayMetrics.density
         val pad = (8 * density).toInt()
 
-        val fallbackZones = listOf(
-            MapZone("A", "501호", 3, 4),
-            MapZone("B", "포장다이", 3, 2),
-            MapZone("C", "502호", 3, 3),
-        )
-        val zones = if (mapLayout != null && mapLayout.zones.isNotEmpty()) mapLayout.zones else fallbackZones
-        val floor = mapLayout?.floor ?: 1
+        if (mapLayout == null || mapLayout.zones.isEmpty()) {
+            val errorView = TextView(this).apply {
+                text = "도면을 불러올 수 없습니다\n서버 연결을 확인하고 화면을 탭해 다시 시도하세요"
+                textSize = 14f
+                gravity = android.view.Gravity.CENTER
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface_variant))
+                setPadding(pad * 4, pad * 8, pad * 4, pad * 8)
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { loadMainMap() }
+            }
+            binding.mapContainer.addView(errorView)
+            return
+        }
+
+        val zones = mapLayout.zones
+        val floor = mapLayout.floor
 
         val headerText = TextView(this).apply {
             text = "${floor}층 창고 도면"
@@ -299,6 +310,7 @@ class MainActivity : BaseActivity() {
                 showScanResult(result)
             } else {
                 binding.layoutScanResult.visibility = View.GONE
+                binding.layoutMainMap.visibility = View.VISIBLE
                 binding.btnBarCart.isEnabled = false
             }
         }
@@ -418,7 +430,8 @@ class MainActivity : BaseActivity() {
     }
 
     private fun checkServerStatus() {
-        lifecycleScope.launch {
+        serverStatusJob?.cancel()
+        serverStatusJob = lifecycleScope.launch {
             val url = RetrofitClient.getBaseUrl(this@MainActivity)
             val result = repository.healthCheck()
             result.onSuccess {
@@ -488,7 +501,7 @@ class MainActivity : BaseActivity() {
                 } else "장바구니 추가 실패: ${e.message}"
                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
             } finally {
-                binding.btnBarCart.isEnabled = true
+                binding.btnBarCart.isEnabled = currentScanResult != null
             }
         }
     }
@@ -534,8 +547,7 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        mapAnimators.forEach { it.cancel() }
-        mapAnimators.clear()
+        serverStatusJob?.cancel()
         super.onDestroy()
     }
 }

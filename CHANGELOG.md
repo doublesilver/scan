@@ -4,6 +4,31 @@
 
 ---
 
+## [5.3.1] - 2026-04-08
+
+### 수정 (코드 리뷰 반영)
+
+- **장바구니 버튼 활성 상태 회귀 수정**: `addToCart` 완료 후 `isEnabled = true` 무조건 복원 → 스캔 결과 없는 상태에서도 활성화되던 버그. `isEnabled = currentScanResult != null`로 교체.
+- **가짜 도면 렌더링 제거**: 서버 로드 실패 시 하드코딩된 `fallbackZones`(A/B/C 3구역)로 도면을 그려 잘못된 셀을 탭하면 서버에 존재하지 않는 셀 키로 CellDetailActivity에 진입해 데이터 오염 위험이 있었음. 실패 시 에러 메시지 + 탭 시 재시도 UI로 교체.
+- **scanResult null 분기 `layoutMainMap` 복원 누락**: ViewModel이 null을 밀면 메인 도면이 숨겨진 채로 남던 문제. null 분기에서 `layoutMainMap.visibility = VISIBLE` 복원 추가.
+- **`checkServerStatus` 경쟁 조건**: `onResume`마다 호출되는 서버 상태 체크가 여러 코루틴을 동시 기동해서 마지막 완료 순서에 따라 UI가 뒤집히는 문제. `serverStatusJob`으로 이전 작업 취소 후 재실행하는 패턴 도입.
+- **`btnBarCart` 관리 책임 분산**: `setupHeader`와 `setupBottomNav`에 각각 리스너/상태가 흩어져 있던 것을 `setupBottomNav`로 통합. 비어있는 상태 클릭 시 "스캔한 상품이 없습니다" 토스트 피드백 추가.
+
+### 제거
+
+- **`mapAnimators` 데드 코드**: `ObjectAnimator` 리스트 선언·정리·취소 코드가 남아있었지만 실제 애니메이션 추가 로직은 없었음. 관련 import(`android.animation.*`) 포함 삭제.
+
+### 분석 스크립트 품질 개선
+
+- `server/scripts/analyze_sku_matching.py`:
+  - 절대 경로 하드코딩 → `argparse` + 환경 변수 `SKU_CSV` + 상대 경로 기본값
+  - 수동 `n//2` 중앙값 → `statistics.median()`
+  - 나눗셈 전 0 체크 (`safe_pct` 헬퍼)
+  - `single_skus`·`rejection_skus` 비어있을 때 `ZeroDivisionError` 방어
+  - `main()` 함수로 감싸고 `sys.exit()` 종료 코드 반환
+
+---
+
 ## [5.3.0] - 2026-04-08
 
 ### 추가
