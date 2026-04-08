@@ -1,6 +1,5 @@
 package com.scan.warehouse.ui
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -26,7 +25,6 @@ import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
 import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.MapZone
-import com.scan.warehouse.model.ParsedLocation
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.network.UpdateManager
@@ -48,6 +46,7 @@ class MainActivity : BaseActivity() {
     private var lastKeystrokeTime = 0L
     private var lastIntentScanTime = 0L
     private var serverStatusJob: Job? = null
+    private var currentScanResult: ScanResponse? = null
 
     @Inject lateinit var repository: ProductRepository
 
@@ -105,15 +104,6 @@ class MainActivity : BaseActivity() {
         binding.btnNavPlacement.setOnClickListener {
             startWithSlide(ProductPlacementActivity.createIntent(this))
         }
-        binding.btnBarCart.setOnClickListener {
-            val result = currentScanResult
-            if (result != null) {
-                addToCart(result)
-            } else {
-                Toast.makeText(this, "스캔한 상품이 없습니다", Toast.LENGTH_SHORT).show()
-            }
-        }
-        binding.btnBarCart.isEnabled = false
     }
 
     private fun loadMainMap() {
@@ -283,11 +273,16 @@ class MainActivity : BaseActivity() {
 
         binding.btnClearSearch.setOnClickListener {
             binding.etSearch.setText("")
-            binding.layoutMainMap.visibility = View.VISIBLE
-            binding.layoutScanResult.visibility = View.GONE
-            binding.btnBarCart.isEnabled = false
-            binding.rvProducts.visibility = View.GONE
+            resetToMap()
         }
+    }
+
+    private fun resetToMap() {
+        binding.layoutMainMap.visibility = View.VISIBLE
+        binding.layoutScanResult.visibility = View.GONE
+        binding.rvProducts.visibility = View.GONE
+        binding.bottomBar.visibility = View.VISIBLE
+        currentScanResult = null
     }
 
     private fun observeViewModel() {
@@ -307,11 +302,10 @@ class MainActivity : BaseActivity() {
         viewModel.scanResult.observe(this) { result ->
             if (result != null) {
                 binding.layoutMainMap.visibility = View.GONE
+                binding.bottomBar.visibility = View.GONE
                 showScanResult(result)
             } else {
-                binding.layoutScanResult.visibility = View.GONE
-                binding.layoutMainMap.visibility = View.VISIBLE
-                binding.btnBarCart.isEnabled = false
+                resetToMap()
             }
         }
 
@@ -319,7 +313,6 @@ class MainActivity : BaseActivity() {
             if (response != null) {
                 binding.layoutMainMap.visibility = View.GONE
                 binding.layoutScanResult.visibility = View.GONE
-                binding.btnBarCart.isEnabled = false
                 binding.rvProducts.visibility = View.VISIBLE
                 productAdapter.submitList(response.items)
             } else {
@@ -362,13 +355,10 @@ class MainActivity : BaseActivity() {
             .show()
     }
 
-    private var currentScanResult: ScanResponse? = null
-
     private fun showScanResult(result: ScanResponse) {
         currentScanResult = result
         binding.rvProducts.visibility = View.GONE
         binding.layoutScanResult.visibility = View.VISIBLE
-        binding.btnBarCart.isEnabled = true
 
         binding.tvProductName.text = BarcodeUtils.applyColorKeywords(result.productName)
         binding.tvSkuId.text = "SKU: ${result.skuId}"
@@ -394,15 +384,6 @@ class MainActivity : BaseActivity() {
             binding.tvProductMasterName.visibility = View.VISIBLE
         } else {
             binding.tvProductMasterName.visibility = View.GONE
-        }
-
-        val displayLocation = result.productMasterLocation?.takeIf { it.isNotBlank() }
-            ?: result.location?.takeIf { it.isNotBlank() }
-        if (displayLocation != null) {
-            binding.tvLocation.text = displayLocation
-            binding.tvLocation.visibility = View.VISIBLE
-        } else {
-            binding.tvLocation.visibility = View.GONE
         }
 
         binding.layoutScanResult.setOnClickListener {
@@ -484,28 +465,6 @@ class MainActivity : BaseActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    private fun addToCart(data: ScanResponse) {
-        val barcode = data.barcodes.firstOrNull() ?: return
-        binding.btnBarCart.isEnabled = false
-        Toast.makeText(this, "장바구니 추가 중...", Toast.LENGTH_SHORT).show()
-        lifecycleScope.launch {
-            try {
-                val result = repository.addToCart(barcode, data.skuId, data.productName, 1)
-                Toast.makeText(this@MainActivity, result.message, Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                val msg = if (e is retrofit2.HttpException) {
-                    e.response()?.errorBody()?.string()?.let {
-                        try { org.json.JSONObject(it).optString("detail", "장바구니 추가 실패") }
-                        catch (_: Exception) { "장바구니 추가 실패" }
-                    } ?: "장바구니 추가 실패"
-                } else "장바구니 추가 실패: ${e.message}"
-                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
-            } finally {
-                binding.btnBarCart.isEnabled = currentScanResult != null
-            }
-        }
-    }
-
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
@@ -524,11 +483,7 @@ class MainActivity : BaseActivity() {
     override fun onBackPressed() {
         if (binding.layoutScanResult.visibility == View.VISIBLE || binding.rvProducts.visibility == View.VISIBLE) {
             binding.etSearch.setText("")
-            binding.layoutScanResult.visibility = View.GONE
-            binding.rvProducts.visibility = View.GONE
-            binding.btnBarCart.isEnabled = false
-            binding.layoutMainMap.visibility = View.VISIBLE
-            currentScanResult = null
+            resetToMap()
         } else {
             @Suppress("DEPRECATION")
             super.onBackPressed()

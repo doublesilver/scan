@@ -278,10 +278,10 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 75,
-        "versionName": "5.3.1",
+        "versionCode": 76,
+        "versionName": "5.3.2",
         "downloadUrl": "/apk/app-live-debug.apk",
-        "releaseNotes": "코드 리뷰 반영: 장바구니 활성 상태 회귀 수정, 가짜 도면 제거, 서버 상태 경쟁 방지 등 13건",
+        "releaseNotes": "설정 저장→메인 자동 이동, 하단 장바구니 제거, 스캔 결과 위치정보·배치 버튼 정리, 배치 화면 검색 기능 추가",
         "forceUpdate": False,
     }
 

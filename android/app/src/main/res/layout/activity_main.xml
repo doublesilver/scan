@@ -152,7 +152,6 @@
             android:layout_marginTop="8dp"
             android:indeterminateTint="@color/secondary_container" />
 
-        <!-- 도면 컨테이너 (스캔 대기 중 표시) -->
         <FrameLayout
             android:id="@+id/layoutMainMap"
             android:layout_width="match_parent"
@@ -276,15 +275,6 @@
                         android:textStyle="bold"
                         android:visibility="gone" />
 
-                    <TextView
-                        android:id="@+id/tvLocation"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textSize="13sp"
-                        android:textColor="@color/on_surface_variant"
-                        android:visibility="gone" />
-
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -311,32 +301,15 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNavPlacement"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_weight="1"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:text="배치"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 app:icon="@drawable/ic_box"
-                app:iconGravity="top"
-                app:iconTint="@color/primary" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBarCart"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="장바구니"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary"
-                app:icon="@drawable/ic_cart"
                 app:iconGravity="top"
                 app:iconTint="@color/primary" />
 

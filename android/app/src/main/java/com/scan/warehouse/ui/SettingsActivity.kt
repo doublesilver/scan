@@ -93,8 +93,7 @@ class SettingsActivity : BaseActivity() {
                 Toast.makeText(this, "올바른 URL을 입력하세요", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            RetrofitClient.saveBaseUrl(this, url)
-            Toast.makeText(this, "저장되었습니다", Toast.LENGTH_SHORT).show()
+            saveAndReturn(url)
         }
 
         binding.btnTest.setOnClickListener {
@@ -130,6 +129,29 @@ class SettingsActivity : BaseActivity() {
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.success))
             }.onFailure { e ->
                 RetrofitClient.saveBaseUrl(this@SettingsActivity, previousUrl)
+                binding.tvConnectionStatus.text = "연결 실패: ${e.message}"
+                binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
+            }
+        }
+    }
+
+    private fun saveAndReturn(url: String) {
+        binding.progressBarSettings.visibility = View.VISIBLE
+        binding.tvConnectionStatus.visibility = View.GONE
+
+        val previousUrl = RetrofitClient.getBaseUrl(this)
+        RetrofitClient.saveBaseUrl(this, url)
+
+        lifecycleScope.launch {
+            val result = repository.healthCheck()
+            binding.progressBarSettings.visibility = View.GONE
+
+            result.onSuccess {
+                Toast.makeText(this@SettingsActivity, "연결 성공 — 저장 완료", Toast.LENGTH_SHORT).show()
+                finishWithSlide()
+            }.onFailure { e ->
+                RetrofitClient.saveBaseUrl(this@SettingsActivity, previousUrl)
+                binding.tvConnectionStatus.visibility = View.VISIBLE
                 binding.tvConnectionStatus.text = "연결 실패: ${e.message}"
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
             }

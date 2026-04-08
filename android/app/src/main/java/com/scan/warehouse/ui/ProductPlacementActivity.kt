@@ -101,9 +101,64 @@ class ProductPlacementActivity : BaseActivity() {
         binding.btnBoxCamera.setOnClickListener { launchPhoto(PhotoTarget.BOX) }
         binding.btnBoxGallery.setOnClickListener { photoTarget = PhotoTarget.BOX; galleryLauncher.launch("image/*") }
 
+        setupSearch()
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 DataWedgeManager.scanFlow.collect { barcode -> handleScan(barcode) }
+            }
+        }
+    }
+
+    private fun setupSearch() {
+        binding.btnSearch.setOnClickListener { performSearch() }
+        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                performSearch()
+                true
+            } else false
+        }
+    }
+
+    private fun performSearch() {
+        val query = binding.etSearch.text.toString().trim()
+        if (query.isBlank()) return
+
+        // 바코드/QR 형식이면 바로 스캔 처리
+        if (query.matches(Regex(DataWedgeManager.BARCODE_PATTERN)) || query.startsWith("BOX-")) {
+            handleScan(query)
+            return
+        }
+
+        // 상품명 검색
+        binding.progressBar.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            val (result, _) = repository.searchProducts(query)
+            binding.progressBar.visibility = View.GONE
+            result.onSuccess { response ->
+                if (response.items.isEmpty()) {
+                    Toast.makeText(this@ProductPlacementActivity, "검색 결과가 없습니다", Toast.LENGTH_SHORT).show()
+                    return@onSuccess
+                }
+                val labels = response.items.map { item ->
+                    val code = item.barcode ?: item.skuId
+                    "${item.productName}\n$code"
+                }.toTypedArray()
+                AlertDialog.Builder(this@ProductPlacementActivity)
+                    .setTitle("검색 결과 (${response.items.size}건)")
+                    .setItems(labels) { _, which ->
+                        val selected = response.items[which]
+                        val barcode = selected.barcode
+                        if (barcode != null) {
+                            handleScan(barcode)
+                        } else {
+                            Toast.makeText(this@ProductPlacementActivity, "바코드 정보가 없습니다", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .setNegativeButton("취소", null)
+                    .show()
+            }.onFailure { e ->
+                Toast.makeText(this@ProductPlacementActivity, "검색 실패: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
