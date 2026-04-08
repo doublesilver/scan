@@ -55,7 +55,7 @@ class ScanViewModel @Inject constructor(
             _isOffline.value = offline
             result.onSuccess { response ->
                 savedStateHandle[KEY_SCAN_RESULT] = response
-                _searchResults.value = null
+                // searchResults 는 함수 진입 시 이미 null. 여기서 재설정 불필요.
             }.onFailure { e ->
                 _error.value = when (e) {
                     is retrofit2.HttpException -> when (e.code()) {
@@ -86,7 +86,9 @@ class ScanViewModel @Inject constructor(
                     _error.value = "\"${query}\" 검색 결과가 없습니다"
                 }
                 _searchResults.value = response
-                savedStateHandle[KEY_SCAN_RESULT] = null
+                // scanResult 는 함수 진입 시 이미 null 로 비워놨음.
+                // 여기서 또 null 로 set 하면 scanResult observer 가 재발화돼서
+                // resetToMap() 이 돌고 rvProducts 가 다시 숨겨짐 (검색 결과 안 보임)
             }.onFailure { e ->
                 _error.value = when (e) {
                     is retrofit2.HttpException -> when (e.code()) {

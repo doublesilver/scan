@@ -4,6 +4,15 @@
 
 ---
 
+## [5.3.4] - 2026-04-08
+
+### 수정 (회귀)
+
+- **메인 검색 결과가 표시 직후 사라지는 버그 수정**: v5.3.2 에서 도입한 `resetToMap()` 헬퍼가 `rvProducts.GONE` 을 포함하게 된 이후, `ScanViewModel.searchProducts().onSuccess` 안의 `savedStateHandle[KEY_SCAN_RESULT] = null` 이 `scanResult` observer를 재발화시켜 **직전에 표시된 검색 결과 리스트가 바로 숨겨지는** 회귀 발생. onSuccess 안의 redundant scanResult 초기화 제거로 해결.
+- 마찬가지로 `scanBarcode().onSuccess` 안의 redundant `_searchResults.value = null` 도 제거 (함수 진입 시 이미 비워놔서 불필요했음)
+
+---
+
 ## [5.3.3] - 2026-04-08 (추가 보강)
 
 ### 시연 대비 — print_agent 복원 및 2단 방어

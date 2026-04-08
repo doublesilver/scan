@@ -295,10 +295,10 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 77,
-        "versionName": "5.3.3",
+        "versionCode": 78,
+        "versionName": "5.3.4",
         "downloadUrl": "/apk/app-live-debug.apk",
-        "releaseNotes": "인쇄 실패 시 구체적 원인 표시, 서버에 인쇄 이력(성공·실패) 기록",
+        "releaseNotes": "메인 검색 결과가 표시 직후 사라지던 회귀 수정",
         "forceUpdate": False,
     }
 
