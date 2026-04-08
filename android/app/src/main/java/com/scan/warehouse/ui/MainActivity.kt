@@ -1,28 +1,40 @@
 package com.scan.warehouse.ui
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.google.android.material.snackbar.Snackbar
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityMainBinding
+import com.scan.warehouse.model.MapLayout
+import com.scan.warehouse.model.MapZone
+import com.scan.warehouse.model.ParsedLocation
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.network.UpdateManager
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.ScanViewModel
-import android.view.inputmethod.InputMethodManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,6 +48,7 @@ class MainActivity : BaseActivity() {
     private val keystrokeBuffer = StringBuilder()
     private var lastKeystrokeTime = 0L
     private var lastIntentScanTime = 0L
+    private val mapAnimators = mutableListOf<ObjectAnimator>()
 
     @Inject lateinit var repository: ProductRepository
 
@@ -49,6 +62,8 @@ class MainActivity : BaseActivity() {
         setupRecyclerView()
         setupSearch()
         setupHeader()
+        setupBottomNav()
+        loadMainMap()
         observeViewModel()
         checkServerOnce()
 
@@ -91,6 +106,123 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun setupBottomNav() {
+        binding.btnNavPlacement.setOnClickListener {
+            startWithSlide(ProductPlacementActivity.createIntent(this))
+        }
+        binding.btnBarCart.isEnabled = false
+    }
+
+    private fun loadMainMap() {
+        binding.progressMap.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            val result = repository.getMapLayout()
+            binding.progressMap.visibility = View.GONE
+            result.onSuccess { layout ->
+                renderMap(layout)
+            }.onFailure {
+                renderMap(null)
+            }
+        }
+    }
+
+    private fun renderMap(mapLayout: MapLayout?) {
+        binding.mapContainer.removeAllViews()
+        mapAnimators.forEach { it.cancel() }
+        mapAnimators.clear()
+
+        val density = resources.displayMetrics.density
+        val pad = (8 * density).toInt()
+
+        val fallbackZones = listOf(
+            MapZone("A", "501호", 3, 4),
+            MapZone("B", "포장다이", 3, 2),
+            MapZone("C", "502호", 3, 3),
+        )
+        val zones = if (mapLayout != null && mapLayout.zones.isNotEmpty()) mapLayout.zones else fallbackZones
+        val floor = mapLayout?.floor ?: 1
+
+        val headerText = TextView(this).apply {
+            text = "${floor}층 창고 도면"
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface))
+            setPadding(pad, pad, pad, (4 * density).toInt())
+        }
+        binding.mapContainer.addView(headerText)
+
+        for (zone in zones) {
+            val zoneLabel = TextView(this).apply {
+                text = "${zone.name} (${zone.code}구역)"
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface_variant))
+                setPadding(pad, (6 * density).toInt(), pad, (2 * density).toInt())
+            }
+            binding.mapContainer.addView(zoneLabel)
+
+            val grid = createMapGrid(zone, mapLayout, floor, density)
+            binding.mapContainer.addView(grid)
+        }
+    }
+
+    private fun createMapGrid(zone: MapZone, mapLayout: MapLayout?, floor: Int, density: Float): LinearLayout {
+        val cellSize = (44 * density).toInt()
+        val margin = (3 * density).toInt()
+
+        val grid = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((8 * density).toInt(), 0, (8 * density).toInt(), (4 * density).toInt())
+        }
+
+        for (row in 1..zone.rows) {
+            val rowLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+            }
+            for (col in 1..zone.cols) {
+                val cellKey = "${zone.code}-$row-$col"
+                val cellData = mapLayout?.cells?.get(cellKey)
+                val cellNum = (row - 1) * zone.cols + col
+                val cellText = cellData?.name ?: "${zone.code}-$cellNum"
+
+                val cell = TextView(this).apply {
+                    text = cellText
+                    textSize = 9f
+                    gravity = android.view.Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
+                        setMargins(margin, margin, margin, margin)
+                    }
+                    when (cellData?.status) {
+                        "full" -> {
+                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_light))
+                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_dark))
+                        }
+                        "used" -> {
+                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_light))
+                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_dark))
+                        }
+                        else -> {
+                            val gd = GradientDrawable().apply {
+                                setColor(ContextCompat.getColor(this@MainActivity, R.color.surface_container_high))
+                                cornerRadius = 4 * density
+                            }
+                            background = gd
+                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface_variant))
+                        }
+                    }
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        startWithSlide(CellDetailActivity.createIntent(this@MainActivity, floor, zone.code, cellKey))
+                    }
+                }
+                rowLayout.addView(cell)
+            }
+            grid.addView(rowLayout)
+        }
+        return grid
+    }
+
     private fun setupRecyclerView() {
         productAdapter = ProductAdapter(repository) { item ->
             val barcode = item.barcode
@@ -104,7 +236,6 @@ class MainActivity : BaseActivity() {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = productAdapter
         }
-
     }
 
     private fun performSearch(query: String) {
@@ -141,9 +272,9 @@ class MainActivity : BaseActivity() {
 
         binding.btnClearSearch.setOnClickListener {
             binding.etSearch.setText("")
-            binding.layoutScanWaiting.visibility = View.VISIBLE
+            binding.layoutMainMap.visibility = View.VISIBLE
             binding.layoutScanResult.visibility = View.GONE
-            binding.bottomBar.visibility = View.GONE
+            binding.btnBarCart.isEnabled = false
             binding.rvProducts.visibility = View.GONE
         }
     }
@@ -164,19 +295,19 @@ class MainActivity : BaseActivity() {
 
         viewModel.scanResult.observe(this) { result ->
             if (result != null) {
-                binding.layoutScanWaiting.visibility = View.GONE
+                binding.layoutMainMap.visibility = View.GONE
                 showScanResult(result)
             } else {
                 binding.layoutScanResult.visibility = View.GONE
-                binding.bottomBar.visibility = View.GONE
+                binding.btnBarCart.isEnabled = false
             }
         }
 
         viewModel.searchResults.observe(this) { response ->
             if (response != null) {
-                binding.layoutScanWaiting.visibility = View.GONE
+                binding.layoutMainMap.visibility = View.GONE
                 binding.layoutScanResult.visibility = View.GONE
-                binding.bottomBar.visibility = View.GONE
+                binding.btnBarCart.isEnabled = false
                 binding.rvProducts.visibility = View.VISIBLE
                 productAdapter.submitList(response.items)
             } else {
@@ -201,7 +332,6 @@ class MainActivity : BaseActivity() {
                 viewModel.clearBoxNotFound()
             }
         }
-
     }
 
     private fun showBoxDialog(box: com.scan.warehouse.model.BoxResponse) {
@@ -226,7 +356,7 @@ class MainActivity : BaseActivity() {
         currentScanResult = result
         binding.rvProducts.visibility = View.GONE
         binding.layoutScanResult.visibility = View.VISIBLE
-        binding.bottomBar.visibility = View.VISIBLE
+        binding.btnBarCart.isEnabled = true
 
         binding.tvProductName.text = BarcodeUtils.applyColorKeywords(result.productName)
         binding.tvSkuId.text = "SKU: ${result.skuId}"
@@ -272,13 +402,37 @@ class MainActivity : BaseActivity() {
 
     private fun checkServerOnce() {
         val url = RetrofitClient.getBaseUrl(this)
-        if (url.isNotBlank() && url != "http://") return
+        if (url.isNotBlank() && url != "http://") {
+            checkServerStatus()
+            return
+        }
 
         lifecycleScope.launch {
             val found = com.scan.warehouse.network.ServerDiscovery.findServer()
             if (found != null) {
                 RetrofitClient.saveBaseUrl(this@MainActivity, found)
                 Toast.makeText(this@MainActivity, "서버 연결됨", Toast.LENGTH_SHORT).show()
+            }
+            checkServerStatus()
+        }
+    }
+
+    private fun checkServerStatus() {
+        lifecycleScope.launch {
+            val url = RetrofitClient.getBaseUrl(this@MainActivity)
+            val result = repository.healthCheck()
+            result.onSuccess {
+                val ip = url.removePrefix("http://").removePrefix("https://").substringBefore(":")
+                binding.tvServerStatus.text = "🟢 연결됨 ($ip)"
+                binding.tvServerStatus.setTextColor(Color.parseColor("#A5D6A7"))
+            }.onFailure {
+                if (url.isBlank() || url == "http://") {
+                    binding.tvServerStatus.text = "🔴 서버 연결 안 됨"
+                    binding.tvServerStatus.setTextColor(Color.parseColor("#EF9A9A"))
+                } else {
+                    binding.tvServerStatus.text = "🟡 오프라인 모드"
+                    binding.tvServerStatus.setTextColor(Color.parseColor("#FFCC80"))
+                }
             }
         }
     }
@@ -359,8 +513,8 @@ class MainActivity : BaseActivity() {
             binding.etSearch.setText("")
             binding.layoutScanResult.visibility = View.GONE
             binding.rvProducts.visibility = View.GONE
-            binding.bottomBar.visibility = View.GONE
-            binding.layoutScanWaiting.visibility = View.VISIBLE
+            binding.btnBarCart.isEnabled = false
+            binding.layoutMainMap.visibility = View.VISIBLE
             currentScanResult = null
         } else {
             @Suppress("DEPRECATION")
@@ -371,10 +525,17 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         DataWedgeManager.register(this)
+        checkServerStatus()
     }
 
     override fun onPause() {
         super.onPause()
         DataWedgeManager.unregister(this)
+    }
+
+    override fun onDestroy() {
+        mapAnimators.forEach { it.cancel() }
+        mapAnimators.clear()
+        super.onDestroy()
     }
 }

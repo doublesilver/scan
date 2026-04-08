@@ -7,34 +7,40 @@ from fastapi.responses import FileResponse, Response
 
 from app.db.database import get_db, get_read_db
 from app.models.schemas import (
-    ScanResponse, SearchResponse, StockResponse, StockUpdate, StockLogItem,
-    PrintRequest, CartRequest,
     BoxResponse,
+    CartRequest,
+    FavoriteItem,
+    FavoriteRequest,
     HistoryItem,
-    FavoriteItem, FavoriteRequest,
+    PrintRequest,
     RecentScanItem,
+    ScanResponse,
+    SearchResponse,
+    StockLogItem,
+    StockResponse,
+    StockUpdate,
 )
-from app.services.product_service import scan_barcode as _scan_barcode
-from app.services.print_service import print_label as _print_label
-from app.services.cart_service import add_to_cart as _add_to_cart
-from app.services.product_service import search_products as _search_products
-from app.services.image_service import get_image_data, guess_media_type
-from app.services.stock_service import get_stock as _get_stock
-from app.services.stock_service import update_stock as _update_stock
-from app.services.stock_service import get_stock_log as _get_stock_log
-from app.services.status_service import get_status as _get_status
-from app.services.box_service import get_box as _get_box
-from app.services.box_service import create_box as _create_box
-from app.services.box_service import update_box as _update_box
 from app.services.box_service import add_member as _add_member
+from app.services.box_service import create_box as _create_box
+from app.services.box_service import get_box as _get_box
 from app.services.box_service import remove_member as _remove_member
-from app.services.history_service import log_action as _log_action
-from app.services.history_service import get_history as _get_history
+from app.services.box_service import update_box as _update_box
+from app.services.cart_service import add_to_cart as _add_to_cart
 from app.services.favorite_service import add_favorite as _add_favorite
-from app.services.favorite_service import remove_favorite as _remove_favorite
 from app.services.favorite_service import get_favorites as _get_favorites
-from app.services.scan_log_service import log_scan as _log_scan
+from app.services.favorite_service import remove_favorite as _remove_favorite
+from app.services.history_service import get_history as _get_history
+from app.services.history_service import log_action as _log_action
+from app.services.image_service import get_image_data, guess_media_type
+from app.services.print_service import print_label as _print_label
+from app.services.product_service import scan_barcode as _scan_barcode
+from app.services.product_service import search_products as _search_products
 from app.services.scan_log_service import get_recent_scans as _get_recent_scans
+from app.services.scan_log_service import log_scan as _log_scan
+from app.services.status_service import get_status as _get_status
+from app.services.stock_service import get_stock as _get_stock
+from app.services.stock_service import get_stock_log as _get_stock_log
+from app.services.stock_service import update_stock as _update_stock
 from app.services.url_import_service import import_purchase_urls as _import_purchase_urls
 
 logger = logging.getLogger(__name__)
@@ -103,7 +109,9 @@ async def status():
 
 @router.post("/print")
 async def print_label(body: PrintRequest):
-    result = await asyncio.to_thread(_print_label, body.product_name, body.barcode, body.sku_id, body.quantity)
+    result = await asyncio.to_thread(
+        _print_label, body.product_name, body.barcode, body.sku_id, body.quantity
+    )
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
     db = await get_db()
@@ -113,7 +121,9 @@ async def print_label(body: PrintRequest):
 
 @router.post("/cart")
 async def add_to_cart(body: CartRequest):
-    result = await asyncio.to_thread(_add_to_cart, body.barcode, body.sku_id, body.product_name, body.quantity)
+    result = await asyncio.to_thread(
+        _add_to_cart, body.barcode, body.sku_id, body.product_name, body.quantity
+    )
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
     db = await get_db()
@@ -122,7 +132,9 @@ async def add_to_cart(body: CartRequest):
 
 
 @router.get("/image/{path:path}")
-async def get_image(path: str, request: Request, width: int | None = Query(None, ge=1, le=2000)) -> Response:
+async def get_image(
+    path: str, request: Request, width: int | None = Query(None, ge=1, le=2000)
+) -> Response:
     http_client = request.app.state.http_client
     image_bytes, file_path, resized_width = await get_image_data(path, width, http_client)
 
@@ -266,11 +278,11 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 73,
-        "versionName": "5.2.1",
+        "versionCode": 74,
+        "versionName": "5.3.0",
         "downloadUrl": "/apk/app-live-debug.apk",
-        "releaseNotes": "바코드 스캔 오류 수정 (버퍼 방식으로 개선)",
-        "forceUpdate": False
+        "releaseNotes": "메인 화면 창고 도면 임베드 + 하단 2버튼 네비 + SKU 매칭 분석 도구",
+        "forceUpdate": False,
     }
 
 
@@ -281,8 +293,7 @@ async def update_product_location(sku_id: str, request: Request):
     db = await get_db()
     async with _write_lock:
         result = await db.execute(
-            "UPDATE product SET location = ? WHERE sku_id = ?",
-            (location, sku_id)
+            "UPDATE product SET location = ? WHERE sku_id = ?", (location, sku_id)
         )
         await db.commit()
     if result.rowcount == 0:

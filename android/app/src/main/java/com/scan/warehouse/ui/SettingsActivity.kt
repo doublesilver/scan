@@ -48,10 +48,6 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
-        binding.btnProductPlacement.setOnClickListener {
-            startWithSlide(ProductPlacementActivity.createIntent(this))
-        }
-
         if (BuildConfig.FLAVOR == "demo") {
             binding.tvConnectionStatus.text = "데모 모드 - 서버 연결 불필요"
             binding.tvConnectionStatus.visibility = View.VISIBLE
@@ -59,7 +55,6 @@ class SettingsActivity : BaseActivity() {
             binding.btnSave.isEnabled = false
             binding.btnTest.isEnabled = false
             binding.btnAutoDiscover.isEnabled = false
-            binding.btnMapEditor.isEnabled = false
             return
         }
 
@@ -84,10 +79,6 @@ class SettingsActivity : BaseActivity() {
                     binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
                 }
             }
-        }
-
-        binding.btnMapEditor.setOnClickListener {
-            startWithSlide(MapEditorActivity.createIntent(this))
         }
 
         binding.btnSave.setOnClickListener {
