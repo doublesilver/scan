@@ -4,6 +4,33 @@
 
 ---
 
+## [5.3.3] - 2026-04-08
+
+### 관측성 (인쇄)
+
+- **인쇄 실패 시 구체적 원인이 앱에 노출됨**: 기존엔 "인쇄 요청 실패" Toast 한 줄로 끝이라 왜 실패했는지 현장에서 판단 불가. 이제 서버가 돌려준 상세 메시지(예: `"라벨 템플릿 없음 (70008.btw)"`, `"프린터 오프라인 — 전원/케이블 확인"`, `"물류PC 응답 없음 (30초 타임아웃)"`)가 Toast에 그대로 표시됨.
+- **`print_log` 테이블 신규 (스키마 v10)**: 모든 `/api/print` 시도(성공·실패 모두)를 미니PC DB에 기록.
+  - 컬럼: `id, created_at, barcode, sku_id, product_name, quantity, status, via, http_status, elapsed_ms, message, raw_response`
+  - 인덱스: `created_at`, `status`, `barcode`
+  - 나중에 만들 통합 어드민 웹화면에서 그대로 조회 대상
+- **`print_service.py` 리팩토링**:
+  - 경로 A (BarTender agent) 응답을 HTTP 상태 코드와 body status 모두 검사해 에러 판정 정확도 향상
+  - `httpx.TimeoutException` 별도 처리 — "물류PC 응답 없음" 메시지
+  - `_friendly_agent_error()` 헬퍼로 agent raw 메시지를 작업자 친화 문구로 변환 (template/printer/timeout 패턴 매칭)
+  - 경로 B (pywin32), 경로 C (dry_run) 모두 `elapsed_ms`, `via`, `raw_response` 필드를 반환해 로그 일관성 확보
+- **`routes.py` `/api/print` 개편**: 성공·실패 모두 `print_log`에 기록. 성공 시에만 기존 `action_log`에 'print' 액션 기록 유지(기존 동작 호환).
+- **`DetailActivity.kt`**: `HttpException` 전용 분기 추가. `errorBody` JSON의 `detail` 필드를 파싱해 Toast에 표시. 네트워크 예외는 별도 메시지. Toast 길이 `LONG`으로 변경해 가독성 확보.
+
+### 문서
+
+- **`docs/PRINT_FLOW.md` 개정**:
+  - 장비 구성 명시 (미니PC=FastAPI 서버, 물류PC=BarTender+프린터)
+  - 경로 A 설명에 미니PC → 물류PC 네트워크 경유 명시
+  - `print_log` 테이블 구조·조회 예시 섹션 추가
+  - 문제 해결 가이드에 "DB `print_log` 조회" 단계 추가
+
+---
+
 ## [5.3.2] - 2026-04-08
 
 ### 변경 (UX 개선)

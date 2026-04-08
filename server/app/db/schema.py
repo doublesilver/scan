@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -232,5 +232,24 @@ MIGRATIONS = {
         "CREATE INDEX IF NOT EXISTS idx_level_cell ON cell_level(cell_id)",
         "CREATE INDEX IF NOT EXISTS idx_lp_level ON cell_level_product(level_id)",
         "CREATE INDEX IF NOT EXISTS idx_lp_master ON cell_level_product(product_master_id)",
+    ],
+    10: [
+        """CREATE TABLE IF NOT EXISTS print_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            barcode TEXT NOT NULL,
+            sku_id TEXT NOT NULL DEFAULT '',
+            product_name TEXT NOT NULL DEFAULT '',
+            quantity INTEGER NOT NULL DEFAULT 1,
+            status TEXT NOT NULL,
+            via TEXT NOT NULL DEFAULT '',
+            http_status INTEGER,
+            elapsed_ms INTEGER,
+            message TEXT NOT NULL DEFAULT '',
+            raw_response TEXT NOT NULL DEFAULT ''
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_print_log_created ON print_log(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_print_log_status ON print_log(status)",
+        "CREATE INDEX IF NOT EXISTS idx_print_log_barcode ON print_log(barcode)",
     ],
 }

@@ -117,8 +117,16 @@ class DetailActivity : BaseActivity() {
             try {
                 val result = repository.printLabel(barcode, data.skuId, data.productName, quantity)
                 Toast.makeText(this@DetailActivity, result.message, Toast.LENGTH_SHORT).show()
+            } catch (e: retrofit2.HttpException) {
+                val detail = try {
+                    val body = e.response()?.errorBody()?.string().orEmpty()
+                    org.json.JSONObject(body).optString("detail", "")
+                } catch (_: Exception) { "" }
+                val msg = if (detail.isNotBlank()) "인쇄 실패: $detail" else "인쇄 실패 (HTTP ${e.code()})"
+                Toast.makeText(this@DetailActivity, msg, Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
-                Toast.makeText(this@DetailActivity, "인쇄 요청 실패", Toast.LENGTH_SHORT).show()
+                val reason = e.message?.take(80) ?: "연결 오류"
+                Toast.makeText(this@DetailActivity, "인쇄 요청 실패: $reason", Toast.LENGTH_LONG).show()
             } finally {
                 binding.btnBarPrint.isEnabled = true
             }

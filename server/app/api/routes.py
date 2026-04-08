@@ -32,6 +32,7 @@ from app.services.favorite_service import remove_favorite as _remove_favorite
 from app.services.history_service import get_history as _get_history
 from app.services.history_service import log_action as _log_action
 from app.services.image_service import get_image_data, guess_media_type
+from app.services.print_log_service import log_print_attempt as _log_print_attempt
 from app.services.print_service import print_label as _print_label
 from app.services.product_service import scan_barcode as _scan_barcode
 from app.services.product_service import search_products as _search_products
@@ -112,9 +113,25 @@ async def print_label(body: PrintRequest):
     result = await asyncio.to_thread(
         _print_label, body.product_name, body.barcode, body.sku_id, body.quantity
     )
+
+    db = await get_db()
+    await _log_print_attempt(
+        db,
+        barcode=body.barcode,
+        sku_id=body.sku_id,
+        product_name=body.product_name,
+        quantity=body.quantity,
+        status=result.get("status", ""),
+        via=result.get("via", ""),
+        http_status=result.get("http_status"),
+        elapsed_ms=result.get("elapsed_ms"),
+        message=result.get("message", ""),
+        raw_response=result.get("raw_response", ""),
+    )
+
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
-    db = await get_db()
+
     await _log_action(db, "print", body.barcode, body.sku_id, body.product_name, body.quantity)
     return result
 
@@ -278,10 +295,10 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 76,
-        "versionName": "5.3.2",
+        "versionCode": 77,
+        "versionName": "5.3.3",
         "downloadUrl": "/apk/app-live-debug.apk",
-        "releaseNotes": "설정 저장→메인 자동 이동, 하단 장바구니 제거, 스캔 결과 위치정보·배치 버튼 정리, 배치 화면 검색 기능 추가",
+        "releaseNotes": "인쇄 실패 시 구체적 원인 표시, 서버에 인쇄 이력(성공·실패) 기록",
         "forceUpdate": False,
     }
 
