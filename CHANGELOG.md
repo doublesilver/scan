@@ -10,6 +10,10 @@
 
 - **스캔 결과 카드의 "그룹" 표시 UI 숨김**: `tvProductMasterName` 을 `showScanResult` 에서 무조건 `GONE` 처리. 서버 `ScanResponse.product_master_name` 필드와 DB 의 `product_master` 테이블은 그대로 유지(나중에 다시 활성화할 수 있게).
 
+### 수정 (서버만)
+
+- **배치 화면 404 수정**: `PATCH /api/map-layout/cell/{cell_key}` 가 DB 에 아직 없는 셀 위치를 받으면 `404 cell not found` 를 반환하던 문제. 그리드는 `zone.rows × zone.cols` 전부 렌더링하는데 DB 에는 일부 cell 만 pre-insert 된 상태였음. 요청 시 lazy-create (zone 존재 확인 후 cell 빈 레코드 삽입) 로 수정.
+
 ---
 
 ## [5.3.4] - 2026-04-08

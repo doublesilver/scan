@@ -17,7 +17,7 @@ _CELL_KEY_RE = re.compile(r"^[A-Za-z0-9]-\d{1,2}-\d{1,2}$")
 _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024
 
-_PHOTO_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'photos')
+_PHOTO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "static", "photos")
 
 
 def _validate_cell_key(cell_key: str) -> None:
@@ -89,7 +89,7 @@ async def _do_upload_photo_to_table(cell_key: str, level_index: int, file: Uploa
         product_id = prod_rows[0][0]
         old_photo = prod_rows[0][1]
         if old_photo:
-            old_path = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
+            old_path = os.path.join(os.path.dirname(__file__), "..", "..", old_photo.lstrip("/"))
             resolved = os.path.realpath(old_path)
             if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                 os.remove(resolved)
@@ -105,7 +105,7 @@ async def _do_upload_photo_to_table(cell_key: str, level_index: int, file: Uploa
             (level_id, photo_url),
         )
 
-    with open(filepath, 'wb') as f:
+    with open(filepath, "wb") as f:
         f.write(content)
 
     await db.commit()
@@ -119,6 +119,7 @@ async def get_map_layout():
     if zones and zones[0][0] > 0:
         return await ws.get_layout_as_json(db)
     from app.services.map_layout_service import get_or_init_layout
+
     return await get_or_init_layout(db)
 
 
@@ -168,7 +169,7 @@ async def delete_cell_photo(cell_key: str):
         for pr in prod_rows:
             photo = pr[1]
             if photo:
-                filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
+                filepath = os.path.join(os.path.dirname(__file__), "..", "..", photo.lstrip("/"))
                 resolved = os.path.realpath(filepath)
                 if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                     os.remove(resolved)
@@ -219,7 +220,7 @@ async def delete_level_photo(cell_key: str, level_index: int):
         if prod_rows:
             photo = prod_rows[0][1]
             if photo:
-                filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
+                filepath = os.path.join(os.path.dirname(__file__), "..", "..", photo.lstrip("/"))
                 resolved = os.path.realpath(filepath)
                 if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                     os.remove(resolved)
@@ -247,7 +248,24 @@ async def update_map_cell(cell_key: str, request: Request):
             (zone_code, row_num, col_num),
         )
         if not cell_row:
-            raise HTTPException(status_code=404, detail="cell not found")
+            # 셀이 DB에 아직 없으면 lazy-create
+            # (grid는 zone.rows × zone.cols 전부 렌더링하는데,
+            #  DB에는 일부 cell만 미리 삽입된 상태라 클릭 시 404 나던 문제)
+            zone_row = await db.execute_fetchall(
+                "SELECT id FROM warehouse_zone WHERE code = ?", (zone_code,)
+            )
+            if not zone_row:
+                raise HTTPException(status_code=404, detail=f"zone not found: {zone_code}")
+            zone_id = zone_row[0][0]
+            await db.execute(
+                "INSERT INTO warehouse_cell (zone_id, row, col, label, status) "
+                "VALUES (?, ?, ?, '', 'empty')",
+                (zone_id, row_num, col_num),
+            )
+            cell_row = await db.execute_fetchall(
+                "SELECT id FROM warehouse_cell WHERE zone_id = ? AND row = ? AND col = ?",
+                (zone_id, row_num, col_num),
+            )
         cell_id = cell_row[0][0]
 
         update_kwargs = {}
@@ -264,9 +282,7 @@ async def update_map_cell(cell_key: str, request: Request):
             await ws.update_cell(db, cell_id, **update_kwargs)
 
         if "levels" in body:
-            await db.execute(
-                "DELETE FROM cell_level WHERE cell_id = ?", (cell_id,)
-            )
+            await db.execute("DELETE FROM cell_level WHERE cell_id = ?", (cell_id,))
             for lv in body["levels"]:
                 level_index = lv.get("index", 0)
                 label = lv.get("label", "")
