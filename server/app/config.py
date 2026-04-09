@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: list[str] = ["http://localhost", "http://127.0.0.1"]
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "latin-1"}
 
     @property
     def db_path(self) -> Path:
