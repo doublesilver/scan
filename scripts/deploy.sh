@@ -12,8 +12,8 @@ echo "🚀 피닉스앱 배포 시작..."
 
 # 1. 현재 버전 읽기
 GRADLE="android/app/build.gradle.kts"
-CURRENT_CODE=$(grep "versionCode" $GRADLE | grep -o '[0-9]*')
-CURRENT_NAME=$(grep "versionName" $GRADLE | grep -o '"[^"]*"' | tr -d '"')
+CURRENT_CODE=$(grep "versionCode = " $GRADLE | grep -o '[0-9]*')
+CURRENT_NAME=$(grep "versionName = " $GRADLE | grep -o '"[^"]*"' | tr -d '"')
 
 echo "📌 현재: v${CURRENT_NAME} (code=${CURRENT_CODE})"
 
@@ -35,8 +35,8 @@ sed -i '' "s/versionName = \"${CURRENT_NAME}\"/versionName = \"${NEW_NAME}\"/" $
 
 # 4. routes.py 업데이트
 ROUTES="server/app/api/routes.py"
-sed -i '' "s/\"versionCode\": ${CURRENT_CODE}/\"versionCode\": ${NEW_CODE}/" $ROUTES
-sed -i '' "s/\"versionName\": \"${CURRENT_NAME}\"/\"versionName\": \"${NEW_NAME}\"/" $ROUTES
+sed -i '' "s/APP_VERSION_CODE = ${CURRENT_CODE}/APP_VERSION_CODE = ${NEW_CODE}/" $ROUTES
+sed -i '' "s/APP_VERSION_NAME = \"${CURRENT_NAME}\"/APP_VERSION_NAME = \"${NEW_NAME}\"/" $ROUTES
 
 # 5. Android 빌드
 echo "🔨 Android 빌드 중..."
