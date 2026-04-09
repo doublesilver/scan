@@ -61,7 +61,12 @@ EAN-13 바코드로 상품 정보 + 이미지 경로 조회.
     { "file_path": "img/8801234567890.jpg", "image_type": "thumbnail" },
     { "file_path": "real_image/8801234567890_1.jpg", "image_type": "real" }
   ],
-  "quantity": null
+  "quantity": null,
+  "coupang_url": null,
+  "location": null,
+  "product_master_id": null,
+  "product_master_name": null,
+  "product_master_location": null
 }
 ```
 
@@ -97,7 +102,8 @@ EAN-13 바코드로 상품 정보 + 이미지 경로 조회.
       "product_name": "테스트 상품명",
       "category": "식품",
       "brand": "테스트브랜드",
-      "barcode": "8801234567890"
+      "barcode": "8801234567890",
+      "thumbnail": null
     }
   ]
 }
