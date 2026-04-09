@@ -24,7 +24,6 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.google.gson.Gson
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxDetailBinding
 import com.scan.warehouse.model.BoxResponse
@@ -41,9 +40,9 @@ class BoxDetailActivity : BaseActivity() {
     companion object {
         const val EXTRA_BOX_DATA = "extra_box_data"
 
-        fun createIntent(context: Context, boxJson: String): Intent {
+        fun createIntent(context: Context, box: BoxResponse): Intent {
             return Intent(context, BoxDetailActivity::class.java).apply {
-                putExtra(EXTRA_BOX_DATA, boxJson)
+                putExtra(EXTRA_BOX_DATA, box)
             }
         }
     }
@@ -53,14 +52,23 @@ class BoxDetailActivity : BaseActivity() {
     private var mapLayout: MapLayout? = null
     private var currentLocation: String? = null
     private val animators = mutableListOf<ObjectAnimator>()
+    private var currentZoomDialog: Dialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBoxDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val json = intent.getStringExtra(EXTRA_BOX_DATA) ?: run { finish(); return }
-        val box = Gson().fromJson(json, BoxResponse::class.java)
+        val box = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(EXTRA_BOX_DATA, BoxResponse::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(EXTRA_BOX_DATA)
+        } ?: run {
+            Toast.makeText(this, "박스 정보 오류", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
         binding.btnBack.setOnClickListener { finishWithSlide() }
 
@@ -72,7 +80,7 @@ class BoxDetailActivity : BaseActivity() {
         setupImageZoom()
 
         setupOptionImages(box)
-        setupSourcingImages(box)
+        binding.layoutSourcingImages.visibility = View.GONE
 
         loadMapAndPhotos(box)
     }
@@ -83,6 +91,7 @@ class BoxDetailActivity : BaseActivity() {
     }
 
     private fun showZoomDialog(sourceImage: ImageView) {
+        currentZoomDialog?.dismiss()
         val dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         val iv = ImageView(this).apply {
@@ -93,6 +102,8 @@ class BoxDetailActivity : BaseActivity() {
             setOnClickListener { dialog.dismiss() }
         }
         dialog.setContentView(iv)
+        dialog.setOnDismissListener { if (currentZoomDialog == dialog) currentZoomDialog = null }
+        currentZoomDialog = dialog
         dialog.show()
     }
 
@@ -221,29 +232,16 @@ class BoxDetailActivity : BaseActivity() {
     private fun loadCellPhotos(layout: MapLayout, location: String?) {
         val parsed = ParsedLocation.parse(location)
         if (parsed.zone.isEmpty() || parsed.shelf.isEmpty()) return
-
         val zone = layout.zones.find { it.code == parsed.zone } ?: return
-
-        for (r in 1..zone.rows) {
-            for (c in 1..zone.cols) {
-                val cellNum = (r - 1) * zone.cols + c
-                if (cellNum.toString() != parsed.shelf) continue
-
-                val cellKey = "${parsed.zone}-$r-$c"
-                val cell = layout.cells[cellKey] ?: continue
-                val levels = cell.levels ?: continue
-
-                if (levels.isNotEmpty()) {
-                    val photo = levels.firstOrNull { !it.photo.isNullOrEmpty() }?.photo
-                    if (photo != null) {
-                        binding.ivShelfPhoto.load(repository.getImageUrl(photo)) {
-                            crossfade(true)
-                            placeholder(R.drawable.ic_placeholder)
-                            error(R.drawable.ic_placeholder)
-                        }
-                    }
-                }
-            }
+        val shelfNum = parsed.shelf.toIntOrNull() ?: return
+        val r = (shelfNum - 1) / zone.cols + 1
+        val c = (shelfNum - 1) % zone.cols + 1
+        val cell = layout.cells["${zone.code}-$r-$c"] ?: return
+        val photo = cell.levels?.firstOrNull { !it.photo.isNullOrEmpty() }?.photo ?: return
+        binding.ivShelfPhoto.load(repository.getImageUrl(photo)) {
+            crossfade(true)
+            placeholder(R.drawable.ic_placeholder)
+            error(R.drawable.ic_placeholder)
         }
     }
 
@@ -336,9 +334,7 @@ class BoxDetailActivity : BaseActivity() {
             }
         }
 
-        binding.btnBarPrint.setOnClickListener {
-            Toast.makeText(this, "인쇄 기능 준비 중", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnBarPrint.visibility = View.GONE
     }
 
     private fun showMapZoomDialog(layout: MapLayout, location: String?) {
@@ -464,6 +460,8 @@ class BoxDetailActivity : BaseActivity() {
     override fun onDestroy() {
         animators.forEach { it.cancel() }
         animators.clear()
+        currentZoomDialog?.dismiss()
+        currentZoomDialog = null
         super.onDestroy()
     }
 

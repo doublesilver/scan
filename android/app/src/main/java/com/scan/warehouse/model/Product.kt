@@ -51,25 +51,15 @@ data class PrintResponse(
     @SerializedName("message") val message: String
 )
 
-data class CartRequest(
-    @SerializedName("barcode") val barcode: String,
-    @SerializedName("sku_id") val skuId: String,
-    @SerializedName("product_name") val productName: String,
-    @SerializedName("quantity") val quantity: Int
-)
-
-data class CartResponse(
-    @SerializedName("status") val status: String,
-    @SerializedName("message") val message: String
-)
-
+@Parcelize
 data class FamilyMember(
     @SerializedName("sku_id") val skuId: String,
     @SerializedName("sku_name") val skuName: String,
     @SerializedName("barcode") val barcode: String? = null,
     @SerializedName("location") val location: String? = null
-)
+) : Parcelable
 
+@Parcelize
 data class BoxResponse(
     @SerializedName("qr_code") val qrCode: String,
     @SerializedName("box_name") val boxName: String,
@@ -81,7 +71,7 @@ data class BoxResponse(
     @SerializedName("naver_url") val naverUrl: String? = null,
     @SerializedName("url_1688") val url1688: String? = null,
     @SerializedName("flow_url") val flowUrl: String? = null
-)
+) : Parcelable
 
 data class ShelfItem(
     @SerializedName("id") val id: Int,
