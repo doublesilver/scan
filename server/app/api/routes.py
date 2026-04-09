@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 
 from app.db.database import get_db, get_read_db
+from app.db.database import write_lock as _write_lock
 from app.models.schemas import (
     BoxResponse,
     CartRequest,
@@ -46,7 +47,9 @@ from app.services.url_import_service import import_purchase_urls as _import_purc
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
-_write_lock = asyncio.Lock()
+
+APP_VERSION_CODE = 79
+APP_VERSION_NAME = "5.3.5"
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)
@@ -63,7 +66,8 @@ async def scan_barcode(barcode: str) -> ScanResponse:
 
     if result.sku_id:
         write_db = await get_db()
-        await _log_scan(write_db, barcode, result.sku_id, result.product_name)
+        async with _write_lock:
+            await _log_scan(write_db, barcode, result.sku_id, result.product_name)
 
     return result
 
@@ -90,7 +94,8 @@ async def get_stock(sku_id: str) -> StockResponse:
 @router.patch("/stock/{sku_id}", response_model=StockResponse)
 async def update_stock(sku_id: str, body: StockUpdate) -> StockResponse:
     db = await get_db()
-    result = await _update_stock(db, sku_id, body)
+    async with _write_lock:
+        result = await _update_stock(db, sku_id, body)
     if result is None:
         raise HTTPException(status_code=404, detail="SKU not found")
     return result
@@ -109,49 +114,67 @@ async def status():
 
 
 @router.post("/print")
-async def print_label(body: PrintRequest):
-    result = await asyncio.to_thread(
-        _print_label, body.product_name, body.barcode, body.sku_id, body.quantity
-    )
+async def print_label(body: PrintRequest, request: Request):
+    from app.config import settings as _settings
+
+    if _settings.print_agent_url:
+        result = await _call_print_agent(
+            request.app.state.http_client,
+            body.product_name,
+            body.barcode,
+            body.sku_id,
+            body.quantity,
+        )
+    else:
+        result = await asyncio.to_thread(
+            _print_label, body.product_name, body.barcode, body.sku_id, body.quantity
+        )
 
     db = await get_db()
-    await _log_print_attempt(
-        db,
-        barcode=body.barcode,
-        sku_id=body.sku_id,
-        product_name=body.product_name,
-        quantity=body.quantity,
-        status=result.get("status", ""),
-        via=result.get("via", ""),
-        http_status=result.get("http_status"),
-        elapsed_ms=result.get("elapsed_ms"),
-        message=result.get("message", ""),
-        raw_response=result.get("raw_response", ""),
-    )
+    async with _write_lock:
+        await _log_print_attempt(
+            db,
+            barcode=body.barcode,
+            sku_id=body.sku_id,
+            product_name=body.product_name,
+            quantity=body.quantity,
+            status=result.get("status", ""),
+            via=result.get("via", ""),
+            http_status=result.get("http_status"),
+            elapsed_ms=result.get("elapsed_ms"),
+            message=result.get("message", ""),
+            raw_response=result.get("raw_response", ""),
+        )
 
-    if result["status"] == "error":
-        raise HTTPException(status_code=500, detail=result["message"])
+        if result["status"] == "error":
+            raise HTTPException(status_code=500, detail=result["message"])
 
-    await _log_action(db, "print", body.barcode, body.sku_id, body.product_name, body.quantity)
+        await _log_action(db, "print", body.barcode, body.sku_id, body.product_name, body.quantity)
     return result
 
 
 @router.post("/cart")
 async def add_to_cart(body: CartRequest):
-    result = await asyncio.to_thread(
-        _add_to_cart, body.barcode, body.sku_id, body.product_name, body.quantity
-    )
+    try:
+        result = await asyncio.wait_for(
+            asyncio.to_thread(
+                _add_to_cart, body.barcode, body.sku_id, body.product_name, body.quantity
+            ),
+            timeout=10.0,
+        )
+    except TimeoutError:
+        logger.error("장바구니 구글시트 타임아웃")
+        raise HTTPException(status_code=500, detail="시트 연동 실패")
     if result["status"] == "error":
         raise HTTPException(status_code=500, detail=result["message"])
     db = await get_db()
-    await _log_action(db, "cart", body.barcode, body.sku_id, body.product_name, body.quantity)
+    async with _write_lock:
+        await _log_action(db, "cart", body.barcode, body.sku_id, body.product_name, body.quantity)
     return result
 
 
 @router.get("/image/{path:path}")
-async def get_image(
-    path: str, request: Request, width: int | None = Query(None, ge=1, le=2000)
-) -> Response:
+async def get_image(path: str, request: Request, width: int | None = Query(None)) -> Response:
     http_client = request.app.state.http_client
     image_bytes, file_path, resized_width = await get_image_data(path, width, http_client)
 
@@ -256,14 +279,16 @@ async def get_history(
 @router.post("/favorite")
 async def add_favorite(body: FavoriteRequest):
     db = await get_db()
-    await _add_favorite(db, body.sku_id, body.product_name, body.barcode)
+    async with _write_lock:
+        await _add_favorite(db, body.sku_id, body.product_name, body.barcode)
     return {"status": "ok"}
 
 
 @router.delete("/favorite/{sku_id}")
 async def remove_favorite(sku_id: str):
     db = await get_db()
-    found = await _remove_favorite(db, sku_id)
+    async with _write_lock:
+        found = await _remove_favorite(db, sku_id)
     if not found:
         raise HTTPException(status_code=404, detail="favorite not found")
     return {"status": "ok"}
@@ -283,10 +308,15 @@ async def get_recent_scans(limit: int = Query(20, ge=1, le=100)) -> list[RecentS
 
 @router.post("/import/urls")
 async def import_urls(file_path: str = Query(...)):
-    if ".." in file_path:
+    from app.config import settings as _settings
+
+    base = Path(_settings.xlsx_watch_dir).resolve()
+    target = (base / file_path).resolve()
+    if not str(target).startswith(str(base) + "/") and target != base:
         raise HTTPException(status_code=400, detail="invalid file path")
     db = await get_db()
-    result = await _import_purchase_urls(db, file_path)
+    async with _write_lock:
+        result = await _import_purchase_urls(db, file_path)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result
@@ -295,8 +325,8 @@ async def import_urls(file_path: str = Query(...)):
 @router.get("/app-version")
 async def app_version():
     return {
-        "versionCode": 79,
-        "versionName": "5.3.5",
+        "versionCode": APP_VERSION_CODE,
+        "versionName": APP_VERSION_NAME,
         "downloadUrl": "/apk/app-live-debug.apk",
         "releaseNotes": "스캔 결과 카드의 그룹명 표시 숨김",
         "forceUpdate": False,

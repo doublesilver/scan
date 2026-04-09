@@ -43,7 +43,14 @@ async def create_zone(db, code: str, name: str, rows: int, cols: int) -> dict:
             )
 
     await db.commit()
-    return {"id": zone_id, "code": code, "name": name, "rows": rows, "cols": cols, "sort_order": sort_order}
+    return {
+        "id": zone_id,
+        "code": code,
+        "name": name,
+        "rows": rows,
+        "cols": cols,
+        "sort_order": sort_order,
+    }
 
 
 async def update_zone(db, zone_id: int, **kwargs) -> dict | None:
@@ -65,9 +72,7 @@ async def update_zone(db, zone_id: int, **kwargs) -> dict | None:
     if sets:
         sets.append("updated_at = datetime('now')")
         params.append(zone_id)
-        await db.execute(
-            f"UPDATE warehouse_zone SET {', '.join(sets)} WHERE id = ?", params
-        )
+        await db.execute(f"UPDATE warehouse_zone SET {', '.join(sets)} WHERE id = ?", params)
 
     new_rows = kwargs.get("rows", old_rows)
     new_cols = kwargs.get("cols", old_cols)
@@ -117,15 +122,17 @@ async def get_zone_cells(db, zone_id: int) -> list[dict]:
     for cr in cell_rows:
         cell_id, row, col, label, status, bg_color = cr
         levels = await _get_cell_levels(db, cell_id)
-        result.append({
-            "id": cell_id,
-            "row": row,
-            "col": col,
-            "label": label,
-            "status": status,
-            "bg_color": bg_color,
-            "levels": levels,
-        })
+        result.append(
+            {
+                "id": cell_id,
+                "row": row,
+                "col": col,
+                "label": label,
+                "status": status,
+                "bg_color": bg_color,
+                "levels": levels,
+            }
+        )
     return result
 
 
@@ -180,19 +187,19 @@ async def _get_cell_levels(db, cell_id: int) -> list[dict]:
             }
             for pr in prod_rows
         ]
-        levels.append({
-            "id": level_id,
-            "index": level_index,
-            "label": level_label,
-            "products": products,
-        })
+        levels.append(
+            {
+                "id": level_id,
+                "index": level_index,
+                "label": level_label,
+                "products": products,
+            }
+        )
     return levels
 
 
 async def update_cell(db, cell_id: int, **kwargs) -> dict | None:
-    existing = await db.execute_fetchall(
-        "SELECT id FROM warehouse_cell WHERE id = ?", (cell_id,)
-    )
+    existing = await db.execute_fetchall("SELECT id FROM warehouse_cell WHERE id = ?", (cell_id,))
     if not existing:
         return None
 
@@ -206,18 +213,14 @@ async def update_cell(db, cell_id: int, **kwargs) -> dict | None:
     if sets:
         sets.append("updated_at = datetime('now')")
         params.append(cell_id)
-        await db.execute(
-            f"UPDATE warehouse_cell SET {', '.join(sets)} WHERE id = ?", params
-        )
+        await db.execute(f"UPDATE warehouse_cell SET {', '.join(sets)} WHERE id = ?", params)
         await db.commit()
 
     return await get_cell_detail(db, cell_id)
 
 
 async def add_level(db, cell_id: int, label: str = "") -> dict | None:
-    existing = await db.execute_fetchall(
-        "SELECT id FROM warehouse_cell WHERE id = ?", (cell_id,)
-    )
+    existing = await db.execute_fetchall("SELECT id FROM warehouse_cell WHERE id = ?", (cell_id,))
     if not existing:
         return None
 
@@ -244,9 +247,7 @@ async def delete_level(db, level_id: int) -> bool:
 async def add_level_product(
     db, level_id: int, product_master_id: int | None = None, photo: str = "", memo: str = ""
 ) -> dict | None:
-    existing = await db.execute_fetchall(
-        "SELECT id FROM cell_level WHERE id = ?", (level_id,)
-    )
+    existing = await db.execute_fetchall("SELECT id FROM cell_level WHERE id = ?", (level_id,))
     if not existing:
         return None
 
@@ -323,14 +324,21 @@ async def update_level_product_photo(db, product_id: int, photo: str) -> dict | 
     return {"id": product_id, "photo": photo}
 
 
-async def sync_product_location(db, product_master_id: int, zone_code: str, cell_row: int, cell_col: int, zone_cols: int):
+async def sync_product_location(
+    db, product_master_id: int, zone_code: str, cell_row: int, cell_col: int, zone_cols: int
+):
     cell_num = (cell_row - 1) * zone_cols + cell_col
     location = f"{zone_code}구역 {zone_code}-{cell_num}"
-    await db.execute(
+    cursor = await db.execute(
         "UPDATE product SET location = ? WHERE sku_id IN "
         "(SELECT sku_id FROM product_master_sku WHERE product_master_id = ?)",
         (location, product_master_id),
     )
+    if cursor.rowcount == 0:
+        logger.warning(
+            "sync_product_location: product_master_id=%d 에 해당하는 product 없음",
+            product_master_id,
+        )
     await db.commit()
 
 
@@ -359,7 +367,9 @@ async def find_product_location(db, sku_id: str) -> dict | None:
     }
 
 
-async def resolve_product_master(db, barcode: str = "", sku_id: str = "", product_master_id: int | None = None) -> int | None:
+async def resolve_product_master(
+    db, barcode: str = "", sku_id: str = "", product_master_id: int | None = None
+) -> int | None:
     if product_master_id:
         row = await db.execute_fetchall(
             "SELECT id FROM product_master WHERE id = ?", (product_master_id,)
@@ -387,9 +397,7 @@ async def resolve_product_master(db, barcode: str = "", sku_id: str = "", produc
         )
         product_name = pr[0][0] if pr else target_sku
 
-        cursor = await db.execute(
-            "INSERT INTO product_master (name) VALUES (?)", (product_name,)
-        )
+        cursor = await db.execute("INSERT INTO product_master (name) VALUES (?)", (product_name,))
         master_id = cursor.lastrowid
         await db.execute(
             "INSERT OR IGNORE INTO product_master_sku (product_master_id, sku_id, sku_name) VALUES (?, ?, ?)",
@@ -450,13 +458,15 @@ async def get_layout_as_json(db) -> dict:
                 )
 
                 first_prod = prod_rows[0] if prod_rows else (None, None, None)
-                levels.append({
-                    "index": level_index,
-                    "label": level_label,
-                    "photo": first_prod[0] or "",
-                    "itemLabel": first_prod[2] or first_prod[1] or "",
-                    "sku": "",
-                })
+                levels.append(
+                    {
+                        "index": level_index,
+                        "label": level_label,
+                        "photo": first_prod[0] or "",
+                        "itemLabel": first_prod[2] or first_prod[1] or "",
+                        "sku": "",
+                    }
+                )
 
             cells[cell_key] = {
                 "label": label,
@@ -474,75 +484,80 @@ async def get_layout_as_json(db) -> dict:
 
 
 async def save_layout_from_json(db, layout: dict):
-    await db.execute("DELETE FROM warehouse_zone")
+    await db.execute("BEGIN IMMEDIATE")
+    try:
+        await db.execute("DELETE FROM warehouse_zone")
 
-    zones = layout.get("zones", [])
-    for i, z in enumerate(zones):
-        await db.execute(
-            "INSERT INTO warehouse_zone (code, name, rows, cols, sort_order) VALUES (?, ?, ?, ?, ?)",
-            (z["code"], z["name"], z["rows"], z["cols"], i),
-        )
+        zones = layout.get("zones", [])
+        for i, z in enumerate(zones):
+            await db.execute(
+                "INSERT INTO warehouse_zone (code, name, rows, cols, sort_order) VALUES (?, ?, ?, ?, ?)",
+                (z["code"], z["name"], z["rows"], z["cols"], i),
+            )
 
-    cells = layout.get("cells", {})
-    for cell_key, cell_data in cells.items():
-        parts = cell_key.split("-")
-        if len(parts) < 3:
-            continue
-        zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
+        cells = layout.get("cells", {})
+        for cell_key, cell_data in cells.items():
+            parts = cell_key.split("-")
+            if len(parts) < 3:
+                continue
+            zone_code, row_num, col_num = parts[0], int(parts[1]), int(parts[2])
 
-        zone_row = await db.execute_fetchall(
-            "SELECT id FROM warehouse_zone WHERE code = ?", (zone_code,)
-        )
-        if not zone_row:
-            continue
-        zone_id = zone_row[0][0]
-
-        await db.execute(
-            "INSERT OR IGNORE INTO warehouse_cell (zone_id, row, col, label, status, bg_color) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                zone_id,
-                row_num,
-                col_num,
-                cell_data.get("label", ""),
-                cell_data.get("status", "empty"),
-                cell_data.get("bgColor", ""),
-            ),
-        )
-
-        cell_row = await db.execute_fetchall(
-            "SELECT id FROM warehouse_cell WHERE zone_id = ? AND row = ? AND col = ?",
-            (zone_id, row_num, col_num),
-        )
-        if not cell_row:
-            continue
-        cell_id = cell_row[0][0]
-
-        levels = cell_data.get("levels", [])
-        for lv in levels:
-            level_index = lv.get("index", 0)
-            label = lv.get("label", "")
+            zone_row = await db.execute_fetchall(
+                "SELECT id FROM warehouse_zone WHERE code = ?", (zone_code,)
+            )
+            if not zone_row:
+                continue
+            zone_id = zone_row[0][0]
 
             await db.execute(
-                "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
-                (cell_id, level_index, label),
+                "INSERT OR IGNORE INTO warehouse_cell (zone_id, row, col, label, status, bg_color) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    zone_id,
+                    row_num,
+                    col_num,
+                    cell_data.get("label", ""),
+                    cell_data.get("status", "empty"),
+                    cell_data.get("bgColor", ""),
+                ),
             )
 
-            level_row = await db.execute_fetchall(
-                "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
-                (cell_id, level_index),
+            cell_row = await db.execute_fetchall(
+                "SELECT id FROM warehouse_cell WHERE zone_id = ? AND row = ? AND col = ?",
+                (zone_id, row_num, col_num),
             )
-            if not level_row:
+            if not cell_row:
                 continue
-            level_id = level_row[0][0]
+            cell_id = cell_row[0][0]
 
-            item_label = lv.get("itemLabel", "")
-            photo = lv.get("photo", "")
+            levels = cell_data.get("levels", [])
+            for lv in levels:
+                level_index = lv.get("index", 0)
+                label = lv.get("label", "")
 
-            if item_label or photo:
                 await db.execute(
-                    "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
-                    (level_id, photo, item_label),
+                    "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
+                    (cell_id, level_index, label),
                 )
 
-    await db.commit()
+                level_row = await db.execute_fetchall(
+                    "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+                    (cell_id, level_index),
+                )
+                if not level_row:
+                    continue
+                level_id = level_row[0][0]
+
+                item_label = lv.get("itemLabel", "")
+                photo = lv.get("photo", "")
+
+                if item_label or photo:
+                    await db.execute(
+                        "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
+                        (level_id, photo, item_label),
+                    )
+
+        await db.commit()
+    except Exception:
+        await db.execute("ROLLBACK")
+        raise

@@ -13,6 +13,8 @@ _read_db: aiosqlite.Connection | None = None
 _write_lock = asyncio.Lock()
 _read_lock = asyncio.Lock()
 
+write_lock = asyncio.Lock()
+
 
 async def _init_connection(db: aiosqlite.Connection) -> None:
     db.row_factory = aiosqlite.Row

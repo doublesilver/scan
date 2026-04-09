@@ -1,4 +1,3 @@
-import asyncio
 import os
 import re
 import uuid
@@ -6,12 +5,11 @@ import uuid
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 
 from app.db.database import get_db, get_read_db
+from app.db.database import write_lock as _map_layout_lock
 from app.services import warehouse_service as ws
 from app.services.map_layout_service import save_layout_only as _save_layout_only
 
 router = APIRouter(prefix="/api")
-
-_map_layout_lock = asyncio.Lock()
 
 _CELL_KEY_RE = re.compile(r"^[A-Za-z0-9]-\d{1,2}-\d{1,2}$")
 _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -31,6 +29,10 @@ def _validate_upload_file(file: UploadFile, content: bytes) -> None:
         raise HTTPException(status_code=400, detail=f"unsupported file type: {ext}")
     if len(content) > _MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="file too large (max 10MB)")
+    try:
+        Image.open(io.BytesIO(content)).verify()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid image file")
 
 
 async def _find_or_create_cell_and_level(db, cell_key: str, level_index: int) -> tuple[int, int]:
@@ -258,7 +260,7 @@ async def update_map_cell(cell_key: str, request: Request):
                 raise HTTPException(status_code=404, detail=f"zone not found: {zone_code}")
             zone_id = zone_row[0][0]
             await db.execute(
-                "INSERT INTO warehouse_cell (zone_id, row, col, label, status) "
+                "INSERT OR IGNORE INTO warehouse_cell (zone_id, row, col, label, status) "
                 "VALUES (?, ?, ?, '', 'empty')",
                 (zone_id, row_num, col_num),
             )
@@ -266,6 +268,8 @@ async def update_map_cell(cell_key: str, request: Request):
                 "SELECT id FROM warehouse_cell WHERE zone_id = ? AND row = ? AND col = ?",
                 (zone_id, row_num, col_num),
             )
+            if not cell_row:
+                raise HTTPException(status_code=500, detail="cell creation failed")
         cell_id = cell_row[0][0]
 
         update_kwargs = {}
@@ -282,30 +286,35 @@ async def update_map_cell(cell_key: str, request: Request):
             await ws.update_cell(db, cell_id, **update_kwargs)
 
         if "levels" in body:
-            await db.execute("DELETE FROM cell_level WHERE cell_id = ?", (cell_id,))
-            for lv in body["levels"]:
-                level_index = lv.get("index", 0)
-                label = lv.get("label", "")
-                await db.execute(
-                    "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
-                    (cell_id, level_index, label),
-                )
-                level_row = await db.execute_fetchall(
-                    "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
-                    (cell_id, level_index),
-                )
-                if not level_row:
-                    continue
-                level_id = level_row[0][0]
-
-                item_label = lv.get("itemLabel", "")
-                photo = lv.get("photo", "")
-                if item_label or photo:
+            await db.execute("BEGIN IMMEDIATE")
+            try:
+                await db.execute("DELETE FROM cell_level WHERE cell_id = ?", (cell_id,))
+                for lv in body["levels"]:
+                    level_index = lv.get("index", 0)
+                    label = lv.get("label", "")
                     await db.execute(
-                        "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
-                        (level_id, photo, item_label),
+                        "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
+                        (cell_id, level_index, label),
                     )
+                    level_row = await db.execute_fetchall(
+                        "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+                        (cell_id, level_index),
+                    )
+                    if not level_row:
+                        continue
+                    level_id = level_row[0][0]
 
-            await db.commit()
+                    item_label = lv.get("itemLabel", "")
+                    photo = lv.get("photo", "")
+                    if item_label or photo:
+                        await db.execute(
+                            "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
+                            (level_id, photo, item_label),
+                        )
+
+                await db.commit()
+            except Exception:
+                await db.execute("ROLLBACK")
+                raise
 
     return {"status": "ok"}

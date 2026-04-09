@@ -1,16 +1,15 @@
-import asyncio
 import os
 import uuid
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 
 from app.db.database import get_db, get_read_db
+from app.db.database import write_lock as _zone_lock
 from app.services import warehouse_service as ws
 
 router = APIRouter(prefix="/api")
-_zone_lock = asyncio.Lock()
 
-_PHOTO_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'static', 'photos')
+_PHOTO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "static", "photos")
 _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -168,6 +167,10 @@ async def upload_level_product_photo(product_id: int, file: UploadFile):
         raise HTTPException(status_code=400, detail=f"unsupported file type: {ext}")
     if len(content) > _MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="file too large (max 10MB)")
+    try:
+        Image.open(io.BytesIO(content)).verify()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid image file")
 
     os.makedirs(_PHOTO_DIR, exist_ok=True)
     suffix = uuid.uuid4().hex[:8]
@@ -184,12 +187,12 @@ async def upload_level_product_photo(product_id: int, file: UploadFile):
 
         old_photo = existing[0][0]
         if old_photo:
-            old_path = os.path.join(os.path.dirname(__file__), '..', '..', old_photo.lstrip('/'))
+            old_path = os.path.join(os.path.dirname(__file__), "..", "..", old_photo.lstrip("/"))
             resolved = os.path.realpath(old_path)
             if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                 os.remove(resolved)
 
-        with open(filepath, 'wb') as f:
+        with open(filepath, "wb") as f:
             f.write(content)
 
         photo_url = f"/static/photos/{filename}"
@@ -210,7 +213,7 @@ async def delete_level_product_photo(product_id: int):
 
         photo = existing[0][0]
         if photo:
-            filepath = os.path.join(os.path.dirname(__file__), '..', '..', photo.lstrip('/'))
+            filepath = os.path.join(os.path.dirname(__file__), "..", "..", photo.lstrip("/"))
             resolved = os.path.realpath(filepath)
             if resolved.startswith(os.path.realpath(_PHOTO_DIR)) and os.path.exists(resolved):
                 os.remove(resolved)
