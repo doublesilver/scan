@@ -18,9 +18,12 @@ _MAX_FILE_SIZE = 10 * 1024 * 1024
 _PHOTO_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "static", "photos")
 
 
-def _validate_cell_key(cell_key: str) -> None:
+def _validate_cell_key(cell_key: str) -> str:
+    """검증 + 정규화. A-01-01 과 A-1-1 을 같은 키(A-1-1)로 통일."""
     if not _CELL_KEY_RE.match(cell_key):
         raise HTTPException(status_code=400, detail="invalid cell_key format")
+    zone, row, col = cell_key.split("-")
+    return f"{zone}-{int(row)}-{int(col)}"
 
 
 def _validate_upload_file(file: UploadFile, content: bytes) -> None:
@@ -137,7 +140,7 @@ async def save_map_layout(request: Request):
 
 @router.post("/map-layout/cell/{cell_key}/photo")
 async def upload_cell_photo(cell_key: str, file: UploadFile):
-    _validate_cell_key(cell_key)
+    cell_key = _validate_cell_key(cell_key)
     db = await get_db()
     async with _map_layout_lock:
         photo_url = await _do_upload_photo_to_table(cell_key, 0, file, db)
@@ -146,7 +149,7 @@ async def upload_cell_photo(cell_key: str, file: UploadFile):
 
 @router.delete("/map-layout/cell/{cell_key}/photo")
 async def delete_cell_photo(cell_key: str):
-    _validate_cell_key(cell_key)
+    cell_key = _validate_cell_key(cell_key)
     db = await get_db()
     async with _map_layout_lock:
         parts = cell_key.split("-")
@@ -185,7 +188,7 @@ async def delete_cell_photo(cell_key: str):
 
 @router.post("/map-layout/cell/{cell_key}/level/{level_index}/photo")
 async def upload_level_photo(cell_key: str, level_index: int, file: UploadFile):
-    _validate_cell_key(cell_key)
+    cell_key = _validate_cell_key(cell_key)
     if level_index < 0:
         raise HTTPException(status_code=400, detail="level_index must be >= 0")
     db = await get_db()
@@ -196,7 +199,7 @@ async def upload_level_photo(cell_key: str, level_index: int, file: UploadFile):
 
 @router.delete("/map-layout/cell/{cell_key}/level/{level_index}/photo")
 async def delete_level_photo(cell_key: str, level_index: int):
-    _validate_cell_key(cell_key)
+    cell_key = _validate_cell_key(cell_key)
     if level_index < 0:
         raise HTTPException(status_code=400, detail="level_index must be >= 0")
     db = await get_db()
@@ -236,7 +239,7 @@ async def delete_level_photo(cell_key: str, level_index: int):
 
 @router.patch("/map-layout/cell/{cell_key}")
 async def update_map_cell(cell_key: str, request: Request):
-    _validate_cell_key(cell_key)
+    cell_key = _validate_cell_key(cell_key)
     body = await request.json()
     db = await get_db()
     async with _map_layout_lock:
