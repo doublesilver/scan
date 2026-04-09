@@ -70,11 +70,13 @@ open class ProductRepository(protected val context: Context) {
     }
 
     open fun getImageUrl(filePath: String): String {
-        if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
-            return filePath
-        }
         val baseUrl = RetrofitClient.getBaseUrl(context)
         val base = if (baseUrl.endsWith("/")) baseUrl.dropLast(1) else baseUrl
+        if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+            // 외부 URL은 서버 프록시 경유 (PDA가 인터넷 접근 불가한 환경 대응 + 캐싱)
+            val encoded = java.net.URLEncoder.encode(filePath, "UTF-8")
+            return "$base/api/image/$encoded"
+        }
         if (filePath.startsWith("/static/")) {
             return "$base$filePath"
         }

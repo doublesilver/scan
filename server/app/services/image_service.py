@@ -144,12 +144,12 @@ async def get_image_data(
 
 async def _fetch_from_url(client, url: str) -> bytes | None:
     try:
-        resp = await client.get(url, timeout=10.0)
+        resp = await client.get(url, timeout=10.0, follow_redirects=True)
         if resp.status_code == 200:
             return resp.content
-        logger.warning("url fetch %s → %d", path, resp.status_code)
+        logger.warning("url fetch %s → %d", url, resp.status_code)
     except Exception as e:
-        logger.warning("url fetch 실패: %s — %s", path, e)
+        logger.warning("url fetch 실패: %s — %s", url, e)
     return None
 
 
