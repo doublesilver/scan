@@ -34,6 +34,7 @@ from app.services.history_service import get_history as _get_history
 from app.services.history_service import log_action as _log_action
 from app.services.image_service import get_image_data, guess_media_type
 from app.services.print_log_service import log_print_attempt as _log_print_attempt
+from app.services.print_service import call_print_agent as _call_print_agent
 from app.services.print_service import print_label as _print_label
 from app.services.product_service import scan_barcode as _scan_barcode
 from app.services.product_service import search_products as _search_products
