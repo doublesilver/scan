@@ -22,10 +22,10 @@ object RetrofitClient {
     private var appContext: Context? = null
 
     fun getApiService(context: Context): ApiService {
-        appContext = context.applicationContext
         val baseUrl = getBaseUrl(context)
         if (apiService == null || currentBaseUrl != baseUrl) {
             synchronized(this) {
+                appContext = appContext ?: context.applicationContext
                 if (apiService == null || currentBaseUrl != baseUrl) {
                     currentBaseUrl = baseUrl
                     apiService = buildRetrofit(baseUrl).create(ApiService::class.java)
@@ -66,6 +66,7 @@ object RetrofitClient {
     }
 
     private fun buildRetrofit(baseUrl: String): Retrofit {
+        val safeBaseUrl = if (baseUrl.isBlank()) "http://0.0.0.0:8000/" else baseUrl
         val client = OkHttpClient.Builder()
             .addInterceptor(RetryInterceptor())
             .addInterceptor { chain ->
@@ -91,7 +92,7 @@ object RetrofitClient {
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
 
-        val normalizedUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+        val normalizedUrl = if (safeBaseUrl.endsWith("/")) safeBaseUrl else "$safeBaseUrl/"
 
         return Retrofit.Builder()
             .baseUrl(normalizedUrl)

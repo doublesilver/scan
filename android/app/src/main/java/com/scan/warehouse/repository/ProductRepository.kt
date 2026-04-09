@@ -5,10 +5,8 @@ import com.google.gson.Gson
 import com.scan.warehouse.db.AppDatabase
 import com.scan.warehouse.db.CachedProduct
 import com.scan.warehouse.model.BoxResponse
-import com.scan.warehouse.model.CartRequest
 import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.MapLayout
-import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.ImageItem
 import com.scan.warehouse.model.PrintRequest
 import com.scan.warehouse.model.PrintResponse
@@ -19,6 +17,8 @@ import com.scan.warehouse.model.ShelfItem
 import com.scan.warehouse.model.ShelfListResponse
 import com.scan.warehouse.model.Zone
 import com.scan.warehouse.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 
 open class ProductRepository(protected val context: Context) {
@@ -55,7 +55,7 @@ open class ProductRepository(protected val context: Context) {
             val response = api.searchProducts(query, limit)
             Pair(Result.success(response), false)
         } catch (e: Exception) {
-            val cached = dao.searchByName(query)
+            val cached = dao.searchByName(query, limit)
             if (cached.isNotEmpty()) {
                 val items = cached.map { it.toSearchItem() }
                 Pair(Result.success(SearchResponse(total = items.size, items = items)), true)
@@ -82,7 +82,7 @@ open class ProductRepository(protected val context: Context) {
     }
 
     private suspend fun cacheProduct(barcode: String, response: ScanResponse) {
-        val imageUrls = gson.toJson(response.images)
+        val imageUrls = withContext(Dispatchers.Default) { gson.toJson(response.images) }
         val cached = CachedProduct(
             barcode = barcode,
             skuId = response.skuId,
@@ -108,10 +108,6 @@ open class ProductRepository(protected val context: Context) {
             barcodes = listOf(barcode),
             images = images
         )
-    }
-
-    open suspend fun addToCart(barcode: String, skuId: String, productName: String, quantity: Int): CartResponse {
-        return api.addToCart(CartRequest(barcode, skuId, productName, quantity))
     }
 
     open suspend fun printLabel(barcode: String, skuId: String, productName: String, quantity: Int): PrintResponse {

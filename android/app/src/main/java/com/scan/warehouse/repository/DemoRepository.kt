@@ -2,7 +2,6 @@ package com.scan.warehouse.repository
 
 import android.content.Context
 import com.scan.warehouse.model.BoxResponse
-import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.FamilyMember
 import com.scan.warehouse.model.ImageItem
@@ -119,11 +118,6 @@ class DemoRepository(context: Context) : ProductRepository(context) {
     override suspend fun printLabel(barcode: String, skuId: String, productName: String, quantity: Int): PrintResponse {
         delay(300)
         return PrintResponse(status = "dry_run", message = "데모 모드: ${quantity}장 인쇄 시뮬레이션")
-    }
-
-    override suspend fun addToCart(barcode: String, skuId: String, productName: String, quantity: Int): CartResponse {
-        delay(300)
-        return CartResponse(status = "ok", message = "데모: $productName ${quantity}개 장바구니 추가")
     }
 
     override suspend fun healthCheck(): Result<Unit> = Result.success(Unit)

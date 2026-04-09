@@ -71,7 +71,7 @@ class MapEditorActivity : BaseActivity() {
             builtInZoomControls = true
             displayZoomControls = false
             setSupportZoom(true)
-            cacheMode = WebSettings.LOAD_NO_CACHE
+            cacheMode = WebSettings.LOAD_DEFAULT
         }
 
         binding.webView.webViewClient = WebViewClient()

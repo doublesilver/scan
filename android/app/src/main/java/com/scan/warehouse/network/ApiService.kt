@@ -4,8 +4,6 @@ import com.scan.warehouse.model.AppVersion
 import com.scan.warehouse.model.BoxResponse
 import com.scan.warehouse.model.CellDetail
 import com.scan.warehouse.model.MapLayout
-import com.scan.warehouse.model.CartRequest
-import com.scan.warehouse.model.CartResponse
 import com.scan.warehouse.model.PrintRequest
 import com.scan.warehouse.model.PrintResponse
 import com.scan.warehouse.model.ScanResponse
@@ -41,9 +39,6 @@ interface ApiService {
 
     @POST("api/print")
     suspend fun printLabel(@Body request: PrintRequest): PrintResponse
-
-    @POST("api/cart")
-    suspend fun addToCart(@Body request: CartRequest): CartResponse
 
     @GET("health")
     suspend fun healthCheck(): ResponseBody

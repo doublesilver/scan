@@ -30,6 +30,7 @@ class RetryInterceptor(
             } catch (e: IOException) {
                 lastException = e
                 if (attempt == maxRetries) throw e
+                Thread.sleep(100L * (attempt + 1))
             }
         }
 

@@ -11,8 +11,8 @@ interface ProductDao {
     @Query("SELECT * FROM cached_products WHERE barcode = :barcode")
     suspend fun getByBarcode(barcode: String): CachedProduct?
 
-    @Query("SELECT * FROM cached_products WHERE productName LIKE '%' || :query || '%'")
-    suspend fun searchByName(query: String): List<CachedProduct>
+    @Query("SELECT * FROM cached_products WHERE productName LIKE '%' || :query || '%' LIMIT :limit")
+    suspend fun searchByName(query: String, limit: Int = 20): List<CachedProduct>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(products: List<CachedProduct>)
