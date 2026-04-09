@@ -1,8 +1,8 @@
 """xlsx 파일 감시 — 지정 폴더에 새 파일 추가 시 자동 파싱."""
 
 import asyncio
-import glob
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -39,9 +39,8 @@ class XlsxHandler(FileSystemEventHandler):
         if not self._should_handle(path):
             return
         logger.info("파일 감지: %s", path)
-        self._loop.call_soon_threadsafe(
-            asyncio.ensure_future, _handle_new_file(path)
-        )
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(_handle_new_file(path), self._loop)
 
     def on_modified(self, event) -> None:
         if event.is_directory:
@@ -52,9 +51,8 @@ class XlsxHandler(FileSystemEventHandler):
         if not self._should_handle(path):
             return
         logger.info("파일 변경 감지: %s", path)
-        self._loop.call_soon_threadsafe(
-            asyncio.ensure_future, _handle_new_file(path)
-        )
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(_handle_new_file(path), self._loop)
 
 
 async def _handle_new_file(file_path: str) -> None:
@@ -63,8 +61,13 @@ async def _handle_new_file(file_path: str) -> None:
     from app.services.codepath_parser import parse_codepath
     from app.services.sku_parser import parse_sku_download
 
-    # 파일 쓰기 완료 대기
-    await asyncio.sleep(1)
+    prev_size = -1
+    for _ in range(10):
+        size = os.path.getsize(path)
+        if size == prev_size:
+            break
+        prev_size = size
+        await asyncio.sleep(0.5)
 
     db = await get_db()
     name = Path(file_path).name.lower()
@@ -75,7 +78,9 @@ async def _handle_new_file(file_path: str) -> None:
             logger.info("자동 갱신 (codepath): 추가=%d, 갱신=%d", stats["added"], stats["updated"])
         elif "sku_download" in name or "coupangmd" in name:
             stats = await parse_sku_download(db, file_path)
-            logger.info("자동 갱신 (sku_download): 추가=%d, 갱신=%d", stats["added"], stats["updated"])
+            logger.info(
+                "자동 갱신 (sku_download): 추가=%d, 갱신=%d", stats["added"], stats["updated"]
+            )
         else:
             logger.info("무시: 알 수 없는 xlsx 파일 %s", name)
     except Exception as e:
