@@ -116,27 +116,22 @@
   - [x] 호환 레이어: 기존 GET/POST /api/map-layout 유지
   - [x] 배포 자동화 `scripts/deploy.sh`
 
-## M13: Hilt DI + 입출고 워크플로우 (v5.1)
+## M13: Hilt DI (v5.1)
 
 - Status: [x] 완료
 - 완료 조건:
   - [x] Hilt DI: WarehouseApp, AppModule, 전 Activity @AndroidEntryPoint
   - [x] ScanViewModel → @HiltViewModel
   - [x] CellDetailViewModel: 셀 데이터·편집모드·네비게이션 상태 관리
-  - [x] 서버: inbound_service, outbound_service, inventory_service
-  - [x] API: POST /inbound, POST /outbound, POST /inventory-check
-  - [x] 앱 하단바 [입고][출고][장바구니] 3버튼
-  - [x] 입고: 스캔 → 도면 셀 선택 → 층 선택 → 등록 + 위치 동기화
-  - [x] 출고: 스캔 → 위치 표시 + 도면 하이라이트 → 피킹 완료
 
 ## M14: PDA 실기기 E2E 테스트
 
 - Status: [ ] 대기 중
 - 완료 조건:
-  - [ ] APK v5.1.0 설치 (Mini PC C:\scanner\)
+  - [ ] APK v5.3.5 설치 (Mini PC C:\scanner\)
   - [ ] DataWedge 프로파일 자동 생성 확인
   - [ ] 실제 바코드 스캔 테스트 (0.3~0.5초 목표)
-  - [ ] 입출고 워크플로우 E2E 테스트
+  - [ ] 장바구니 + 라벨 인쇄 워크플로우 E2E
   - [ ] 오프라인 모드 동작 확인
   - [ ] 현장 WiFi 환경 테스트
 
