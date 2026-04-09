@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityBoxRegisterBinding
 import com.scan.warehouse.model.SearchItem
@@ -60,7 +59,12 @@ class BoxRegisterActivity : BaseActivity() {
         lifecycleScope.launch {
             repository.getMapLayout().onSuccess { layout ->
                 WarehouseMapDialog.show(this@BoxRegisterActivity, selectedLocation, layout) { floor, zoneCode, row, col, _ ->
-                    val cellNum = (row - 1) * layout.zones.find { it.code == zoneCode }!!.cols + col
+                    val zone = layout.zones.find { it.code == zoneCode }
+                    if (zone == null) {
+                        Toast.makeText(this@BoxRegisterActivity, "도면이 변경되었습니다. 다시 시도해주세요", Toast.LENGTH_SHORT).show()
+                        return@show
+                    }
+                    val cellNum = (row - 1) * zone.cols + col
                     selectedLocation = "${floor}층-${zoneCode}-${cellNum}"
                     binding.tvLocation.text = selectedLocation
                     binding.tvLocation.setTextColor(ContextCompat.getColor(this@BoxRegisterActivity, R.color.primary))
@@ -220,8 +224,7 @@ class BoxRegisterActivity : BaseActivity() {
         lifecycleScope.launch {
             repository.createBox(data).onSuccess { box ->
                 Toast.makeText(this@BoxRegisterActivity, "등록 완료", Toast.LENGTH_SHORT).show()
-                val json = Gson().toJson(box)
-                startWithSlide(BoxDetailActivity.createIntent(this@BoxRegisterActivity, json))
+                startWithSlide(BoxDetailActivity.createIntent(this@BoxRegisterActivity, box))
                 finish()
             }.onFailure { e ->
                 Toast.makeText(this@BoxRegisterActivity, "등록 실패: ${e.message}", Toast.LENGTH_SHORT).show()

@@ -1,5 +1,6 @@
 package com.scan.warehouse.network
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -14,11 +15,24 @@ object ServerDiscovery {
 
     private const val PORT = 8000
     private const val TIMEOUT_MS = 500
+    private const val PREF_NAME = "warehouse_settings"
+    private const val KEY_LAST_IP = "last_known_server_ip"
 
-    suspend fun findServer(): String? = withContext(Dispatchers.IO) {
+    suspend fun findServer(context: Context? = null): String? = withContext(Dispatchers.IO) {
+        if (context != null) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val lastIp = prefs.getString(KEY_LAST_IP, null)
+            if (!lastIp.isNullOrBlank()) {
+                val candidate = "http://$lastIp:$PORT"
+                if (healthCheck(candidate)) {
+                    return@withContext candidate
+                }
+            }
+        }
+
         val subnet = getSubnet() ?: return@withContext null
 
-        for (chunk in (1..254).chunked(20)) {
+        for (chunk in (1..254).chunked(4)) {
             val result = coroutineScope {
                 chunk.map { i ->
                     async {
@@ -39,9 +53,32 @@ object ServerDiscovery {
                     }
                 }.awaitAll().firstOrNull { it != null }
             }
-            if (result != null) return@withContext result
+            if (result != null) {
+                if (context != null) {
+                    val ip = result.removePrefix("http://").substringBefore(":")
+                    context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                        .edit().putString(KEY_LAST_IP, ip).apply()
+                }
+                return@withContext result
+            }
         }
         null
+    }
+
+    private fun healthCheck(baseUrl: String): Boolean {
+        var conn: HttpURLConnection? = null
+        return try {
+            val url = URL("$baseUrl/health")
+            conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = TIMEOUT_MS
+            conn.readTimeout = TIMEOUT_MS
+            conn.requestMethod = "GET"
+            conn.responseCode == 200
+        } catch (_: Exception) {
+            false
+        } finally {
+            conn?.disconnect()
+        }
     }
 
     private fun getSubnet(): String? {

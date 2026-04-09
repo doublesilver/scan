@@ -11,7 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import com.scan.warehouse.BuildConfig
 import com.scan.warehouse.model.AppVersion
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -91,7 +92,8 @@ object UpdateManager {
             .create()
         dialog.show()
 
-        val job = CoroutineScope(Dispatchers.IO).launch {
+        val lifecycleOwner = context as? LifecycleOwner ?: return
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 if (destFile.exists()) destFile.delete()
 
