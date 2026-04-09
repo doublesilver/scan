@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import io
 import logging
@@ -26,34 +27,37 @@ ALLOWED_IMAGE_HOSTS = {
 logger = logging.getLogger(__name__)
 
 _cache_save_count = 0
+_cache_lock = asyncio.Lock()
 
 
-def _check_and_evict(cache_base: Path) -> None:
+def _walk_cache_sync(path: Path) -> list[tuple[Path, float, int]]:
+    return [(f, f.stat().st_mtime, f.stat().st_size) for f in path.rglob("*") if f.is_file()]
+
+
+async def _check_and_evict(cache_base: Path) -> None:
     global _cache_save_count
     _cache_save_count += 1
     if _cache_save_count % 100 != 0:
         return
 
-    total = sum(f.stat().st_size for f in cache_base.rglob("*") if f.is_file())
-    limit = settings.image_cache_max_size_mb * 1024 * 1024
-    if total <= limit:
-        return
+    async with _cache_lock:
+        file_infos = await asyncio.to_thread(_walk_cache_sync, cache_base)
+        total = sum(size for _, _, size in file_infos)
+        limit = settings.image_cache_max_size_mb * 1024 * 1024
+        if total <= limit:
+            return
 
-    target = limit - 50 * 1024 * 1024
-    files = sorted(
-        (f for f in cache_base.rglob("*") if f.is_file()),
-        key=lambda f: f.stat().st_mtime,
-    )
-    for f in files:
-        if total <= target:
-            break
-        try:
-            size = f.stat().st_size
-            f.unlink()
-            total -= size
-            logger.info("cache evict: %s", f)
-        except Exception as e:
-            logger.warning("cache evict 실패: %s — %s", f, e)
+        target = limit - 50 * 1024 * 1024
+        file_infos.sort(key=lambda x: x[1])
+        for f, _mtime, size in file_infos:
+            if total <= target:
+                break
+            try:
+                f.unlink()
+                total -= size
+                logger.info("cache evict: %s", f)
+            except Exception as e:
+                logger.warning("cache evict 실패: %s — %s", f, e)
 
 
 def validate_path(base: Path, sub_path: str) -> Path:
@@ -98,7 +102,7 @@ async def get_image_data(
             image_bytes = await _fetch_from_url(http_client, path)
             if image_bytes:
                 cache_path.parent.mkdir(parents=True, exist_ok=True)
-                _check_and_evict(cache_base)
+                await _check_and_evict(cache_base)
                 cache_path.write_bytes(image_bytes)
                 logger.info("image url fetch + cached: %s", path)
     else:
@@ -112,7 +116,7 @@ async def get_image_data(
             image_bytes = await _fetch_from_webdav(http_client, path)
             if image_bytes:
                 cache_path.parent.mkdir(parents=True, exist_ok=True)
-                _check_and_evict(cache_base)
+                await _check_and_evict(cache_base)
                 cache_path.write_bytes(image_bytes)
                 logger.info("image webdav fetch + cached: %s", path)
 
@@ -128,7 +132,7 @@ async def get_image_data(
         if resized:
             resized_path = validate_path(cache_base, f"resized/{width}/{path}")
             resized_path.parent.mkdir(parents=True, exist_ok=True)
-            _check_and_evict(cache_base)
+            await _check_and_evict(cache_base)
             resized_path.write_bytes(resized)
             logger.info("resized + cached: %s (w=%d)", path, width)
             return resized, None, width
@@ -140,12 +144,12 @@ async def get_image_data(
 
 async def _fetch_from_url(client, url: str) -> bytes | None:
     try:
-        resp = await client.get(url)
+        resp = await client.get(url, timeout=10.0)
         if resp.status_code == 200:
             return resp.content
-        logger.warning("url fetch %s → %d", url, resp.status_code)
+        logger.warning("url fetch %s → %d", path, resp.status_code)
     except Exception as e:
-        logger.warning("url fetch 실패: %s — %s", url, e)
+        logger.warning("url fetch 실패: %s — %s", path, e)
     return None
 
 
@@ -157,6 +161,7 @@ async def _fetch_from_webdav(client, path: str) -> bytes | None:
         logger.warning("webdav 경로 차단 (비허용 prefix): %s", path)
         return None
     from urllib.parse import quote
+
     prefix = settings.webdav_path_prefix.strip("/")
     encoded_prefix = quote(prefix) if prefix else ""
     base = settings.webdav_base_url.rstrip("/")
@@ -168,9 +173,9 @@ async def _fetch_from_webdav(client, path: str) -> bytes | None:
         resp = await client.get(url, auth=auth)
         if resp.status_code == 200:
             return resp.content
-        logger.warning("webdav %s → %d", url, resp.status_code)
+        logger.warning("webdav %s → %d", path, resp.status_code)
     except Exception as e:
-        logger.warning("webdav 연결 실패: %s — %s", url, e)
+        logger.warning("webdav 연결 실패: %s — %s", path, e)
     return None
 
 
@@ -191,6 +196,8 @@ def resize_image(raw: bytes, width: int, path: str) -> bytes | None:
 
     buf = io.BytesIO()
     fmt = img.format or "JPEG"
+    if fmt.upper() == "JPEG" and resized.mode != "RGB":
+        resized = resized.convert("RGB")
     resized.save(buf, format=fmt)
     return buf.getvalue()
 
@@ -208,6 +215,7 @@ def guess_media_type(path: str) -> str:
 
 async def upload_to_webdav(http_client, file_bytes: bytes, remote_path: str) -> bool:
     from urllib.parse import quote
+
     resized = resize_image(file_bytes, 1920, remote_path)
     data = resized if resized is not None else file_bytes
 
@@ -233,7 +241,9 @@ async def upload_to_webdav(http_client, file_bytes: bytes, remote_path: str) -> 
         if resp.status_code == 409:
             parent = remote_path.rsplit("/", 1)[0] if "/" in remote_path else ""
             if parent:
-                parent_url = f"{base}/{encoded_prefix}/{parent}" if encoded_prefix else f"{base}/{parent}"
+                parent_url = (
+                    f"{base}/{encoded_prefix}/{parent}" if encoded_prefix else f"{base}/{parent}"
+                )
                 await http_client.request("MKCOL", parent_url, auth=auth, timeout=5.0)
             resp = await http_client.put(
                 url,
@@ -255,6 +265,7 @@ async def upload_to_webdav(http_client, file_bytes: bytes, remote_path: str) -> 
 
 async def delete_from_webdav(http_client, remote_path: str) -> bool:
     from urllib.parse import quote
+
     prefix = settings.webdav_path_prefix.strip("/")
     encoded_prefix = quote(prefix) if prefix else ""
     base = settings.webdav_base_url.rstrip("/")

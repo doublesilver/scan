@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -9,16 +10,18 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 _client = None
+_client_lock = threading.Lock()
 
 
 def _get_client():
     global _client
-    if _client is None:
-        cred_path = Path(settings.gsheet_credentials)
-        if not cred_path.exists():
-            raise FileNotFoundError(f"credentials.json 없음: {cred_path}")
-        _client = gspread.service_account(filename=str(cred_path))
-    return _client
+    with _client_lock:
+        if _client is None:
+            cred_path = Path(settings.gsheet_credentials)
+            if not cred_path.exists():
+                raise FileNotFoundError(f"credentials.json 없음: {cred_path}")
+            _client = gspread.service_account(filename=str(cred_path))
+        return _client
 
 
 def add_to_cart(
@@ -43,6 +46,6 @@ def add_to_cart(
         return {"status": "ok", "message": f"{product_name} {quantity}개 장바구니 추가"}
     except FileNotFoundError as e:
         return {"status": "error", "message": str(e)}
-    except Exception as e:
-        logger.error("장바구니 추가 실패: %s", e)
-        return {"status": "error", "message": f"시트 연동 오류: {e}"}
+    except Exception:
+        logger.error("gsheets error", exc_info=True)
+        return {"status": "error", "message": "시트 연동 실패"}

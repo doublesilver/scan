@@ -49,6 +49,82 @@ def _friendly_agent_error(message: str, barcode: str) -> str:
     return message
 
 
+async def call_print_agent(
+    http_client, product_name: str, barcode: str, sku_id: str, quantity: int
+) -> dict:
+    start = time.perf_counter()
+    via = "agent"
+    try:
+        resp = await http_client.post(
+            settings.print_agent_url,
+            json={
+                "barcode": barcode,
+                "quantity": quantity,
+                "printer_name": settings.printer_name or "TSC TE210",
+                "product_name": product_name,
+                "sku_id": sku_id,
+            },
+            timeout=30,
+        )
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        raw_text = resp.text
+        try:
+            body = resp.json()
+        except Exception:
+            body = None
+
+        is_http_error = resp.status_code >= 400
+        body_status = (body or {}).get("status", "").lower() if isinstance(body, dict) else ""
+        is_body_error = body_status in ("error", "fail", "failed")
+
+        if is_http_error or is_body_error:
+            raw_msg = (body or {}).get("message") if isinstance(body, dict) else None
+            if not raw_msg:
+                raw_msg = f"HTTP {resp.status_code}: {raw_text[:200]}"
+            return {
+                "status": "error",
+                "message": _friendly_agent_error(raw_msg, barcode),
+                "via": via,
+                "http_status": resp.status_code,
+                "elapsed_ms": elapsed_ms,
+                "raw_response": raw_text,
+            }
+
+        ok_msg = (
+            (body or {}).get("message") if isinstance(body, dict) else None
+        ) or f"{quantity}장 인쇄 완료"
+        return {
+            "status": "ok",
+            "message": ok_msg,
+            "via": via,
+            "http_status": resp.status_code,
+            "elapsed_ms": elapsed_ms,
+            "raw_response": raw_text,
+        }
+    except httpx.TimeoutException:
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        logger.error("물류PC agent 타임아웃")
+        return {
+            "status": "error",
+            "message": "물류PC 응답 없음 (30초 타임아웃) — 미니PC에서 물류PC 연결 확인",
+            "via": via,
+            "http_status": None,
+            "elapsed_ms": elapsed_ms,
+            "raw_response": "",
+        }
+    except Exception as e:
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        logger.error("물류PC agent 호출 실패: %s", e)
+        return {
+            "status": "error",
+            "message": f"물류PC 연결 실패: {e}",
+            "via": via,
+            "http_status": None,
+            "elapsed_ms": elapsed_ms,
+            "raw_response": "",
+        }
+
+
 def print_label(product_name: str, barcode: str, sku_id: str, quantity: int) -> dict:
     start = time.perf_counter()
 

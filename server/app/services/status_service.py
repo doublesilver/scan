@@ -23,11 +23,15 @@ def _format_uptime() -> str:
     return f"{minutes}분"
 
 
-def _dir_size_mb(path: Path) -> float:
+def _sum_dir_size_sync(path: Path) -> float:
     if not path.exists():
         return 0.0
     total = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
     return round(total / (1024 * 1024), 1)
+
+
+async def _dir_size_mb(path: Path) -> float:
+    return await asyncio.to_thread(_sum_dir_size_sync, path)
 
 
 def _file_count(path: Path) -> int:
@@ -53,7 +57,7 @@ async def get_status(db: aiosqlite.Connection) -> dict:
         cursor = await db.execute(stock_sql)
         row = await cursor.fetchone()
         db_counts["stock_entries"] = row[0] if row else 0
-    except Exception:
+    except aiosqlite.OperationalError:
         db_counts["stock_entries"] = 0
 
     last_parse = None
@@ -70,7 +74,7 @@ async def get_status(db: aiosqlite.Connection) -> dict:
                 "added": row[2],
                 "updated": row[3],
             }
-    except Exception:
+    except aiosqlite.OperationalError:
         pass
 
     cache_dir = Path(settings.image_cache_dir)
@@ -88,7 +92,7 @@ async def get_status(db: aiosqlite.Connection) -> dict:
             "status": "connected" if settings.webdav_base_url else "disconnected",
         },
         "disk": {
-            "cache_size_mb": _dir_size_mb(cache_dir),
+            "cache_size_mb": await _dir_size_mb(cache_dir),
             "cache_limit_mb": settings.image_cache_max_size_mb,
             "backup_count": _file_count(backup_dir),
         },
