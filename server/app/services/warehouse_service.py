@@ -327,8 +327,20 @@ async def update_level_product_photo(db, product_id: int, photo: str) -> dict | 
 async def sync_product_location(
     db, product_master_id: int, zone_code: str, cell_row: int, cell_col: int, zone_cols: int
 ):
-    cell_num = (cell_row - 1) * zone_cols + cell_col
-    location = f"{zone_code}구역 {zone_code}-{cell_num}"
+    # 실제 셀 label을 우선 사용 — 도면에 1-1~1-20 / 2-1~2-10 같이 skipped 번호가 있을 수 있어
+    # (row-1)*cols+col 위치 계산은 label과 일치하지 않음
+    label_row = await db.execute_fetchall(
+        "SELECT wc.label FROM warehouse_cell wc "
+        "JOIN warehouse_zone wz ON wc.zone_id = wz.id "
+        "WHERE wz.code = ? AND wc.row = ? AND wc.col = ?",
+        (zone_code, cell_row, cell_col),
+    )
+    cell_label = label_row[0][0] if label_row and label_row[0][0] else ""
+    if not cell_label:
+        cell_num = (cell_row - 1) * zone_cols + cell_col
+        cell_label = f"{zone_code}-{cell_num}"
+    # Android ParsedLocation이 읽을 수 있는 "{floor}층-{zone}-{shelf}" 형식으로 통일
+    location = f"5층-{cell_label}"
     cursor = await db.execute(
         "UPDATE product SET location = ? WHERE sku_id IN "
         "(SELECT sku_id FROM product_master_sku WHERE product_master_id = ?)",
@@ -344,7 +356,7 @@ async def sync_product_location(
 
 async def find_product_location(db, sku_id: str) -> dict | None:
     rows = await db.execute_fetchall(
-        "SELECT wz.code, wz.name, wc.row, wc.col, wc.id as cell_id, wz.cols "
+        "SELECT wz.code, wz.name, wc.row, wc.col, wc.id as cell_id, wz.cols, wc.label "
         "FROM cell_level_product clp "
         "JOIN cell_level cl ON clp.level_id = cl.id "
         "JOIN warehouse_cell wc ON cl.cell_id = wc.id "
@@ -356,14 +368,14 @@ async def find_product_location(db, sku_id: str) -> dict | None:
     if not rows:
         return None
     r = rows[0]
-    cell_num = (r[2] - 1) * r[5] + r[3]
+    label = r[6] or f"{r[0]}-{(r[2] - 1) * r[5] + r[3]}"
     return {
         "zone_code": r[0],
         "zone_name": r[1],
         "row": r[2],
         "col": r[3],
         "cell_id": r[4],
-        "location": f"{r[0]}구역 {r[0]}-{cell_num}",
+        "location": f"5층-{label}",
     }
 
 
@@ -427,7 +439,7 @@ async def get_layout_as_json(db) -> dict:
 
     for zr in zones_rows:
         zone_id, code, name, rows, cols = zr
-        zones.append({"code": code, "name": name, "rows": rows, "cols": cols})
+        zones.append({"id": zone_id, "code": code, "name": name, "rows": rows, "cols": cols})
 
         cell_rows = await db.execute_fetchall(
             "SELECT id, row, col, label, status, bg_color FROM warehouse_cell "

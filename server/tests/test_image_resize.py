@@ -1,15 +1,10 @@
 import io
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 from PIL import Image
 
 from app.config import settings
-from app.main import app
-
-client = TestClient(app)
 
 
 def _create_test_image(width: int = 800, height: int = 600, fmt: str = "JPEG") -> bytes:
@@ -19,16 +14,15 @@ def _create_test_image(width: int = 800, height: int = 600, fmt: str = "JPEG") -
     return buf.getvalue()
 
 
-@pytest.fixture(autouse=True)
-def setup_cache(tmp_path, monkeypatch):
-    cache_dir = tmp_path / "cache"
-    cache_dir.mkdir()
-    monkeypatch.setattr(settings, "image_cache_dir", str(cache_dir))
-    return cache_dir
+@pytest.fixture
+def setup_cache(client):
+    # conftest의 client fixture가 이미 cache_dir 생성 + settings.image_cache_dir 패치를 마쳤다.
+    # 여기서는 그 경로만 돌려받아 테스트에서 파일을 배치한다.
+    return Path(settings.image_cache_dir)
 
 
 class TestResizeThumbnail:
-    def test_resize_thumbnail(self, setup_cache):
+    def test_resize_thumbnail(self, client, setup_cache):
         img_dir = setup_cache / "img"
         img_dir.mkdir(parents=True)
         (img_dir / "test.jpg").write_bytes(_create_test_image(800, 600))
@@ -40,7 +34,7 @@ class TestResizeThumbnail:
         assert result.width == 300
         assert result.height == 225  # aspect ratio 유지 (600/800*300)
 
-    def test_resize_original(self, setup_cache):
+    def test_resize_original(self, client, setup_cache):
         img_dir = setup_cache / "img"
         img_dir.mkdir(parents=True)
         original = _create_test_image(800, 600)
@@ -52,7 +46,7 @@ class TestResizeThumbnail:
 
 
 class TestResizeCache:
-    def test_resize_cache(self, setup_cache):
+    def test_resize_cache(self, client, setup_cache):
         img_dir = setup_cache / "img"
         img_dir.mkdir(parents=True)
         (img_dir / "test.jpg").write_bytes(_create_test_image(800, 600))
@@ -70,7 +64,7 @@ class TestResizeCache:
 
 class TestResizeInvalidWidth:
     @pytest.mark.parametrize("width", [0, -1, -100])
-    def test_zero_or_negative(self, setup_cache, width):
+    def test_zero_or_negative(self, client, setup_cache, width):
         img_dir = setup_cache / "img"
         img_dir.mkdir(parents=True)
         original = _create_test_image(800, 600)
@@ -80,7 +74,7 @@ class TestResizeInvalidWidth:
         assert resp.status_code == 200
         assert resp.content == original
 
-    def test_too_large(self, setup_cache):
+    def test_too_large(self, client, setup_cache):
         img_dir = setup_cache / "img"
         img_dir.mkdir(parents=True)
         original = _create_test_image(800, 600)
@@ -92,7 +86,7 @@ class TestResizeInvalidWidth:
 
 
 class TestResizeNonImage:
-    def test_non_image_file(self, setup_cache):
+    def test_non_image_file(self, client, setup_cache):
         txt_dir = setup_cache / "docs"
         txt_dir.mkdir(parents=True)
         (txt_dir / "readme.txt").write_text("not an image")

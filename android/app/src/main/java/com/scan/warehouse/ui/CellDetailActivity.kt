@@ -171,15 +171,14 @@ class CellDetailActivity : BaseActivity() {
     private fun updateTitle() {
         val cellKey = viewModel.cellKey
         val zone = viewModel.zone
-        val parts = cellKey.split("-")
-        if (parts.size >= 3) {
-            val row = parts[1].toIntOrNull() ?: 1
-            val col = parts[2].toIntOrNull() ?: 1
-            val seqNum = (row - 1) * viewModel.zoneColCount + col
-            binding.tvTitle.text = "${zone}구역 ${zone}-$seqNum"
-        } else {
-            binding.tvTitle.text = "${zone}구역 — $cellKey"
+        val serverLabel = viewModel.cellData.value?.label.orEmpty()
+        // 서버가 내려준 실제 셀 라벨을 최우선 사용 (위치 기반 계산 금지)
+        if (serverLabel.isNotEmpty()) {
+            binding.tvTitle.text = "${zone}구역 $serverLabel"
+            return
         }
+        // 라벨이 없으면 cellKey 그대로 노출
+        binding.tvTitle.text = "${zone}구역 $cellKey"
     }
 
     private fun renderLevels(cell: MapCell?, editMode: Boolean) {

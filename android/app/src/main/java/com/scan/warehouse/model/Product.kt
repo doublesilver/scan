@@ -102,7 +102,8 @@ data class MapZone(
     @SerializedName("code") val code: String,
     @SerializedName("name") val name: String,
     @SerializedName("rows") val rows: Int,
-    @SerializedName("cols") val cols: Int
+    @SerializedName("cols") val cols: Int,
+    @SerializedName("id") val id: Int? = null
 )
 
 data class MapLevel(

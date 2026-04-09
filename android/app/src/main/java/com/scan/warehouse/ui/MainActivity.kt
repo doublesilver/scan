@@ -195,13 +195,25 @@ class MainActivity : BaseActivity() {
                 val cellLabel = cellData?.label.orEmpty()
                 val cellStatus = cellData?.status ?: "empty"
 
+                // 주변 같은 status 여부 — 연결 표시용
+                val aboveStatus = mapLayout?.cells?.get("${zone.code}-${row - 1}-$col")?.status
+                val belowStatus = mapLayout?.cells?.get("${zone.code}-${row + 1}-$col")?.status
+                val leftStatus = mapLayout?.cells?.get("${zone.code}-$row-${col - 1}")?.status
+                val rightStatus = mapLayout?.cells?.get("${zone.code}-$row-${col + 1}")?.status
+
                 val cell = TextView(this).apply {
                     text = cellLabel
                     textSize = 9f
                     gravity = android.view.Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
-                        setMargins(margin, margin, margin, margin)
+
+                    fun applyMargins(l: Int, t: Int, r: Int, b: Int) {
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                            setMargins(l, t, r, b)
+                        }
                     }
+
+                    applyMargins(margin, margin, margin, margin)
+
                     when (cellStatus) {
                         "used" -> {
                             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_light))
@@ -222,29 +234,37 @@ class MainActivity : BaseActivity() {
                             }
                         }
                         "aisle" -> {
-                            // 통로: 공간 표시만, 점선 윤곽 + 투명 배경, 비클릭
-                            val gd = GradientDrawable().apply {
-                                setColor(android.graphics.Color.TRANSPARENT)
-                                setStroke((1 * density).toInt(), android.graphics.Color.parseColor("#555555"), (2 * density), (2 * density))
-                                cornerRadius = 2 * density
-                            }
-                            background = gd
-                            setTextColor(android.graphics.Color.parseColor("#888888"))
-                            textSize = 7f
+                            // 통로: 세로로 연결된 실제 공간처럼 하나의 막대로 보이게
+                            val connectedAbove = aboveStatus == "aisle"
+                            val connectedBelow = belowStatus == "aisle"
+                            applyMargins(margin, if (connectedAbove) 0 else margin, margin, if (connectedBelow) 0 else margin)
+                            setBackgroundColor(android.graphics.Color.parseColor("#2a2a2a"))
+                            setTextColor(android.graphics.Color.parseColor("#999999"))
+                            textSize = 8f
+                            // 연결된 막대의 맨 위 셀에만 "통로" 텍스트
+                            text = if (connectedAbove) "" else "통로"
                         }
                         "table" -> {
-                            // 테이블: 연갈색, 볼드, 비클릭
+                            // 테이블: 가로로 연결된 단일 박스처럼
+                            val connectedLeft = leftStatus == "table"
+                            val connectedRight = rightStatus == "table"
+                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(android.graphics.Color.parseColor("#3d2e1e"))
                             setTextColor(android.graphics.Color.parseColor("#d4a574"))
                             typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
+                            text = if (connectedLeft) "" else "테이블"
                         }
                         "pc" -> {
-                            // 물류PC: 연파란색, 볼드, 비클릭
+                            // 물류PC: 가로로 연결된 단일 박스처럼
+                            val connectedLeft = leftStatus == "pc"
+                            val connectedRight = rightStatus == "pc"
+                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(android.graphics.Color.parseColor("#1e3a5f"))
                             setTextColor(android.graphics.Color.parseColor("#9fc5e8"))
                             typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
+                            text = if (connectedLeft) "" else "물류PC"
                         }
                         else -> {
                             // 빈 슬롯: 투명, 텍스트 없음, 비클릭

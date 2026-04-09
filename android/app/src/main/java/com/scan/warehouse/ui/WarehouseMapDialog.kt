@@ -180,14 +180,25 @@ object WarehouseMapDialog {
                     cellLabel.isNotEmpty() &&
                     cellLabel == expectedCurrentLabel
 
+                val aboveStatus = mapLayout?.cells?.get("${zone.code}-${row - 1}-$col")?.status
+                val belowStatus = mapLayout?.cells?.get("${zone.code}-${row + 1}-$col")?.status
+                val leftStatus = mapLayout?.cells?.get("${zone.code}-$row-${col - 1}")?.status
+                val rightStatus = mapLayout?.cells?.get("${zone.code}-$row-${col + 1}")?.status
+
                 val cell = TextView(context).apply {
                     text = cellLabel
                     textSize = 10f
                     gravity = Gravity.CENTER
                     typeface = if (isCurrentCell) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-                    layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
-                        setMargins(margin, margin, margin, margin)
+
+                    fun applyMargins(l: Int, t: Int, r: Int, b: Int) {
+                        layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
+                            setMargins(l, t, r, b)
+                        }
                     }
+
+                    applyMargins(margin, margin, margin, margin)
+
                     when {
                         isCurrentCell -> {
                             val gd = GradientDrawable().apply {
@@ -199,21 +210,34 @@ object WarehouseMapDialog {
                             setTextColor(Color.BLACK)
                         }
                         cellStatus == "aisle" -> {
-                            setBackgroundColor(Color.parseColor("#1a1a1a"))
-                            setTextColor(Color.parseColor("#666666"))
-                            textSize = 8f
+                            // 세로로 연결된 단일 통로 막대처럼
+                            val connectedAbove = aboveStatus == "aisle"
+                            val connectedBelow = belowStatus == "aisle"
+                            applyMargins(margin, if (connectedAbove) 0 else margin, margin, if (connectedBelow) 0 else margin)
+                            setBackgroundColor(Color.parseColor("#2a2a2a"))
+                            setTextColor(Color.parseColor("#999999"))
+                            textSize = 9f
+                            text = if (connectedAbove) "" else "통로"
                         }
                         cellStatus == "table" -> {
+                            val connectedLeft = leftStatus == "table"
+                            val connectedRight = rightStatus == "table"
+                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(Color.parseColor("#5a3e28"))
                             setTextColor(Color.WHITE)
-                            textSize = 9f
+                            textSize = 10f
                             typeface = Typeface.DEFAULT_BOLD
+                            text = if (connectedLeft) "" else "테이블"
                         }
                         cellStatus == "pc" -> {
+                            val connectedLeft = leftStatus == "pc"
+                            val connectedRight = rightStatus == "pc"
+                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(Color.parseColor("#2e4a6b"))
                             setTextColor(Color.WHITE)
-                            textSize = 9f
+                            textSize = 10f
                             typeface = Typeface.DEFAULT_BOLD
+                            text = if (connectedLeft) "" else "물류PC"
                         }
                         cellStatus == "full" -> {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.cell_full_light))
@@ -224,12 +248,11 @@ object WarehouseMapDialog {
                             setTextColor(ContextCompat.getColor(context, R.color.cell_used_dark))
                         }
                         else -> {
-                            // empty slot — 비어있는 공간, 투명
                             setBackgroundColor(Color.TRANSPARENT)
                             text = ""
                         }
                     }
-                    // 실제 선반(used/full)만 클릭 가능 — 통로/테이블/PC/빈칸은 비클릭
+                    // 실제 선반만 클릭 가능
                     if (onCellClick != null && (cellStatus == "used" || cellStatus == "full")) {
                         isClickable = true
                         isFocusable = true
@@ -278,7 +301,8 @@ object WarehouseMapDialog {
         addField("행", rowsEdit)
         addField("열", colsEdit)
 
-        val zoneIdFromCode = zone.code.toIntOrNull()
+        // 서버가 내려준 실제 DB zone.id 사용 — code를 int로 파싱하는 건 취약함
+        val zoneIdFromCode = zone.id ?: zone.code.toIntOrNull()
 
         AlertDialog.Builder(context)
             .setTitle("구역 설정")
