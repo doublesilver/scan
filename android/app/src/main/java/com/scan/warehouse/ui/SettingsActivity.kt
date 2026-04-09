@@ -65,7 +65,7 @@ class SettingsActivity : BaseActivity() {
             binding.btnAutoDiscover.text = "감지 중..."
             binding.tvConnectionStatus.visibility = View.GONE
             lifecycleScope.launch {
-                val found = com.scan.warehouse.network.ServerDiscovery.findServer()
+                val found = com.scan.warehouse.network.ServerDiscovery.findServer(this@SettingsActivity)
                 binding.btnAutoDiscover.isEnabled = true
                 binding.btnAutoDiscover.text = "서버 자동 감지"
                 binding.tvConnectionStatus.visibility = View.VISIBLE
@@ -121,14 +121,15 @@ class SettingsActivity : BaseActivity() {
 
         lifecycleScope.launch {
             val result = repository.healthCheck()
+            RetrofitClient.saveBaseUrl(this@SettingsActivity, previousUrl)
             binding.progressBarSettings.visibility = View.GONE
             binding.tvConnectionStatus.visibility = View.VISIBLE
 
             result.onSuccess {
+                RetrofitClient.saveBaseUrl(this@SettingsActivity, urlToSave)
                 binding.tvConnectionStatus.text = "연결 성공"
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.success))
             }.onFailure { e ->
-                RetrofitClient.saveBaseUrl(this@SettingsActivity, previousUrl)
                 binding.tvConnectionStatus.text = "연결 실패: ${e.message}"
                 binding.tvConnectionStatus.setTextColor(getColor(R.color.error))
             }
@@ -158,33 +159,7 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
-    private val keystrokeBuffer = StringBuilder()
-    private var lastKeystrokeTime = 0L
-
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            if (event.keyCode == KeyEvent.KEYCODE_ENTER && keystrokeBuffer.isNotBlank()) {
-                val barcode = keystrokeBuffer.toString()
-                keystrokeBuffer.clear()
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    putExtra("BARCODE", barcode)
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(intent)
-                finish()
-                return true
-            }
-            val char = event.unicodeChar.toChar()
-            if (char.isDigit()) {
-                val now = System.currentTimeMillis()
-                if (now - lastKeystrokeTime > 300) {
-                    keystrokeBuffer.clear()
-                }
-                lastKeystrokeTime = now
-                keystrokeBuffer.append(char)
-                return true
-            }
-        }
         return super.dispatchKeyEvent(event)
     }
 
@@ -196,6 +171,7 @@ class SettingsActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         DataWedgeManager.unregister(this)
+        DataWedgeManager.resetBuffer()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

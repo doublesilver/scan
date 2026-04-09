@@ -25,9 +25,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import coil.load
 import com.scan.warehouse.R
 import com.scan.warehouse.databinding.ActivityCellDetailBinding
@@ -38,8 +36,10 @@ import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.scanner.DataWedgeManager
 import com.scan.warehouse.viewmodel.CellDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -330,14 +330,6 @@ class CellDetailActivity : BaseActivity() {
         }
         dialogBinding.btnSearchProduct.setOnClickListener { showProductSearchDialog() }
 
-        scanCollectJob = lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                DataWedgeManager.scanFlow.collect { barcode ->
-                    matchProductFromBarcode(barcode)
-                }
-            }
-        }
-
         val dialog = AlertDialog.Builder(this)
             .setTitle("${level.label} 편집")
             .setView(dialogBinding.root)
@@ -348,11 +340,19 @@ class CellDetailActivity : BaseActivity() {
             .create()
 
         activeLevelDialog = dialog
+        scanCollectJob?.cancel()
+        scanCollectJob = lifecycleScope.launch {
+            DataWedgeManager.scanFlow.collect { barcode ->
+                matchProductFromBarcode(barcode)
+            }
+        }
         dialog.setOnDismissListener {
             scanCollectJob?.cancel()
             scanCollectJob = null
             activeLevelDialog = null
             activeLevelBinding = null
+            pendingLevelIndex = -1
+            pendingPhotoUri = null
         }
         dialog.show()
     }
@@ -468,11 +468,12 @@ class CellDetailActivity : BaseActivity() {
         showUploadProgress(levelIndex)
         lifecycleScope.launch {
             try {
-                val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                    ?: throw Exception("파일을 열 수 없습니다")
                 val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
                 val ext = android.webkit.MimeTypeMap.getSingleton()
                     .getExtensionFromMimeType(mimeType) ?: "jpg"
+                val bytes = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                } ?: throw Exception("파일을 열 수 없습니다")
                 val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", "photo.$ext", requestBody)
                 if (viewModel.cellKey.isEmpty()) return@launch
@@ -567,7 +568,7 @@ class CellDetailActivity : BaseActivity() {
     }
 
     override fun onResume() { super.onResume(); DataWedgeManager.register(this) }
-    override fun onPause() { super.onPause(); DataWedgeManager.unregister(this) }
+    override fun onPause() { super.onPause(); DataWedgeManager.unregister(this); DataWedgeManager.resetBuffer() }
 
     override fun onDestroy() {
         activeLevelDialog?.dismiss()

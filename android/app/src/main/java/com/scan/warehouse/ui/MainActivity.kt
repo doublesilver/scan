@@ -67,10 +67,12 @@ class MainActivity : BaseActivity() {
 
         binding.etSearch.requestFocus()
 
-        lifecycleScope.launch {
-            val update = UpdateManager.checkUpdate(this@MainActivity)
-            if (update != null) {
-                UpdateManager.showUpdateDialog(this@MainActivity, update)
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                val update = UpdateManager.checkUpdate(this@MainActivity)
+                if (update != null) {
+                    UpdateManager.showUpdateDialog(this@MainActivity, update)
+                }
             }
         }
 
@@ -340,8 +342,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showBoxDialog(box: com.scan.warehouse.model.BoxResponse) {
-        val json = com.google.gson.Gson().toJson(box)
-        startWithSlide(BoxDetailActivity.createIntent(this, json))
+        startWithSlide(BoxDetailActivity.createIntent(this, box))
     }
 
     private fun showBoxNotFoundDialog(qrCode: String) {
@@ -397,7 +398,7 @@ class MainActivity : BaseActivity() {
         }
 
         lifecycleScope.launch {
-            val found = com.scan.warehouse.network.ServerDiscovery.findServer()
+            val found = com.scan.warehouse.network.ServerDiscovery.findServer(this@MainActivity)
             if (found != null) {
                 RetrofitClient.saveBaseUrl(this@MainActivity, found)
                 Toast.makeText(this@MainActivity, "서버 연결됨", Toast.LENGTH_SHORT).show()
@@ -446,7 +447,7 @@ class MainActivity : BaseActivity() {
                 return super.dispatchKeyEvent(event)
             }
             val char = event.unicodeChar.toChar()
-            if (char.isDigit() || char.isLetter()) {
+            if (char.isLetterOrDigit() || char == '-') {
                 val now = System.currentTimeMillis()
                 if (now - lastKeystrokeTime > 2000) {
                     keystrokeBuffer.clear()
@@ -495,6 +496,7 @@ class MainActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         DataWedgeManager.unregister(this)
+        DataWedgeManager.resetBuffer()
     }
 
     override fun onDestroy() {

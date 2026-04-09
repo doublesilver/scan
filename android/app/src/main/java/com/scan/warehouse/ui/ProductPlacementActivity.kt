@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
@@ -348,7 +349,10 @@ class ProductPlacementActivity : BaseActivity() {
             repository.updateMapCell(target.cellKey, mapOf("levels" to payload))
                 .onSuccess {
                     if (scanType == ScanType.BARCODE) {
-                        scannedProduct?.let { repository.updateProductLocation(it.skuId, "${target.floor}층-${target.zone}-${target.seqNum}") }
+                        scannedProduct?.let { product ->
+                            repository.updateProductLocation(product.skuId, "${target.floor}층-${target.zone}-${target.seqNum}")
+                                .onFailure { e -> Log.w("ProductPlacement", "위치 동기화 실패", e) }
+                        }
                     }
                     pendingCellPhotoUri?.let { uploadPhoto(it, target.cellKey, target.levelIndex) }
                     if (scanType == ScanType.QR) {
@@ -374,7 +378,14 @@ class ProductPlacementActivity : BaseActivity() {
             val ext = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "jpg"
             val part = MultipartBody.Part.createFormData("file", "photo.$ext", bytes.toRequestBody(mimeType.toMediaTypeOrNull()))
             repository.uploadLevelPhoto(cellKey, levelIndex, part)
-        } catch (_: Exception) { }
+                .onFailure { e ->
+                    Log.w("ProductPlacement", "사진 업로드 실패", e)
+                    Toast.makeText(this, "배치는 완료됐으나 사진 업로드 실패: 다시 업로드 필요", Toast.LENGTH_LONG).show()
+                }
+        } catch (e: Exception) {
+            Log.w("ProductPlacement", "사진 업로드 실패", e)
+            Toast.makeText(this, "배치는 완료됐으나 사진 업로드 실패: 다시 업로드 필요", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun resetToScan() {
@@ -440,7 +451,7 @@ class ProductPlacementActivity : BaseActivity() {
     }
 
     override fun onResume() { super.onResume(); DataWedgeManager.register(this) }
-    override fun onPause() { super.onPause(); DataWedgeManager.unregister(this) }
+    override fun onPause() { super.onPause(); DataWedgeManager.unregister(this); DataWedgeManager.resetBuffer() }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {

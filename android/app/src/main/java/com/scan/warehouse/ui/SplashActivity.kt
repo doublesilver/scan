@@ -64,6 +64,7 @@ class SplashActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         DataWedgeManager.unregister(this)
+        DataWedgeManager.resetBuffer()
     }
 
     private fun checkServer() {

@@ -58,18 +58,16 @@ class CellDetailViewModel @Inject constructor(
                 _cellData.value = cell
                 layout.zones.find { it.code == zone }?.let { zoneColCount = it.cols }
 
-                if (_allCellKeys.value == null) {
-                    val keys = ArrayList<String>()
-                    for (z in layout.zones) {
-                        for (r in 1..z.rows) {
-                            for (c in 1..z.cols) {
-                                keys.add("${z.code}-$r-$c")
-                            }
+                val keys = ArrayList<String>()
+                for (z in layout.zones) {
+                    for (r in 1..z.rows) {
+                        for (c in 1..z.cols) {
+                            keys.add("${z.code}-$r-$c")
                         }
                     }
-                    _allCellKeys.value = keys
-                    _currentCellIndex.value = keys.indexOf(cellKey)
                 }
+                _allCellKeys.value = keys
+                _currentCellIndex.value = keys.indexOf(cellKey)
 
                 val isEmpty = cell?.levels?.all { level ->
                     level.itemLabel.isNullOrEmpty() && level.sku.isNullOrEmpty() && level.photo.isNullOrEmpty()
@@ -105,14 +103,17 @@ class CellDetailViewModel @Inject constructor(
         if (_cellData.value == null) _cellData.value = cell
         val levels = cell.levels?.toMutableList() ?: DEFAULT_LEVELS.toMutableList()
 
-        if (levelIndex < levels.size) {
-            val updated = levels[levelIndex].copy(
-                itemLabel = productName.ifEmpty { null },
-                sku = sku.ifEmpty { null },
-                photo = matchedPhotoUrl ?: levels[levelIndex].photo
-            )
-            levels[levelIndex] = updated
+        if (levelIndex >= levels.size) {
+            _loadError.value = "층 구성이 변경되었습니다. 화면을 새로고침해주세요"
+            return
         }
+
+        val updated = levels[levelIndex].copy(
+            itemLabel = productName.ifEmpty { null },
+            sku = sku.ifEmpty { null },
+            photo = matchedPhotoUrl ?: levels[levelIndex].photo
+        )
+        levels[levelIndex] = updated
 
         saveLevels(levels)
 
