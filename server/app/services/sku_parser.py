@@ -14,6 +14,8 @@ from lxml import etree
 
 logger = logging.getLogger(__name__)
 
+_SAFE_PARSER = etree.XMLParser(resolve_entities=False, no_network=True, huge_tree=False)
+
 NS = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
 REQUIRED_COLUMNS = {
@@ -60,7 +62,7 @@ def _parse_xlsx_with_lxml(file_path: str) -> tuple[list[str], list[list[str]]]:
     with zipfile.ZipFile(file_path) as z:
         xml_bytes = z.read("xl/worksheets/sheet1.xml")
 
-    root = etree.fromstring(xml_bytes)
+    root = etree.fromstring(xml_bytes, parser=_SAFE_PARSER)
 
     rows = root.findall(".//s:row", NS)
     if not rows:
@@ -98,7 +100,10 @@ async def parse_sku_download(db, file_path: str) -> dict:
         return stats
 
     col_map = _match_columns(headers)
-    logger.info("sku_download 헤더 매칭: %s", {k: headers[v] if v is not None else None for k, v in col_map.items()})
+    logger.info(
+        "sku_download 헤더 매칭: %s",
+        {k: headers[v] if v is not None else None for k, v in col_map.items()},
+    )
 
     missing = [k for k in REQUIRED_COLUMNS if col_map.get(k) is None]
     if missing:
@@ -120,6 +125,7 @@ async def parse_sku_download(db, file_path: str) -> dict:
 
     for row_num, row in enumerate(data_rows, start=2):
         try:
+
             def _get(idx: int | None) -> str:
                 if idx is None or idx >= len(row):
                     return ""
@@ -143,10 +149,15 @@ async def parse_sku_download(db, file_path: str) -> dict:
                     if val:
                         extra[field] = val
 
-            product_batch.append((
-                sku_id, product_name, category, brand,
-                json.dumps(extra, ensure_ascii=False),
-            ))
+            product_batch.append(
+                (
+                    sku_id,
+                    product_name,
+                    category,
+                    brand,
+                    json.dumps(extra, ensure_ascii=False),
+                )
+            )
 
             if barcode and barcode.lower() != "none":
                 barcode_batch.append((barcode, sku_id))
@@ -194,7 +205,11 @@ async def parse_sku_download(db, file_path: str) -> dict:
 
     logger.info(
         "sku_download 파싱 완료: 추가=%d, 갱신=%d, 스킵=%d, 에러=%d (%dms)",
-        stats["added"], stats["updated"], stats["skipped"], stats["errors"], duration_ms,
+        stats["added"],
+        stats["updated"],
+        stats["skipped"],
+        stats["errors"],
+        duration_ms,
     )
     return stats
 

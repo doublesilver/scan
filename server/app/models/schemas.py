@@ -67,7 +67,7 @@ class PrintRequest(BaseModel):
 class CartRequest(BaseModel):
     barcode: str
     sku_id: str
-    product_name: str
+    product_name: str = Field(min_length=1)
     quantity: int = Field(ge=1, le=999)
 
 
