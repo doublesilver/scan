@@ -1,4 +1,4 @@
-from app.models.schemas import FamilyMember, BoxResponse
+from app.models.schemas import BoxResponse, FamilyMember
 
 
 async def get_box(db, qr_code: str) -> BoxResponse | None:
@@ -15,28 +15,42 @@ async def get_box(db, qr_code: str) -> BoxResponse | None:
         (box["product_master_id"],),
     )
     master = await cursor.fetchone()
-    if not master:
-        return None
 
-    cursor = await db.execute(
-        "SELECT sku_id, sku_name, barcode, location FROM product_master_sku "
-        "WHERE product_master_id = ? ORDER BY sku_name",
-        (master["id"],),
-    )
-    rows = await cursor.fetchall()
-    members = [FamilyMember(**dict(r)) for r in rows]
+    if master:
+        cursor = await db.execute(
+            "SELECT sku_id, sku_name, barcode, location FROM product_master_sku "
+            "WHERE product_master_id = ? ORDER BY sku_name",
+            (master["id"],),
+        )
+        rows = await cursor.fetchall()
+        members = [FamilyMember(**dict(r)) for r in rows]
+        return BoxResponse(
+            qr_code=qr_code,
+            box_name=box["box_name"],
+            product_master_name=master["name"],
+            product_master_image=master["image_url"],
+            location=members[0].location if members else None,
+            members=members,
+        )
 
     return BoxResponse(
         qr_code=qr_code,
         box_name=box["box_name"],
-        product_master_name=master["name"],
-        product_master_image=master["image_url"],
-        location=members[0].location if members else None,
-        members=members,
+        product_master_name="",
+        product_master_image=None,
+        location=None,
+        members=[],
     )
 
 
-async def create_box(db, qr_code: str, box_name: str, product_master_name: str, location: str | None, members: list[dict]) -> BoxResponse:
+async def create_box(
+    db,
+    qr_code: str,
+    box_name: str,
+    product_master_name: str,
+    location: str | None,
+    members: list[dict],
+) -> BoxResponse:
     cursor = await db.execute(
         "SELECT id FROM product_master WHERE name = ?",
         (product_master_name,),
@@ -59,14 +73,22 @@ async def create_box(db, qr_code: str, box_name: str, product_master_name: str, 
     for m in members:
         await db.execute(
             "INSERT OR IGNORE INTO product_master_sku (product_master_id, sku_id, sku_name, barcode, location) VALUES (?, ?, ?, ?, ?)",
-            (master_id, m["sku_id"], m.get("sku_name"), m.get("barcode"), m.get("location") or location),
+            (
+                master_id,
+                m["sku_id"],
+                m.get("sku_name"),
+                m.get("barcode"),
+                m.get("location") or location,
+            ),
         )
 
     await db.commit()
     return await get_box(db, qr_code)
 
 
-async def update_box(db, qr_code: str, box_name: str | None, product_master_name: str | None, location: str | None) -> BoxResponse | None:
+async def update_box(
+    db, qr_code: str, box_name: str | None, product_master_name: str | None, location: str | None
+) -> BoxResponse | None:
     cursor = await db.execute(
         "SELECT qr_code, box_name, product_master_id FROM outer_box WHERE qr_code = ?",
         (qr_code,),
@@ -102,7 +124,9 @@ async def update_box(db, qr_code: str, box_name: str | None, product_master_name
     return await get_box(db, qr_code)
 
 
-async def add_member(db, qr_code: str, sku_id: str, sku_name: str, barcode: str | None, location: str | None) -> bool:
+async def add_member(
+    db, qr_code: str, sku_id: str, sku_name: str, barcode: str | None, location: str | None
+) -> bool:
     cursor = await db.execute(
         "SELECT product_master_id FROM outer_box WHERE qr_code = ?",
         (qr_code,),

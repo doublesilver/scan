@@ -13,13 +13,11 @@ def _strip_brands(name: str) -> str:
 
 
 async def scan_barcode(db, barcode: str) -> ScanResponse | None:
-    cursor = await db.execute(
-        "SELECT sku_id FROM barcode WHERE barcode = ?", (barcode,)
-    )
+    cursor = await db.execute("SELECT sku_id FROM barcode WHERE barcode = ?", (barcode,))
     row = await cursor.fetchone()
     if not row:
         cursor = await db.execute(
-            "SELECT sku_id FROM product_master_sku WHERE barcode = ? AND sku_id IS NOT NULL",
+            "SELECT sku_id FROM product_master_sku WHERE barcode = ? AND sku_id IS NOT NULL AND sku_id != ''",
             (barcode,),
         )
         row = await cursor.fetchone()
@@ -39,8 +37,13 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
             for r in await cursor.fetchall()
         ]
         return ScanResponse(
-            sku_id="", product_name="", category="", brand="",
-            barcodes=[barcode], images=images, quantity=None,
+            sku_id="",
+            product_name="",
+            category="",
+            brand="",
+            barcodes=[barcode],
+            images=images,
+            quantity=None,
         )
 
     cursor = await db.execute(
@@ -74,7 +77,11 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
         pm_id = pm_row["product_master_id"]
         pm_name = pm_row["name"]
         cursor = await db.execute(
-            "SELECT wz.code || '-' || wc.label as cell_location "
+            "SELECT CASE "
+            "WHEN wc.label IS NULL OR wc.label = '' "
+            "THEN wz.code || '-' || CAST(((wc.row - 1) * wz.cols + wc.col) AS TEXT) "
+            "ELSE wz.code || '-' || wc.label "
+            "END AS cell_location "
             "FROM cell_level_product clp "
             "JOIN cell_level cl ON cl.id = clp.level_id "
             "JOIN warehouse_cell wc ON wc.id = cl.cell_id "
@@ -97,7 +104,11 @@ async def scan_barcode(db, barcode: str) -> ScanResponse | None:
         for r in await cursor.fetchall()
     ]
 
-    barcodes = product["all_barcodes"].split(",") if product["all_barcodes"] else [barcode]
+    barcodes = (
+        [b for b in product["all_barcodes"].split(",") if b]
+        if product["all_barcodes"]
+        else [barcode]
+    )
 
     return ScanResponse(
         sku_id=product["sku_id"],
