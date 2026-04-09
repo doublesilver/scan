@@ -469,6 +469,7 @@ async def get_layout_as_json(db) -> dict:
                 )
 
             cells[cell_key] = {
+                "name": label,
                 "label": label,
                 "status": status,
                 "bgColor": bg_color,

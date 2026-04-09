@@ -156,7 +156,7 @@ class MainActivity : BaseActivity() {
 
         for (zone in zones) {
             val zoneLabel = TextView(this).apply {
-                text = "${zone.name} (${zone.code}구역)"
+                text = zone.name
                 textSize = 12f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface_variant))
@@ -170,53 +170,87 @@ class MainActivity : BaseActivity() {
     }
 
     private fun createMapGrid(zone: MapZone, mapLayout: MapLayout?, floor: Int, density: Float): LinearLayout {
-        val cellSize = (44 * density).toInt()
-        val margin = (3 * density).toInt()
+        val margin = (2 * density).toInt()
 
         val grid = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding((8 * density).toInt(), 0, (8 * density).toInt(), (4 * density).toInt())
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
 
         for (row in 1..zone.rows) {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    (40 * density).toInt()
+                )
             }
             for (col in 1..zone.cols) {
                 val cellKey = "${zone.code}-$row-$col"
                 val cellData = mapLayout?.cells?.get(cellKey)
-                val cellNum = (row - 1) * zone.cols + col
-                val cellText = cellData?.name ?: "${zone.code}-$cellNum"
+                val cellLabel = cellData?.label.orEmpty()
+                val cellStatus = cellData?.status ?: "empty"
 
                 val cell = TextView(this).apply {
-                    text = cellText
+                    text = cellLabel
                     textSize = 9f
                     gravity = android.view.Gravity.CENTER
-                    layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
                         setMargins(margin, margin, margin, margin)
                     }
-                    when (cellData?.status) {
-                        "full" -> {
-                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_light))
-                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_dark))
-                        }
+                    when (cellStatus) {
                         "used" -> {
                             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_light))
                             setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_dark))
+                            isClickable = true
+                            isFocusable = true
+                            setOnClickListener {
+                                startWithSlide(CellDetailActivity.createIntent(this@MainActivity, floor, zone.code, cellKey))
+                            }
                         }
-                        else -> {
+                        "full" -> {
+                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_light))
+                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_dark))
+                            isClickable = true
+                            isFocusable = true
+                            setOnClickListener {
+                                startWithSlide(CellDetailActivity.createIntent(this@MainActivity, floor, zone.code, cellKey))
+                            }
+                        }
+                        "aisle" -> {
+                            // 통로: 공간 표시만, 점선 윤곽 + 투명 배경, 비클릭
                             val gd = GradientDrawable().apply {
-                                setColor(ContextCompat.getColor(this@MainActivity, R.color.surface_container_high))
-                                cornerRadius = 4 * density
+                                setColor(android.graphics.Color.TRANSPARENT)
+                                setStroke((1 * density).toInt(), android.graphics.Color.parseColor("#555555"), (2 * density), (2 * density))
+                                cornerRadius = 2 * density
                             }
                             background = gd
-                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.on_surface_variant))
+                            setTextColor(android.graphics.Color.parseColor("#888888"))
+                            textSize = 7f
                         }
-                    }
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener {
-                        startWithSlide(CellDetailActivity.createIntent(this@MainActivity, floor, zone.code, cellKey))
+                        "table" -> {
+                            // 테이블: 연갈색, 볼드, 비클릭
+                            setBackgroundColor(android.graphics.Color.parseColor("#3d2e1e"))
+                            setTextColor(android.graphics.Color.parseColor("#d4a574"))
+                            typeface = Typeface.DEFAULT_BOLD
+                            textSize = 8f
+                        }
+                        "pc" -> {
+                            // 물류PC: 연파란색, 볼드, 비클릭
+                            setBackgroundColor(android.graphics.Color.parseColor("#1e3a5f"))
+                            setTextColor(android.graphics.Color.parseColor("#9fc5e8"))
+                            typeface = Typeface.DEFAULT_BOLD
+                            textSize = 8f
+                        }
+                        else -> {
+                            // 빈 슬롯: 투명, 텍스트 없음, 비클릭
+                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                            text = ""
+                        }
                     }
                 }
                 rowLayout.addView(cell)

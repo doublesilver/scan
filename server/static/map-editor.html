@@ -141,18 +141,20 @@
       #canvas {
         flex: 1;
         overflow: auto;
-        padding: 20px;
+        padding: 12px;
       }
       #zonesContainer {
         display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 12px;
         min-height: 100%;
+        max-width: 900px;
+        margin: 0 auto;
       }
       .zone {
         background: var(--surface-lowest);
-        border-radius: 12px;
-        padding: 16px;
+        border-radius: 10px;
+        padding: 10px 12px;
         border: 1px solid var(--outline-variant);
         position: relative;
       }
@@ -218,14 +220,16 @@
       }
       .grid {
         display: grid;
-        gap: 5px;
+        gap: 4px;
+        width: 100%;
+        max-width: 100%;
       }
       .cell {
-        width: 90px;
-        height: 75px;
+        min-width: 0;
+        aspect-ratio: 1 / 0.85;
         background: var(--surface-lowest);
         border: 2px solid var(--outline-variant);
-        border-radius: 8px;
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -236,9 +240,10 @@
           background 0.15s;
         font-size: 11px;
         text-align: center;
-        padding: 4px;
+        padding: 3px;
         position: relative;
         user-select: none;
+        overflow: hidden;
       }
       .cell:hover {
         border-color: var(--secondary);
@@ -261,6 +266,57 @@
         background: #ffebee;
         border-color: var(--error);
       }
+      /* 통로: 공간 표시만, 셀 아님 — 투명 배경 + 점선 윤곽 + 작은 회색 글자 */
+      .cell.saisle {
+        background: transparent;
+        border: 1px dashed #555;
+        cursor: default;
+        color: #888;
+        font-size: 10px;
+      }
+      .cell.saisle:hover {
+        border-color: #555;
+        background: transparent;
+      }
+      .cell.saisle .cid, .cell.saisle .cst { display: none; }
+      .cell.saisle .clabel { color: #888; }
+      /* 테이블: 공간 표시만, 연한 갈색 배경, 테두리 없음 */
+      .cell.stable {
+        background: rgba(139, 94, 60, 0.15);
+        border: 1px solid rgba(139, 94, 60, 0.4);
+        cursor: default;
+        color: #6b4423;
+      }
+      .cell.stable:hover {
+        border-color: rgba(139, 94, 60, 0.6);
+        background: rgba(139, 94, 60, 0.2);
+      }
+      .cell.stable .cid, .cell.stable .cst { display: none; }
+      .cell.stable .clabel { color: #6b4423; font-weight: bold; }
+      /* 물류PC: 공간 표시만, 연한 파란 배경 */
+      .cell.spc {
+        background: rgba(46, 74, 107, 0.15);
+        border: 1px solid rgba(46, 74, 107, 0.4);
+        cursor: default;
+        color: #2e4a6b;
+      }
+      .cell.spc:hover {
+        border-color: rgba(46, 74, 107, 0.6);
+        background: rgba(46, 74, 107, 0.2);
+      }
+      .cell.spc .cid, .cell.spc .cst { display: none; }
+      .cell.spc .clabel { color: #2e4a6b; font-weight: bold; }
+      /* 빈 슬롯: 완전 투명, 보이지 않음 */
+      .cell.sempty {
+        background: transparent;
+        border: 1px dashed rgba(128, 128, 128, 0.15);
+        cursor: default;
+      }
+      .cell.sempty:hover {
+        background: transparent;
+        border-color: rgba(128, 128, 128, 0.25);
+      }
+      .cell.sempty .cid, .cell.sempty .cst, .cell.sempty .clabel { display: none; }
       .cell.dcover {
         border-color: var(--secondary);
         background: #fff3e0;
@@ -1323,7 +1379,7 @@
         <button class="zab del" onclick="delZone('${z.id}')">삭제</button>
       </div>
     </div>
-    <div class="grid" id="grid-${z.id}" style="grid-template-columns:repeat(${z.cols},90px)"></div>
+    <div class="grid" id="grid-${z.id}" style="grid-template-columns:repeat(${z.cols},minmax(0,1fr))"></div>
     <button class="add-row-btn" onclick="zrow('${z.id}',1)">+</button>`;
         const grid = el.querySelector(`#grid-${z.id}`);
         for (let r = 1; r <= z.rows; r++)
@@ -1392,10 +1448,18 @@
       }
 
       function applyCellEl(el, key, d) {
-        const sc =
-          d.status === "used" ? "sused" : d.status === "full" ? "sfull" : "";
+        const statusMap = {
+          used: "sused",
+          full: "sfull",
+          aisle: "saisle",
+          table: "stable",
+          pc: "spc",
+        };
+        // 데이터가 없거나 status가 명시 안 되면 빈 슬롯으로 처리
+        const hasData = d && (d.label || d.status || d.name);
+        const sc = hasData ? statusMap[d.status] || "" : "sempty";
         el.className = "cell" + (sc ? " " + sc : "");
-        el.style.background = d.bgColor || "";
+        el.style.background = sc === "sempty" ? "" : d.bgColor || "";
         const dc =
           d.status === "used"
             ? "#2e7d32"
@@ -1404,16 +1468,25 @@
               : "#45474c";
         const lv = (d.levels && d.levels[0]) || {};
         const ph = lv.photo || d.photo_url || "";
+        // 셀 상단 ID는 서버가 내려준 label/name을 우선, 없으면 위치 기반
         const parts = key.split("-");
         const zObj = W.zones.find((z) => key.startsWith(z.code + "-"));
         const seqNum =
           parts.length >= 3 && zObj
             ? (parseInt(parts[1]) - 1) * zObj.cols + parseInt(parts[2])
             : key;
-        const dkey =
-          d && d.name ? d.name : zObj ? `${zObj.code}-${seqNum}` : key;
-        el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
+        const dkey = d && (d.label || d.name)
+          ? (d.label || d.name)
+          : zObj ? `${zObj.code}-${seqNum}` : key;
+        // 통로/테이블/물류PC/빈슬롯은 cid·cst 숨기고 clabel만 표시
+        if (sc === "sempty") {
+          el.innerHTML = "";
+        } else if (sc === "saisle" || sc === "stable" || sc === "spc") {
+          el.innerHTML = `<span class="clabel">${d.label || ""}</span>`;
+        } else {
+          el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
     <span class="clabel">${d.label || "빈 선반"}</span>`;
+        }
       }
 
       function refreshCell(key) {
