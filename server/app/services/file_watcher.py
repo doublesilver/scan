@@ -63,7 +63,7 @@ async def _handle_new_file(file_path: str) -> None:
 
     prev_size = -1
     for _ in range(10):
-        size = os.path.getsize(path)
+        size = os.path.getsize(file_path)
         if size == prev_size:
             break
         prev_size = size

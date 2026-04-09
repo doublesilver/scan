@@ -1,7 +1,9 @@
+import io
 import os
 import uuid
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
+from PIL import Image
 
 from app.db.database import get_db, get_read_db
 from app.db.database import write_lock as _zone_lock
