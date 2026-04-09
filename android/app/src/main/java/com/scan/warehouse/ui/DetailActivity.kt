@@ -17,11 +17,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.scan.warehouse.R
+import com.scan.warehouse.WarehouseApp
 import com.scan.warehouse.databinding.ActivityDetailBinding
 import com.scan.warehouse.model.ScanResponse
 import com.scan.warehouse.repository.ProductRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -113,22 +116,32 @@ class DetailActivity : BaseActivity() {
         val barcode = data.barcodes.firstOrNull() ?: return
         binding.btnBarPrint.isEnabled = false
         Toast.makeText(this, "인쇄 요청 중...", Toast.LENGTH_SHORT).show()
-        lifecycleScope.launch {
-            try {
+        val appCtx = applicationContext
+        // Activity 라이프사이클과 분리된 appScope 사용 — 뒤로가기 해도 결과 Toast가 뜸
+        (application as WarehouseApp).appScope.launch {
+            val (resultMsg, isError) = try {
                 val result = repository.printLabel(barcode, data.skuId, data.productName, quantity)
-                Toast.makeText(this@DetailActivity, result.message, Toast.LENGTH_SHORT).show()
+                result.message to false
             } catch (e: retrofit2.HttpException) {
                 val detail = try {
                     val body = e.response()?.errorBody()?.string().orEmpty()
                     org.json.JSONObject(body).optString("detail", "")
                 } catch (_: Exception) { "" }
                 val msg = if (detail.isNotBlank()) "인쇄 실패: $detail" else "인쇄 실패 (HTTP ${e.code()})"
-                Toast.makeText(this@DetailActivity, msg, Toast.LENGTH_LONG).show()
+                msg to true
             } catch (e: Exception) {
                 val reason = e.message?.take(80) ?: "연결 오류"
-                Toast.makeText(this@DetailActivity, "인쇄 요청 실패: $reason", Toast.LENGTH_LONG).show()
-            } finally {
-                binding.btnBarPrint.isEnabled = true
+                "인쇄 요청 실패: $reason" to true
+            }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    appCtx,
+                    resultMsg,
+                    if (isError) Toast.LENGTH_LONG else Toast.LENGTH_SHORT,
+                ).show()
+                if (!isFinishing && !isDestroyed) {
+                    binding.btnBarPrint.isEnabled = true
+                }
             }
         }
     }
