@@ -147,11 +147,11 @@ class BoxDetailActivity : BaseActivity() {
         val zones = layout.zones.ifEmpty { return }
 
         val locationZone = zones.find { it.code == parsed.zone }
-        val cellNum = parsed.shelf
+        val zoneHeader = locationZone?.name ?: "${parsed.zone}구역"
 
         // 위치 텍스트 (큰 글씨)
         binding.layoutInlineMap.addView(TextView(this).apply {
-            text = "📍 ${locationZone?.name ?: parsed.zone}구역 ${parsed.zone}-$cellNum"
+            text = "📍 $zoneHeader · ${parsed.zone}-${parsed.shelf}"
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setTypeface(null, Typeface.BOLD)
             setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.on_surface))
@@ -161,6 +161,9 @@ class BoxDetailActivity : BaseActivity() {
 
         // 해당 zone만 그리드로 표시
         if (locationZone != null) {
+            val expectedLabel = if (parsed.zone.isNotEmpty() && parsed.shelf.isNotEmpty()) {
+                "${parsed.zone}-${parsed.shelf}"
+            } else null
             val grid = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
@@ -171,28 +174,52 @@ class BoxDetailActivity : BaseActivity() {
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f)
                 }
                 for (c in 1..locationZone.cols) {
-                    val cn = (r - 1) * locationZone.cols + c
-                    val isHighlight = cn.toString() == parsed.shelf
+                    val cellData = layout.cells["${locationZone.code}-$r-$c"]
+                    val cellLabel = cellData?.label.orEmpty()
+                    val cellStatus = cellData?.status ?: "empty"
+                    val isHighlight = expectedLabel != null && cellLabel == expectedLabel
                     val cellView = TextView(this).apply {
-                        text = "${parsed.zone}-$cn"
+                        text = cellLabel
                         setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
-                        if (isHighlight) {
-                            val gd = GradientDrawable().apply {
-                                setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
-                                setStroke((2 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
-                                cornerRadius = 4 * density
+                        when {
+                            isHighlight -> {
+                                val gd = GradientDrawable().apply {
+                                    setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
+                                    setStroke((2 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
+                                    cornerRadius = 4 * density
+                                }
+                                background = gd
+                                setTextColor(Color.BLACK)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                             }
-                            background = gd
-                            setTextColor(Color.BLACK)
-                            setTypeface(null, Typeface.BOLD)
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-                        } else {
-                            val bgColor = if (layout.cells["${locationZone.code}-$r-$c"]?.status == "used")
-                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
-                            else ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
-                            setBackgroundColor(bgColor)
+                            cellStatus == "aisle" -> {
+                                setBackgroundColor(Color.parseColor("#1a1a1a"))
+                                setTextColor(Color.parseColor("#666666"))
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 7f)
+                            }
+                            cellStatus == "table" -> {
+                                setBackgroundColor(Color.parseColor("#5a3e28"))
+                                setTextColor(Color.WHITE)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 8f)
+                            }
+                            cellStatus == "pc" -> {
+                                setBackgroundColor(Color.parseColor("#2e4a6b"))
+                                setTextColor(Color.WHITE)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 8f)
+                            }
+                            cellStatus == "used" -> {
+                                setBackgroundColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used))
+                            }
+                            else -> {
+                                // 빈 공간: 투명 배경 + 텍스트 없음
+                                setBackgroundColor(Color.TRANSPARENT)
+                                text = ""
+                            }
                         }
                         val margin = (1 * density).toInt()
                         layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, 1f).apply {
@@ -353,7 +380,7 @@ class BoxDetailActivity : BaseActivity() {
 
         for (zone in layout.zones) {
             container.addView(TextView(this).apply {
-                text = "${zone.name} (${zone.code}구역)"
+                text = zone.name
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(Color.WHITE)
@@ -367,6 +394,10 @@ class BoxDetailActivity : BaseActivity() {
                 }
             }
 
+            val expectedLabel = if (parsed.zone.isNotEmpty() && parsed.shelf.isNotEmpty()) {
+                "${parsed.zone}-${parsed.shelf}"
+            } else null
+
             for (r in 1..zone.rows) {
                 val row = LinearLayout(this).apply {
                     orientation = LinearLayout.HORIZONTAL
@@ -375,46 +406,71 @@ class BoxDetailActivity : BaseActivity() {
                 for (c in 1..zone.cols) {
                     val cellKey = "${zone.code}-$r-$c"
                     val cell = layout.cells[cellKey]
-                    val cellNum = (r - 1) * zone.cols + c
-                    val isHighlight = zone.code == parsed.zone && cellNum.toString() == parsed.shelf
+                    val cellLabel = cell?.label.orEmpty()
+                    val cellStatus = cell?.status ?: "empty"
+                    val isHighlight = expectedLabel != null && zone.code == parsed.zone && cellLabel == expectedLabel
 
                     val cellView = TextView(this).apply {
-                        text = "${zone.code}-$cellNum"
+                        text = cellLabel
                         setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                         gravity = Gravity.CENTER
                         setTextColor(Color.WHITE)
-                        if (isHighlight) {
-                            val gd = GradientDrawable().apply {
-                                setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
-                                setStroke((3 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
-                                cornerRadius = 6 * density
+                        when {
+                            isHighlight -> {
+                                val gd = GradientDrawable().apply {
+                                    setColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight))
+                                    setStroke((3 * density).toInt(), ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_highlight_stroke))
+                                    cornerRadius = 6 * density
+                                }
+                                background = gd
+                                setTextColor(Color.BLACK)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                             }
-                            background = gd
-                            setTextColor(Color.BLACK)
-                            setTypeface(null, Typeface.BOLD)
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                        } else {
-                            val bgColor = if (cell?.status == "used")
-                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used)
-                            else
-                                ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_empty)
-                            setBackgroundColor(bgColor)
+                            cellStatus == "aisle" -> {
+                                setBackgroundColor(Color.parseColor("#1a1a1a"))
+                                setTextColor(Color.parseColor("#666666"))
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f)
+                            }
+                            cellStatus == "table" -> {
+                                setBackgroundColor(Color.parseColor("#5a3e28"))
+                                setTextColor(Color.WHITE)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                            }
+                            cellStatus == "pc" -> {
+                                setBackgroundColor(Color.parseColor("#2e4a6b"))
+                                setTextColor(Color.WHITE)
+                                setTypeface(null, Typeface.BOLD)
+                                setTextSize(TypedValue.COMPLEX_UNIT_SP, 10f)
+                            }
+                            cellStatus == "used" -> {
+                                setBackgroundColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.cell_used))
+                            }
+                            else -> {
+                                // 빈 슬롯 — 렌더링은 하되 투명
+                                setBackgroundColor(Color.TRANSPARENT)
+                                text = ""
+                            }
                         }
                         val size = (48 * density).toInt()
                         val margin = (2 * density).toInt()
                         layoutParams = LinearLayout.LayoutParams(0, size, 1f).apply {
                             setMargins(margin, margin, margin, margin)
                         }
-                        isClickable = true
-                        isFocusable = true
-                        foreground = with(obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))) {
-                            getDrawable(0).also { recycle() }
-                        }
-                        setOnClickListener {
-                            zoomDialog?.dismiss()
-                            startWithSlide(CellDetailActivity.createIntent(
-                                this@BoxDetailActivity, layout.floor, zone.code, cellKey
-                            ))
+                        // 실제 선반만 클릭 가능
+                        if (cellStatus == "used") {
+                            isClickable = true
+                            isFocusable = true
+                            foreground = with(obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))) {
+                                getDrawable(0).also { recycle() }
+                            }
+                            setOnClickListener {
+                                zoomDialog?.dismiss()
+                                startWithSlide(CellDetailActivity.createIntent(
+                                    this@BoxDetailActivity, layout.floor, zone.code, cellKey
+                                ))
+                            }
                         }
                     }
                     if (isHighlight) {

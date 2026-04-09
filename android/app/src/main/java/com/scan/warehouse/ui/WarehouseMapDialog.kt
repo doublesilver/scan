@@ -159,6 +159,10 @@ object WarehouseMapDialog {
         val outerRange = if (landscape) 1..zone.cols else 1..zone.rows
         val innerRange = if (landscape) 1..zone.rows else 1..zone.cols
 
+        val expectedCurrentLabel = if (current.zone.isNotEmpty() && current.shelf.isNotEmpty()) {
+            "${current.zone}-${current.shelf}"
+        } else null
+
         for (outer in outerRange) {
             val rowLayout = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -166,16 +170,18 @@ object WarehouseMapDialog {
             for (inner in innerRange) {
                 val row = if (landscape) inner else outer
                 val col = if (landscape) outer else inner
-                val cellNum = (row - 1) * zone.cols + col
-                val shelf = cellNum.toString()
-                val isCurrentCell = zone.code == current.zone && shelf == current.shelf
 
                 val cellKey = "${zone.code}-$row-$col"
                 val cellData = mapLayout?.cells?.get(cellKey)
-                val cellText = cellData?.name ?: "${zone.code}-$cellNum"
+                val cellLabel = cellData?.label.orEmpty()
+                val cellStatus = cellData?.status ?: "empty"
+                val isCurrentCell = expectedCurrentLabel != null &&
+                    zone.code == current.zone &&
+                    cellLabel.isNotEmpty() &&
+                    cellLabel == expectedCurrentLabel
 
                 val cell = TextView(context).apply {
-                    text = cellText
+                    text = cellLabel
                     textSize = 10f
                     gravity = Gravity.CENTER
                     typeface = if (isCurrentCell) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
@@ -192,20 +198,39 @@ object WarehouseMapDialog {
                             background = gd
                             setTextColor(Color.BLACK)
                         }
-                        cellData?.status == "full" -> {
+                        cellStatus == "aisle" -> {
+                            setBackgroundColor(Color.parseColor("#1a1a1a"))
+                            setTextColor(Color.parseColor("#666666"))
+                            textSize = 8f
+                        }
+                        cellStatus == "table" -> {
+                            setBackgroundColor(Color.parseColor("#5a3e28"))
+                            setTextColor(Color.WHITE)
+                            textSize = 9f
+                            typeface = Typeface.DEFAULT_BOLD
+                        }
+                        cellStatus == "pc" -> {
+                            setBackgroundColor(Color.parseColor("#2e4a6b"))
+                            setTextColor(Color.WHITE)
+                            textSize = 9f
+                            typeface = Typeface.DEFAULT_BOLD
+                        }
+                        cellStatus == "full" -> {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.cell_full_light))
                             setTextColor(ContextCompat.getColor(context, R.color.cell_full_dark))
                         }
-                        cellData?.status == "used" -> {
+                        cellStatus == "used" -> {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.cell_used_light))
                             setTextColor(ContextCompat.getColor(context, R.color.cell_used_dark))
                         }
                         else -> {
-                            setBackgroundColor(ContextCompat.getColor(context, R.color.surface_container_high))
-                            setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
+                            // empty slot — 비어있는 공간, 투명
+                            setBackgroundColor(Color.TRANSPARENT)
+                            text = ""
                         }
                     }
-                    if (onCellClick != null) {
+                    // 실제 선반(used/full)만 클릭 가능 — 통로/테이블/PC/빈칸은 비클릭
+                    if (onCellClick != null && (cellStatus == "used" || cellStatus == "full")) {
                         isClickable = true
                         isFocusable = true
                         setOnClickListener {
