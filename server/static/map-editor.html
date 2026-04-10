@@ -2299,6 +2299,8 @@
                 if (z.id == null || z.id === "") {
                   maxNum += 1;
                   z.id = `z${maxNum}`;
+                } else {
+                  z.id = String(z.id);
                 }
               });
               zid = Math.max(zid || 0, maxNum);
