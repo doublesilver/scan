@@ -150,6 +150,7 @@
         min-height: 100%;
         max-width: 900px;
         margin: 0 auto;
+        position: relative;
       }
       .zone {
         background: var(--surface-lowest);
@@ -1074,6 +1075,11 @@
       .zone-size-badge { font-size:10px; color:var(--on-surface-variant); padding:1px 5px; background:var(--surface-low); border:1px solid var(--outline-variant); border-radius:6px; }
       /* 테두리 두께 select */
       .fg select.border-w { width:100%; }
+      .text-box { position:absolute; border:1px dashed #999; border-radius:4px; padding:4px 6px; cursor:move; overflow:hidden; word-break:break-word; z-index:10; user-select:none; }
+      .text-box:hover { border-color:var(--secondary); box-shadow:0 0 0 1px var(--secondary); }
+      body.text-mode { cursor:crosshair; }
+      body.text-mode .cell { pointer-events:none; }
+      .text-drag-rect { position:absolute; border:2px dashed var(--secondary); background:rgba(254,106,52,0.1); z-index:20; pointer-events:none; }
     </style>
   </head>
   <body>
@@ -1097,6 +1103,7 @@
       <div class="sep"></div>
       <button id="darkModeBtn" class="tb" onclick="toggleDark()">☾ 다크</button>
       <button id="paintModeBtn" class="tb" onclick="togglePaintMode()">🖌 페인트</button>
+      <button id="textModeBtn" class="tb" onclick="toggleTextMode()">📝 텍스트</button>
       <span id="paintCtrl" style="display:none;align-items:center;gap:4px">
         <select id="paintStatusSel" class="tb" onchange="paintStatus=this.value">
           <option value="used">사용중</option><option value="full">만석</option>
@@ -1277,6 +1284,22 @@
             ><input type="number" id="zeCellH" min="30" max="120" step="2" placeholder="56" />
           </div>
         </div>
+        <div style="display: flex; gap: 10px">
+          <div class="fg" style="flex: 1">
+            <label>구역 테두리 색상</label
+            ><input type="color" id="zeBorderColor" value="#c5c6cc" />
+          </div>
+          <div class="fg" style="flex: 1">
+            <label>구역 테두리 두께</label>
+            <select id="zeBorderWidth">
+              <option value="1">1px (기본)</option>
+              <option value="2">2px</option>
+              <option value="3">3px</option>
+              <option value="4">4px</option>
+              <option value="5">5px</option>
+            </select>
+          </div>
+        </div>
         <div class="btn-row">
           <button class="btn bp" onclick="saveZoneModal()">저장</button>
           <button class="btn bd" onclick="deleteZoneModal()">구역 삭제</button>
@@ -1368,6 +1391,7 @@
         dsrcKey = null,
         zid = 10;
       let paintMode = false, paintStatus = "used", paintDragging = false, paintChanged = new Set();
+      let textMode = false, textDragStart = null;
       let selKeys = new Set();
 
       // ── Mobile nav ───────────────────────────────────────
@@ -1484,6 +1508,7 @@
         c.appendChild(ab);
         updateStatus();
         if (isMobile()) renderMobileZoneList();
+        renderTextBoxes();
       }
 
       function buildZone(z) {
@@ -1491,6 +1516,9 @@
         el.className = "zone" + (z.collapsed ? " collapsed" : "");
         el.id = `zone-${z.id}`;
         el.dataset.zid = z.id;
+        if (z.borderColor || z.borderWidth) {
+          el.style.border = `${z.borderWidth || 1}px solid ${z.borderColor || "#c5c6cc"}`;
+        }
         el.setAttribute("draggable", true);
         el.addEventListener("dragstart", (e) => {
           if (e.target.classList.contains("cell")) return;
@@ -1940,6 +1968,8 @@
         document.getElementById("zeCols").value = z.cols;
         document.getElementById("zeCellW").value = z.cellW || 56;
         document.getElementById("zeCellH").value = z.cellH || 56;
+        document.getElementById("zeBorderColor").value = z.borderColor || "#c5c6cc";
+        document.getElementById("zeBorderWidth").value = z.borderWidth || 1;
         document.getElementById("zoneModal").classList.add("show");
       }
 
@@ -1975,6 +2005,8 @@
         const ch = parseInt(document.getElementById("zeCellH").value);
         if (cw >= 30 && cw <= 120) z.cellW = cw;
         if (ch >= 30 && ch <= 120) z.cellH = ch;
+        z.borderColor = document.getElementById("zeBorderColor").value;
+        z.borderWidth = parseInt(document.getElementById("zeBorderWidth").value) || 1;
         renderZones();
         saveLS();
         closeModal("zoneModal");
@@ -2275,9 +2307,10 @@
         const localMeta = {
           zoneMeta: {},
           cellMeta: {},
+          textBoxes: W.textBoxes || [],
         };
         W.zones.forEach((z) => {
-          localMeta.zoneMeta[z.code] = { cellW: z.cellW, cellH: z.cellH };
+          localMeta.zoneMeta[z.code] = { cellW: z.cellW, cellH: z.cellH, borderColor: z.borderColor, borderWidth: z.borderWidth };
         });
         Object.entries(W.cells || {}).forEach(([k, c]) => {
           if (c && (c.borderColor || c.borderWidth || c.annotation)) {
@@ -2308,11 +2341,12 @@
               // 로컬 메타 복원
               W.zones.forEach((z) => {
                 const m = localMeta.zoneMeta[z.code];
-                if (m) { z.cellW = m.cellW; z.cellH = m.cellH; }
+                if (m) { z.cellW = m.cellW; z.cellH = m.cellH; z.borderColor = m.borderColor; z.borderWidth = m.borderWidth; }
               });
               Object.entries(localMeta.cellMeta).forEach(([k, m]) => {
                 if (W.cells[k]) Object.assign(W.cells[k], m);
               });
+              W.textBoxes = localMeta.textBoxes;
               renderTitle();
               renderZones();
             }
@@ -2478,6 +2512,146 @@
           if (arrow) arrow.textContent = "▼";
         }
       }
+
+      // ─── 텍스트 박스 ───
+      function toggleTextMode() {
+        textMode = !textMode;
+        const btn = document.getElementById("textModeBtn");
+        if (textMode) {
+          document.body.classList.add("text-mode");
+          if (btn) btn.classList.add("active-tool");
+          // 페인트 모드 OFF
+          if (paintMode) togglePaintMode();
+        } else {
+          document.body.classList.remove("text-mode");
+          if (btn) btn.classList.remove("active-tool");
+        }
+      }
+
+      function renderTextBoxes() {
+        const c = document.getElementById("zonesContainer");
+        c.querySelectorAll(".text-box").forEach((el) => el.remove());
+        if (!W.textBoxes) W.textBoxes = [];
+        W.textBoxes.forEach((tb) => {
+          const div = document.createElement("div");
+          div.className = "text-box";
+          div.dataset.tbid = tb.id;
+          div.style.left = tb.x + "px";
+          div.style.top = tb.y + "px";
+          div.style.width = tb.width + "px";
+          div.style.height = tb.height + "px";
+          div.style.fontSize = (tb.fontSize || 14) + "px";
+          div.style.color = tb.color || "#333";
+          div.style.background = tb.bgColor || "rgba(255,255,200,0.9)";
+          div.textContent = tb.text;
+
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const v = prompt("텍스트 수정", tb.text);
+            if (v === null) return;
+            tb.text = v;
+            div.textContent = v;
+            saveLS();
+          });
+
+          div.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!confirm("텍스트 박스를 삭제할까요?")) return;
+            W.textBoxes = W.textBoxes.filter((x) => x.id !== tb.id);
+            div.remove();
+            saveLS();
+          });
+
+          div.addEventListener("mousedown", (e) => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            const startX = e.clientX - tb.x;
+            const startY = e.clientY - tb.y;
+            function onMove(ev) {
+              tb.x = ev.clientX - startX;
+              tb.y = ev.clientY - startY;
+              div.style.left = tb.x + "px";
+              div.style.top = tb.y + "px";
+            }
+            function onUp() {
+              document.removeEventListener("mousemove", onMove);
+              document.removeEventListener("mouseup", onUp);
+              saveLS();
+            }
+            document.addEventListener("mousemove", onMove);
+            document.addEventListener("mouseup", onUp);
+          });
+
+          c.appendChild(div);
+        });
+      }
+
+      // ─── 캔버스 텍스트 드래그 ───
+      (function () {
+        let dragRect = null;
+        const canvas = document.getElementById("canvas");
+
+        canvas.addEventListener("mousedown", (e) => {
+          if (!textMode || e.button !== 0) return;
+          const c = document.getElementById("zonesContainer");
+          const cr = c.getBoundingClientRect();
+          textDragStart = { x: e.clientX - cr.left, y: e.clientY - cr.top };
+          dragRect = document.createElement("div");
+          dragRect.className = "text-drag-rect";
+          dragRect.style.left = textDragStart.x + "px";
+          dragRect.style.top = textDragStart.y + "px";
+          dragRect.style.width = "0px";
+          dragRect.style.height = "0px";
+          c.appendChild(dragRect);
+          e.preventDefault();
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (!textMode || !dragRect || !textDragStart) return;
+          const c = document.getElementById("zonesContainer");
+          const cr = c.getBoundingClientRect();
+          const cx = e.clientX - cr.left;
+          const cy = e.clientY - cr.top;
+          const x = Math.min(cx, textDragStart.x);
+          const y = Math.min(cy, textDragStart.y);
+          const w = Math.abs(cx - textDragStart.x);
+          const h = Math.abs(cy - textDragStart.y);
+          dragRect.style.left = x + "px";
+          dragRect.style.top = y + "px";
+          dragRect.style.width = w + "px";
+          dragRect.style.height = h + "px";
+        });
+
+        canvas.addEventListener("mouseup", (e) => {
+          if (!textMode || !dragRect || !textDragStart) return;
+          const c = document.getElementById("zonesContainer");
+          const cr = c.getBoundingClientRect();
+          const cx = e.clientX - cr.left;
+          const cy = e.clientY - cr.top;
+          const x = Math.min(cx, textDragStart.x);
+          const y = Math.min(cy, textDragStart.y);
+          const w = Math.abs(cx - textDragStart.x);
+          const h = Math.abs(cy - textDragStart.y);
+          dragRect.remove();
+          dragRect = null;
+          textDragStart = null;
+          if (w < 30 || h < 20) return;
+          const text = prompt("텍스트를 입력하세요");
+          if (!text) return;
+          if (!W.textBoxes) W.textBoxes = [];
+          W.textBoxes.push({
+            id: "tb_" + Date.now(),
+            x, y, width: w, height: h,
+            text,
+            fontSize: 14,
+            color: "#333",
+            bgColor: "rgba(255,255,200,0.9)",
+          });
+          renderTextBoxes();
+          saveLS();
+        });
+      })();
 
       // ─── 페인트 모드 ───
       function togglePaintMode() {
