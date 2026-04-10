@@ -2274,21 +2274,26 @@
             body: JSON.stringify(W),
           });
           if (r.ok) {
-            document.getElementById("lastSaved").textContent =
-              new Date().toLocaleTimeString("ko-KR");
-            const ind = document.getElementById("autoSaveIndicator");
-            if (ind) { ind.textContent = "✅ 자동 저장됨"; ind.className = "saved"; }
             clearTimeout(_autoSaveTimer);
             _autoSaveTimer = null;
+            let metaOk = false;
             try {
               const mr = await fetch(`${API}/api/map-layout/editor-meta`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(buildEditorMeta()),
               });
-              if (mr.ok) showToast("서버에 저장 완료");
-              else showToast("도면 저장됨, 에디터 설정 저장 실패");
-            } catch { showToast("도면 저장됨, 에디터 설정 저장 실패"); }
+              metaOk = mr.ok;
+            } catch {}
+            const ind = document.getElementById("autoSaveIndicator");
+            if (metaOk) {
+              document.getElementById("lastSaved").textContent = new Date().toLocaleTimeString("ko-KR");
+              if (ind) { ind.textContent = "✅ 저장 완료"; ind.className = "saved"; }
+              showToast("서버에 저장 완료");
+            } else {
+              if (ind) { ind.textContent = "⚠ 설정 저장 실패"; ind.className = ""; }
+              showToast("도면 저장됨, 에디터 설정(텍스트/테두리/크기) 저장 실패");
+            }
           } else {
             const err = await r.json().catch(() => null);
             if (err && err.detail && err.detail.affected_cells) {
