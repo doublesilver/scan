@@ -134,11 +134,7 @@ async def add_level_product(level_id: int, request: Request):
             memo=body.get("memo", ""),
         )
 
-    if result is None:
-        raise HTTPException(status_code=404, detail="level not found")
-
-    if master_id:
-        async with _zone_lock:
+        if result is not None and master_id:
             level_row = await db.execute_fetchall(
                 "SELECT cl.cell_id FROM cell_level cl WHERE cl.id = ?", (level_id,)
             )
@@ -153,6 +149,8 @@ async def add_level_product(level_id: int, request: Request):
                     ci = cell_info[0]
                     await ws.sync_product_location(db, master_id, ci[2], ci[0], ci[1], ci[3])
 
+    if result is None:
+        raise HTTPException(status_code=404, detail="level not found")
     return result
 
 
