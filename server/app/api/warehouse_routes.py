@@ -39,9 +39,13 @@ async def create_zone(request: Request):
 @router.patch("/zones/{zone_id}")
 async def update_zone(zone_id: int, request: Request):
     body = await request.json()
+    kwargs = {}
+    for k in ("code", "name", "rows", "cols", "sort_order"):
+        if k in body:
+            kwargs[k] = body[k]
     db = await get_db()
     async with _zone_lock:
-        result = await ws.update_zone(db, zone_id, **body)
+        result = await ws.update_zone(db, zone_id, **kwargs)
     if result is None:
         raise HTTPException(status_code=404, detail="zone not found")
     return result
