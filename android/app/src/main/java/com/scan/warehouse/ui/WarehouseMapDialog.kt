@@ -123,7 +123,8 @@ object WarehouseMapDialog {
             })
         }
 
-        val scrollView = android.widget.ScrollView(context).apply { addView(layout) }
+        val hScroll = android.widget.HorizontalScrollView(context).apply { addView(layout) }
+        val scrollView = android.widget.ScrollView(context).apply { addView(hScroll) }
 
         dialog = AlertDialog.Builder(context)
             .setView(scrollView)
