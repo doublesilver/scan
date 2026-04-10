@@ -132,6 +132,34 @@ async def get_map_layout():
     return await ws.get_layout_as_json(read_db)
 
 
+@router.get("/map-layout/editor-meta")
+async def get_editor_meta():
+    db = await get_read_db()
+    row = await db.execute_fetchall("SELECT data FROM map_layout WHERE id = 2")
+    if row:
+        import json
+
+        return json.loads(row[0][0])
+    return {}
+
+
+@router.post("/map-layout/editor-meta")
+async def save_editor_meta(request: Request):
+    import json
+
+    body = await request.json()
+    data_json = json.dumps(body, ensure_ascii=False)
+    db = await get_db()
+    async with _map_layout_lock:
+        await db.execute(
+            "INSERT INTO map_layout (id, data, updated_at) VALUES (2, ?, datetime('now')) "
+            "ON CONFLICT(id) DO UPDATE SET data = ?, updated_at = datetime('now')",
+            (data_json, data_json),
+        )
+        await db.commit()
+    return {"status": "ok"}
+
+
 @router.post("/map-layout")
 async def save_map_layout(request: Request):
     body = await request.json()

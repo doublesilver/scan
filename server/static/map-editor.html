@@ -2280,6 +2280,11 @@
             if (ind) { ind.textContent = "✅ 자동 저장됨"; ind.className = "saved"; }
             clearTimeout(_autoSaveTimer);
             _autoSaveTimer = null;
+            fetch(`${API}/api/map-layout/editor-meta`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(buildEditorMeta()),
+            }).catch(() => {});
             showToast("서버에 저장 완료");
           } else {
             const err = await r.json().catch(() => null);
@@ -2303,56 +2308,61 @@
       }
 
       async function loadFromServer() {
-        // 로컬 전용 데이터 백업
-        const localMeta = {
-          zoneMeta: {},
-          cellMeta: {},
-          textBoxes: W.textBoxes || [],
-        };
-        W.zones.forEach((z) => {
-          localMeta.zoneMeta[z.code] = { cellW: z.cellW, cellH: z.cellH, borderColor: z.borderColor, borderWidth: z.borderWidth };
-        });
-        Object.entries(W.cells || {}).forEach(([k, c]) => {
-          if (c && (c.borderColor || c.borderWidth || c.annotation)) {
-            localMeta.cellMeta[k] = { borderColor: c.borderColor, borderWidth: c.borderWidth, annotation: c.annotation };
-          }
-        });
         try {
-          const r = await fetch(`${API}/api/map-layout`);
-          if (r.ok) {
-            const d = await r.json();
+          const [layoutRes, metaRes] = await Promise.all([
+            fetch(`${API}/api/map-layout`),
+            fetch(`${API}/api/map-layout/editor-meta`),
+          ]);
+          let meta = {};
+          if (metaRes.ok) meta = await metaRes.json().catch(() => ({}));
+          if (layoutRes.ok) {
+            const d = await layoutRes.json();
             if (d && d.zones) {
-              // 서버가 id를 내려주지 않는 경우(초기 DEFAULT_LAYOUT 등) 안전하게 주입
               let maxNum = 0;
               (d.zones || []).forEach((z) => {
                 const m = /^z(\d+)$/.exec(String(z.id ?? ""));
                 if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
               });
-              (d.zones || []).forEach((z, i) => {
-                if (z.id == null || z.id === "") {
-                  maxNum += 1;
-                  z.id = `z${maxNum}`;
-                } else {
-                  z.id = String(z.id);
-                }
+              (d.zones || []).forEach((z) => {
+                if (z.id == null || z.id === "") { maxNum += 1; z.id = `z${maxNum}`; }
+                else { z.id = String(z.id); }
               });
               zid = Math.max(zid || 0, maxNum);
               W = d;
-              // 로컬 메타 복원
+              // 서버 메타 복원
+              const zm = meta.zoneMeta || {};
               W.zones.forEach((z) => {
-                const m = localMeta.zoneMeta[z.code];
+                const m = zm[z.code];
                 if (m) { z.cellW = m.cellW; z.cellH = m.cellH; z.borderColor = m.borderColor; z.borderWidth = m.borderWidth; }
               });
-              Object.entries(localMeta.cellMeta).forEach(([k, m]) => {
+              const cm = meta.cellMeta || {};
+              Object.entries(cm).forEach(([k, m]) => {
                 if (W.cells[k]) Object.assign(W.cells[k], m);
+                else if (m.annotation) { W.cells[k] = W.cells[k] || {}; Object.assign(W.cells[k], m); }
               });
-              W.textBoxes = localMeta.textBoxes;
+              W.textBoxes = meta.textBoxes || [];
               renderTitle();
               renderZones();
             }
           }
         } catch {}
         renderZones();
+      }
+
+      function buildEditorMeta() {
+        const zm = {};
+        (W.zones || []).forEach((z) => {
+          if (z.cellW || z.cellH || z.borderColor || z.borderWidth) {
+            zm[z.code] = { cellW: z.cellW, cellH: z.cellH, borderColor: z.borderColor, borderWidth: z.borderWidth };
+          }
+        });
+        const cm = {};
+        Object.entries(W.cells || {}).forEach(([k, c]) => {
+          if (c && (c.borderColor || c.borderWidth || c.annotation)) {
+            cm[k] = { borderColor: c.borderColor, borderWidth: c.borderWidth, annotation: c.annotation };
+          }
+        });
+        return { zoneMeta: zm, cellMeta: cm, textBoxes: W.textBoxes || [] };
       }
 
       function exportJSON() {
