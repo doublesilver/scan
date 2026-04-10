@@ -9,6 +9,7 @@ from PIL import Image
 from app.db.database import get_db, get_read_db
 from app.db.database import write_lock as _map_layout_lock
 from app.services import warehouse_service as ws
+from app.services.map_layout_service import DEFAULT_LAYOUT
 
 router = APIRouter(prefix="/api")
 

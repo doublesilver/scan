@@ -79,9 +79,13 @@ async def get_cell_detail(cell_id: int):
 @router.patch("/cells/{cell_id}")
 async def update_cell(cell_id: int, request: Request):
     body = await request.json()
+    kwargs = {}
+    for k in ("label", "status", "bg_color"):
+        if k in body:
+            kwargs[k] = body[k]
     db = await get_db()
     async with _zone_lock:
-        result = await ws.update_cell(db, cell_id, **body)
+        result = await ws.update_cell(db, cell_id, **kwargs)
     if result is None:
         raise HTTPException(status_code=404, detail="cell not found")
     return result
@@ -134,19 +138,20 @@ async def add_level_product(level_id: int, request: Request):
         raise HTTPException(status_code=404, detail="level not found")
 
     if master_id:
-        level_row = await db.execute_fetchall(
-            "SELECT cl.cell_id FROM cell_level cl WHERE cl.id = ?", (level_id,)
-        )
-        if level_row:
-            cell_info = await db.execute_fetchall(
-                "SELECT wc.row, wc.col, wz.code, wz.cols "
-                "FROM warehouse_cell wc JOIN warehouse_zone wz ON wc.zone_id = wz.id "
-                "WHERE wc.id = ?",
-                (level_row[0][0],),
+        async with _zone_lock:
+            level_row = await db.execute_fetchall(
+                "SELECT cl.cell_id FROM cell_level cl WHERE cl.id = ?", (level_id,)
             )
-            if cell_info:
-                ci = cell_info[0]
-                await ws.sync_product_location(db, master_id, ci[2], ci[0], ci[1], ci[3])
+            if level_row:
+                cell_info = await db.execute_fetchall(
+                    "SELECT wc.row, wc.col, wz.code, wz.cols "
+                    "FROM warehouse_cell wc JOIN warehouse_zone wz ON wc.zone_id = wz.id "
+                    "WHERE wc.id = ?",
+                    (level_row[0][0],),
+                )
+                if cell_info:
+                    ci = cell_info[0]
+                    await ws.sync_product_location(db, master_id, ci[2], ci[0], ci[1], ci[3])
 
     return result
 
