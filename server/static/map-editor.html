@@ -1011,6 +1011,65 @@
           font-size: 13px;
         }
       }
+      /* ── 좌표 셀 ─────────────────────────────────────── */
+      .coord {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        color: #999;
+        cursor: default;
+        user-select: none;
+        pointer-events: none;
+      }
+      /* ── 자동 저장 인디케이터 ────────────────────────── */
+      #autoSaveIndicator {
+        font-size: 11px;
+        color: var(--on-surface-variant);
+        transition: color 0.3s;
+      }
+      #autoSaveIndicator.saved {
+        color: var(--success);
+      }
+      /* ── 통계 대시보드 ───────────────────────────────── */
+      #statsBar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+      }
+      .dot-used   { background: #2e7d32; }
+      .dot-full   { background: #c62828; }
+      .dot-aisle  { background: #2a2a2a; }
+      .dot-table  { background: #5a3e28; }
+      .dot-pc     { background: #1e3a5f; }
+      .dot-empty  { background: #bbb; border: 1px solid #999; }
+      body.dark { --surface:#1a1a2e; --surface-low:#16213e; --surface-lowest:#0f3460; --on-surface:#e0e0e0; --on-surface-variant:#b0b0b0; --outline-variant:#444; }
+      body.dark .cell { background:var(--surface-lowest); border-color:var(--outline-variant); color:var(--on-surface); }
+      body.dark .cell:hover { background:var(--surface-low); }
+      body.dark .cell.sused { background:#1b3d1e; border-color:#4caf50; }
+      body.dark .cell.sfull { background:#3d1a1a; border-color:#ef5350; }
+      body.dark .zone { background:var(--surface-lowest); border-color:var(--outline-variant); }
+      body.dark #statusBar { background:var(--surface-low); border-color:var(--outline-variant); }
+      body.dark #darkModeBtn { background:var(--secondary); color:#fff; }
+      .collapse-arrow { font-size:11px; cursor:pointer; color:var(--on-surface-variant); user-select:none; padding:2px 4px; }
+      .collapse-arrow:hover { color:var(--secondary); }
+      .zone.collapsed .grid, .zone.collapsed .add-row-btn { display:none; }
+      body.paint-mode { cursor:crosshair; }
+      body.paint-mode .cell { cursor:crosshair; }
+      body.paint-mode .cell:hover { outline:2px dashed var(--secondary); outline-offset:-2px; }
+      .cell.painting { animation:paint-flash 0.25s ease-out; }
+      @keyframes paint-flash { 0%{filter:brightness(1.6)} 100%{filter:brightness(1)} }
+      .tb.active-tool { background:var(--secondary)!important; color:#fff!important; }
+      .cell.selected { border-color:#1976d2!important; background:rgba(25,118,210,0.12)!important; box-shadow:0 0 0 2px rgba(25,118,210,0.35)!important; }
+      body.dark .cell.selected { background:rgba(25,118,210,0.25)!important; }
+      #selStatus { color:rgba(255,255,255,0.75); font-size:12px; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.1); }
     </style>
   </head>
   <body>
@@ -1031,6 +1090,17 @@
       <div class="sep"></div>
       <button class="tb" onclick="undo()" title="Ctrl+Z">↩ 실행취소</button>
       <button class="tb" onclick="redo()" title="Ctrl+Y">↪ 다시실행</button>
+      <div class="sep"></div>
+      <button id="darkModeBtn" class="tb" onclick="toggleDark()">☾ 다크</button>
+      <button id="paintModeBtn" class="tb" onclick="togglePaintMode()">🖌 페인트</button>
+      <span id="paintCtrl" style="display:none;align-items:center;gap:4px">
+        <select id="paintStatusSel" class="tb" onchange="paintStatus=this.value">
+          <option value="used">사용중</option><option value="full">만석</option>
+          <option value="aisle">통로</option><option value="table">테이블</option>
+          <option value="pc">물류PC</option><option value="empty">빈칸</option>
+        </select>
+      </span>
+      <span id="selStatus"></span>
       <div class="sep"></div>
       <button class="tb" onclick="zoom(-0.1)">🔍-</button>
       <span id="zoomLabel">100%</span>
@@ -1066,9 +1136,17 @@
         <span id="sstatus">확인 중...</span></span
       >
       <span>전체: <span id="totalCells">0</span>개</span>
-      <span>사용 중: <span id="usedCells">0</span>개</span>
+      <span id="autoSaveIndicator">-</span>
       <span>마지막 저장: <span id="lastSaved">-</span></span>
       <span>줌: <span id="zoomStatus">100%</span></span>
+      <div id="statsBar">
+        <span class="stat-item"><span class="dot dot-used"></span>사용중: <span id="st-used">0</span></span>
+        <span class="stat-item"><span class="dot dot-full"></span>가득참: <span id="st-full">0</span></span>
+        <span class="stat-item"><span class="dot dot-aisle"></span>통로: <span id="st-aisle">0</span></span>
+        <span class="stat-item"><span class="dot dot-table"></span>테이블: <span id="st-table">0</span></span>
+        <span class="stat-item"><span class="dot dot-pc"></span>물류PC: <span id="st-pc">0</span></span>
+        <span class="stat-item"><span class="dot dot-empty"></span>빈칸: <span id="st-empty">0</span></span>
+      </div>
     </div>
 
     <!-- Cell modal -->
@@ -1254,6 +1332,8 @@
         dzid = null,
         dsrcKey = null,
         zid = 10;
+      let paintMode = false, paintStatus = "used", paintDragging = false, paintChanged = new Set();
+      let selKeys = new Set();
 
       // ── Mobile nav ───────────────────────────────────────
       let mobileDepth = 0,
@@ -1373,7 +1453,8 @@
 
       function buildZone(z) {
         const el = document.createElement("div");
-        el.className = "zone";
+        el.className = "zone" + (z.collapsed ? " collapsed" : "");
+        el.id = `zone-${z.id}`;
         el.dataset.zid = z.id;
         el.setAttribute("draggable", true);
         el.addEventListener("dragstart", (e) => {
@@ -1407,6 +1488,7 @@
         });
         el.innerHTML = `
     <div class="zone-header">
+      <span class="collapse-arrow" onclick="toggleZoneCollapse('${z.id}')">${z.collapsed?'▶':'▼'}</span>
       <span class="zone-title" onclick="editZone('${z.id}')">${z.name}</span>
       <span class="zbadge" onclick="editZone('${z.id}')">${z.code}구역</span>
       <div class="za">
@@ -1417,12 +1499,30 @@
         <button class="zab del" onclick="delZone('${z.id}')">삭제</button>
       </div>
     </div>
-    <div class="grid" id="grid-${z.id}" style="grid-template-columns:repeat(${z.cols},56px);grid-auto-rows:56px"></div>
+    <div class="grid" id="grid-${z.id}" style="grid-template-columns:24px repeat(${z.cols},56px);grid-auto-rows:56px"></div>
     <button class="add-row-btn" onclick="zrow('${z.id}',1)">+</button>`;
         const grid = el.querySelector(`#grid-${z.id}`);
-        for (let r = 1; r <= z.rows; r++)
+        // 열 번호 헤더 행 (모서리 빈칸 + 열 번호들)
+        const corner = document.createElement("div");
+        corner.className = "coord";
+        corner.style.height = "24px";
+        grid.appendChild(corner);
+        for (let cl = 1; cl <= z.cols; cl++) {
+          const ch = document.createElement("div");
+          ch.className = "coord";
+          ch.style.height = "24px";
+          ch.textContent = cl;
+          grid.appendChild(ch);
+        }
+        // 각 행: 행 번호 + 셀들
+        for (let r = 1; r <= z.rows; r++) {
+          const rh = document.createElement("div");
+          rh.className = "coord";
+          rh.textContent = r;
+          grid.appendChild(rh);
           for (let cl = 1; cl <= z.cols; cl++)
             grid.appendChild(buildCell(z, r, cl));
+        }
         return el;
       }
 
@@ -1442,7 +1542,14 @@
         el.dataset.ck = key;
         el.setAttribute("draggable", true);
         applyCellEl(el, key, W.cells[key] || {});
-        el.addEventListener("click", () => openCellModal(key));
+        el.addEventListener("click", (e) => {
+          if (paintMode) return;
+          if (e.ctrlKey || e.metaKey) { toggleSelKey(key, el); return; }
+          if (selKeys.size > 0) { clearSelKeys(); return; }
+          openCellModal(key);
+        });
+        el.addEventListener("mousedown", (e) => { if (paintMode && e.button===0) { paintDragging=true; paintChanged.clear(); applyPaint(key); } });
+        el.addEventListener("mouseover", () => { if (paintMode && paintDragging) applyPaint(key); });
         el.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           showCtx(e, key);
@@ -1528,6 +1635,20 @@
           el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
     <span class="clabel">${d.label || "빈 선반"}</span>`;
         }
+        // 셀 메모 툴팁
+        const statusLabel = { used: "사용 중", full: "가득 참", aisle: "통로", table: "테이블", pc: "물류PC", empty: "빈 선반" };
+        const tipLines = [];
+        if (d.label || d.name) tipLines.push(d.label || d.name);
+        tipLines.push(statusLabel[d.status] || "빈 선반");
+        if (d.memo) tipLines.push("메모: " + d.memo);
+        if (d.levels && d.levels.length) {
+          d.levels.forEach((lv) => {
+            const lname = lv.label || "";
+            const litem = lv.itemLabel || "";
+            if (lname || litem) tipLines.push((lname ? lname + ": " : "") + litem);
+          });
+        }
+        el.title = tipLines.join("\n");
       }
 
       function refreshCell(key) {
@@ -2018,11 +2139,22 @@
         renderZones();
       }
 
+      // ── Auto-save ─────────────────────────────────────────
+      let _autoSaveTimer = null;
+
+      function scheduleAutoSave() {
+        const ind = document.getElementById("autoSaveIndicator");
+        if (ind) { ind.textContent = "⏳ 미저장 변경"; ind.className = ""; }
+        clearTimeout(_autoSaveTimer);
+        _autoSaveTimer = setTimeout(() => saveAll(), 30000);
+      }
+
       // ── Save/Load ─────────────────────────────────────────
       function saveLS() {
         try {
           localStorage.setItem("wmapdata", JSON.stringify(W));
         } catch (e) {}
+        scheduleAutoSave();
       }
       function loadLS() {
         try {
@@ -2048,6 +2180,10 @@
           if (r.ok) {
             document.getElementById("lastSaved").textContent =
               new Date().toLocaleTimeString("ko-KR");
+            const ind = document.getElementById("autoSaveIndicator");
+            if (ind) { ind.textContent = "✅ 자동 저장됨"; ind.className = "saved"; }
+            clearTimeout(_autoSaveTimer);
+            _autoSaveTimer = null;
             showToast("서버에 저장 완료");
           } else {
             const err = await r.json().catch(() => null);
@@ -2151,12 +2287,26 @@
       }
 
       function updateStatus() {
-        let total = 0,
-          used = 0;
+        let total = 0;
         W.zones.forEach((z) => (total += z.rows * z.cols));
-        used = Object.values(W.cells).filter((d) => d && d.label).length;
         document.getElementById("totalCells").textContent = total;
-        document.getElementById("usedCells").textContent = used;
+
+        const cnt = { used: 0, full: 0, aisle: 0, table: 0, pc: 0, empty: 0 };
+        Object.values(W.cells).forEach((d) => {
+          if (!d) return;
+          const st = d.status || "empty";
+          if (cnt[st] !== undefined) cnt[st]++;
+          else cnt.empty++;
+        });
+        // 셀 데이터가 없는 슬롯 = 빈칸
+        cnt.empty += total - Object.values(W.cells).filter(Boolean).length;
+
+        document.getElementById("st-used").textContent  = cnt.used;
+        document.getElementById("st-full").textContent  = cnt.full;
+        document.getElementById("st-aisle").textContent = cnt.aisle;
+        document.getElementById("st-table").textContent = cnt.table;
+        document.getElementById("st-pc").textContent    = cnt.pc;
+        document.getElementById("st-empty").textContent = Math.max(0, cnt.empty);
       }
 
       function showToast(msg) {
@@ -2212,7 +2362,147 @@
         if (!document.getElementById("ctxMenu").contains(e.target)) hideCtx();
       });
 
+      // ─── 다크모드 ───
+      function toggleDark() {
+        const isDark = document.body.classList.toggle("dark");
+        localStorage.setItem("darkMode", isDark ? "1" : "0");
+        const btn = document.getElementById("darkModeBtn");
+        if (btn) btn.textContent = isDark ? "☀ 라이트" : "☾ 다크";
+      }
+      if (localStorage.getItem("darkMode") === "1") {
+        document.body.classList.add("dark");
+      }
+
+      // ─── 구역 접기 ───
+      function toggleZoneCollapse(zoneId) {
+        const z = W.zones.find((x) => x.id === zoneId);
+        if (!z) return;
+        z.collapsed = !z.collapsed;
+        saveLS();
+        const zoneEl = document.getElementById(`zone-${zoneId}`);
+        if (!zoneEl) return;
+        if (z.collapsed) {
+          zoneEl.classList.add("collapsed");
+          const arrow = zoneEl.querySelector(".collapse-arrow");
+          if (arrow) arrow.textContent = "▶";
+        } else {
+          zoneEl.classList.remove("collapsed");
+          const arrow = zoneEl.querySelector(".collapse-arrow");
+          if (arrow) arrow.textContent = "▼";
+        }
+      }
+
+      // ─── 페인트 모드 ───
+      function togglePaintMode() {
+        paintMode = !paintMode;
+        const btn = document.getElementById("paintModeBtn");
+        const ctrl = document.getElementById("paintCtrl");
+        if (paintMode) {
+          document.body.classList.add("paint-mode");
+          if (btn) btn.classList.add("active-tool");
+          if (ctrl) ctrl.style.display = "flex";
+          clearSelKeys();
+          showToast("페인트 모드 ON — 셀을 드래그해 상태를 칠하세요");
+        } else {
+          document.body.classList.remove("paint-mode");
+          if (btn) btn.classList.remove("active-tool");
+          if (ctrl) ctrl.style.display = "none";
+          showToast("페인트 모드 OFF");
+        }
+      }
+      function applyPaint(key) {
+        if (paintChanged.has(key)) return;
+        paintChanged.add(key);
+        if (!W.cells[key]) W.cells[key] = {};
+        W.cells[key].status = paintStatus;
+        const el = document.getElementById(`cell-${key}`);
+        if (el) el.classList.add("painting");
+        refreshCell(key);
+        saveLS();
+      }
+      document.addEventListener("mouseup", () => {
+        if (!paintDragging) return;
+        paintDragging = false;
+        if (paintChanged.size > 0) {
+          pushH();
+          document.querySelectorAll(".cell.painting").forEach((e) => e.classList.remove("painting"));
+          updateStatus();
+          showToast(`${paintChanged.size}개 셀에 '${paintStatus}' 적용됨`);
+        }
+        paintChanged.clear();
+      });
+
+      // ─── 다중 선택 ───
+      function toggleSelKey(key, el) {
+        if (selKeys.has(key)) { selKeys.delete(key); if (el) el.classList.remove("selected"); }
+        else { selKeys.add(key); if (el) el.classList.add("selected"); }
+        const bar = document.getElementById("selStatus");
+        if (bar) bar.textContent = selKeys.size > 0 ? `${selKeys.size}개 선택됨` : "";
+        if (selKeys.size >= 2) openBatchModal();
+      }
+      function clearSelKeys() {
+        selKeys.forEach((k) => { const e = document.getElementById(`cell-${k}`); if (e) e.classList.remove("selected"); });
+        selKeys.clear();
+        const bar = document.getElementById("selStatus");
+        if (bar) bar.textContent = "";
+      }
+      function openBatchModal() {
+        const m = document.getElementById("batchEditModal");
+        if (m) { m.style.display = "flex"; document.getElementById("batchModalTitle").textContent = `${selKeys.size}개 셀 일괄 편집`; }
+      }
+      function closeBatchModal() { const m = document.getElementById("batchEditModal"); if (m) m.style.display = "none"; }
+      function batchApplyFromModal() {
+        const applyS = document.getElementById("batchApplyStatus").checked;
+        const applyC = document.getElementById("batchApplyColor").checked;
+        if (!applyS && !applyC) { showToast("적용할 항목을 선택하세요"); return; }
+        pushH();
+        selKeys.forEach((key) => {
+          if (!W.cells[key]) W.cells[key] = {};
+          if (applyS) W.cells[key].status = document.getElementById("batchStatus").value;
+          if (applyC) W.cells[key].bgColor = document.getElementById("batchColor").value;
+        });
+        renderZones();
+        selKeys.forEach((key) => { const el = document.getElementById(`cell-${key}`); if (el) el.classList.add("selected"); });
+        updateStatus(); saveLS();
+        showToast(`${selKeys.size}개 셀 일괄 편집 완료`);
+        closeBatchModal();
+      }
+      function batchClear() {
+        if (!confirm(`${selKeys.size}개 셀을 모두 비우시겠습니까?`)) return;
+        pushH();
+        selKeys.forEach((key) => { delete W.cells[key]; });
+        renderZones(); updateStatus(); saveLS();
+        showToast(`${selKeys.size}개 셀 비움`);
+        clearSelKeys(); closeBatchModal();
+      }
+
       init();
+      if (localStorage.getItem("darkMode") === "1") {
+        const btn = document.getElementById("darkModeBtn");
+        if (btn) btn.textContent = "☀ 라이트";
+      }
     </script>
+    <div id="batchEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:var(--surface-lowest);border-radius:12px;padding:24px;min-width:280px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-weight:700;font-size:15px;color:var(--on-surface)" id="batchModalTitle">일괄 편집</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+          <input type="checkbox" id="batchApplyStatus" checked> 상태 변경
+          <select id="batchStatus" style="padding:4px 8px;border-radius:4px;border:1px solid var(--outline-variant);margin-left:4px;">
+            <option value="used">사용중</option><option value="full">만석</option>
+            <option value="aisle">통로</option><option value="table">테이블</option>
+            <option value="pc">물류PC</option><option value="empty">빈칸</option>
+          </select>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+          <input type="checkbox" id="batchApplyColor"> 배경색 변경
+          <input type="color" id="batchColor" value="#1e2635" style="margin-left:4px;width:36px;height:24px;border:none;cursor:pointer;border-radius:4px;">
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button onclick="batchClear()" style="padding:5px 12px;background:#c62828;color:#fff;border:none;border-radius:6px;cursor:pointer;">일괄 비우기</button>
+          <button onclick="closeBatchModal()" style="padding:5px 12px;background:var(--surface-low);border:1px solid var(--outline-variant);border-radius:6px;cursor:pointer;">취소</button>
+          <button onclick="batchApplyFromModal()" style="padding:5px 12px;background:var(--secondary);color:#fff;border:none;border-radius:6px;cursor:pointer;">적용</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
