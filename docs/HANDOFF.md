@@ -230,7 +230,7 @@ APK 새 버전 생성 시:
 
 ```bash
 # 프로젝트 디렉토리
-cd /Users/leeeunseok/Projects/scan/android
+cd <scan-저장소-경로>/android
 
 # Live 빌드
 ./gradlew assembleLiveRelease

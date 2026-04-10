@@ -170,13 +170,15 @@ class MainActivity : BaseActivity() {
     }
 
     private fun createMapGrid(zone: MapZone, mapLayout: MapLayout?, floor: Int, density: Float): LinearLayout {
+        // 셀 크기를 고정해서 구역마다 col 폭이 달라지지 않게 함 — 통로가 같은 x 위치에 정렬됨
+        val cellSize = (36 * density).toInt()
         val margin = (2 * density).toInt()
 
         val grid = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding((8 * density).toInt(), 0, (8 * density).toInt(), (4 * density).toInt())
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
@@ -185,8 +187,8 @@ class MainActivity : BaseActivity() {
             val rowLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    (40 * density).toInt()
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
             }
             for (col in 1..zone.cols) {
@@ -195,11 +197,9 @@ class MainActivity : BaseActivity() {
                 val cellLabel = cellData?.label.orEmpty()
                 val cellStatus = cellData?.status ?: "empty"
 
-                // 주변 같은 status 여부 — 연결 표시용
+                // 통로 세로 연결 여부만 확인 — 테이블/PC는 병합 안 함
                 val aboveStatus = mapLayout?.cells?.get("${zone.code}-${row - 1}-$col")?.status
                 val belowStatus = mapLayout?.cells?.get("${zone.code}-${row + 1}-$col")?.status
-                val leftStatus = mapLayout?.cells?.get("${zone.code}-$row-${col - 1}")?.status
-                val rightStatus = mapLayout?.cells?.get("${zone.code}-$row-${col + 1}")?.status
 
                 val cell = TextView(this).apply {
                     text = cellLabel
@@ -207,7 +207,7 @@ class MainActivity : BaseActivity() {
                     gravity = android.view.Gravity.CENTER
 
                     fun applyMargins(l: Int, t: Int, r: Int, b: Int) {
-                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                        layoutParams = LinearLayout.LayoutParams(cellSize, cellSize).apply {
                             setMargins(l, t, r, b)
                         }
                     }
@@ -245,26 +245,18 @@ class MainActivity : BaseActivity() {
                             text = if (connectedAbove) "" else "통로"
                         }
                         "table" -> {
-                            // 테이블: 가로로 연결된 단일 박스처럼
-                            val connectedLeft = leftStatus == "table"
-                            val connectedRight = rightStatus == "table"
-                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(android.graphics.Color.parseColor("#3d2e1e"))
                             setTextColor(android.graphics.Color.parseColor("#d4a574"))
                             typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
-                            text = if (connectedLeft) "" else "테이블"
+                            text = "테이블"
                         }
                         "pc" -> {
-                            // 물류PC: 가로로 연결된 단일 박스처럼
-                            val connectedLeft = leftStatus == "pc"
-                            val connectedRight = rightStatus == "pc"
-                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(android.graphics.Color.parseColor("#1e3a5f"))
                             setTextColor(android.graphics.Color.parseColor("#9fc5e8"))
                             typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
-                            text = if (connectedLeft) "" else "물류PC"
+                            text = "물류PC"
                         }
                         else -> {
                             // 빈 슬롯: 투명, 텍스트 없음, 비클릭

@@ -50,8 +50,8 @@ from app.services.url_import_service import import_purchase_urls as _import_purc
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 
-APP_VERSION_CODE = 85
-APP_VERSION_NAME = "5.3.11"
+APP_VERSION_CODE = 86
+APP_VERSION_NAME = "5.3.12"
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)
@@ -318,7 +318,7 @@ async def import_urls(file_path: str = Query(...)):
         raise HTTPException(status_code=400, detail="invalid file path")
     db = await get_db()
     async with _write_lock:
-        result = await _import_purchase_urls(db, file_path)
+        result = await _import_purchase_urls(db, str(target))
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result

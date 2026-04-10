@@ -181,7 +181,7 @@ curl -s -m 10 -X POST http://100.125.17.60:8000/api/print \
 ```bash
 # 1. 최신 코드 pull (미니PC 에는 git 이 없으니 rsync 또는 scp 로)
 rsync -avz --exclude=data --exclude=.venv \
-  /Users/leeeunseok/Projects/scan/server/ \
+  <scan-저장소-경로>/server/ \
   lenovo@100.125.17.60:C:/scanner/server/
 
 # 2. 서버 재시작
@@ -198,7 +198,7 @@ curl -s http://100.125.17.60:8000/api/app-version
 집 맥에서:
 
 ```bash
-scp /Users/leeeunseok/Projects/scan/server/tools/print_agent/print_agent.py user@100.123.11.122:C:/print_agent.py
+scp <scan-저장소-경로>/server/tools/print_agent/print_agent.py user@100.123.11.122:C:/print_agent.py
 ssh user@100.123.11.122 "taskkill /f /im pythonw.exe 2>&1 & schtasks /run /tn PrintAgent"
 sleep 4
 curl http://100.123.11.122:7777/health

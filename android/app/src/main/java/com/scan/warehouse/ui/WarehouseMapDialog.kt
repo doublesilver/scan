@@ -175,6 +175,7 @@ object WarehouseMapDialog {
                 val cellData = mapLayout?.cells?.get(cellKey)
                 val cellLabel = cellData?.label.orEmpty()
                 val cellStatus = cellData?.status ?: "empty"
+                val isSelectableCell = cellStatus != "aisle" && cellStatus != "table" && cellStatus != "pc"
                 val isCurrentCell = expectedCurrentLabel != null &&
                     zone.code == current.zone &&
                     cellLabel.isNotEmpty() &&
@@ -182,8 +183,6 @@ object WarehouseMapDialog {
 
                 val aboveStatus = mapLayout?.cells?.get("${zone.code}-${row - 1}-$col")?.status
                 val belowStatus = mapLayout?.cells?.get("${zone.code}-${row + 1}-$col")?.status
-                val leftStatus = mapLayout?.cells?.get("${zone.code}-$row-${col - 1}")?.status
-                val rightStatus = mapLayout?.cells?.get("${zone.code}-$row-${col + 1}")?.status
 
                 val cell = TextView(context).apply {
                     text = cellLabel
@@ -220,24 +219,18 @@ object WarehouseMapDialog {
                             text = if (connectedAbove) "" else "통로"
                         }
                         cellStatus == "table" -> {
-                            val connectedLeft = leftStatus == "table"
-                            val connectedRight = rightStatus == "table"
-                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(Color.parseColor("#5a3e28"))
                             setTextColor(Color.WHITE)
                             textSize = 10f
                             typeface = Typeface.DEFAULT_BOLD
-                            text = if (connectedLeft) "" else "테이블"
+                            text = "테이블"
                         }
                         cellStatus == "pc" -> {
-                            val connectedLeft = leftStatus == "pc"
-                            val connectedRight = rightStatus == "pc"
-                            applyMargins(if (connectedLeft) 0 else margin, margin, if (connectedRight) 0 else margin, margin)
                             setBackgroundColor(Color.parseColor("#2e4a6b"))
                             setTextColor(Color.WHITE)
                             textSize = 10f
                             typeface = Typeface.DEFAULT_BOLD
-                            text = if (connectedLeft) "" else "물류PC"
+                            text = "물류PC"
                         }
                         cellStatus == "full" -> {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.cell_full_light))
@@ -247,13 +240,23 @@ object WarehouseMapDialog {
                             setBackgroundColor(ContextCompat.getColor(context, R.color.cell_used_light))
                             setTextColor(ContextCompat.getColor(context, R.color.cell_used_dark))
                         }
+                        onCellClick != null && isSelectableCell -> {
+                            val gd = GradientDrawable().apply {
+                                setColor(Color.parseColor("#0f000000"))
+                                setStroke((1 * density).toInt(), Color.parseColor("#4dffffff"))
+                                cornerRadius = 4 * density
+                            }
+                            background = gd
+                            setTextColor(ContextCompat.getColor(context, R.color.on_surface_variant))
+                            text = cellLabel
+                        }
                         else -> {
                             setBackgroundColor(Color.TRANSPARENT)
                             text = ""
                         }
                     }
-                    // 실제 선반만 클릭 가능
-                    if (onCellClick != null && (cellStatus == "used" || cellStatus == "full")) {
+                    // 상품 배치/지도 이동에서는 빈 셀까지 선택 가능
+                    if (onCellClick != null && isSelectableCell) {
                         isClickable = true
                         isFocusable = true
                         setOnClickListener {

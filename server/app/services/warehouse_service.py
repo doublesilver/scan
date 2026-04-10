@@ -496,7 +496,61 @@ async def get_layout_as_json(db) -> dict:
     }
 
 
-async def save_layout_from_json(db, layout: dict):
+async def save_layout_from_json(db, layout: dict) -> dict:
+    valid_coords: set[tuple[str, int, int]] = set()
+    for z in layout.get("zones", []):
+        code = z["code"]
+        for r in range(1, z["rows"] + 1):
+            for c in range(1, z["cols"] + 1):
+                valid_coords.add((code, r, c))
+
+    valid_levels: set[tuple[str, int, int, int]] = set()
+    for cell_key, cell_data in layout.get("cells", {}).items():
+        parts = cell_key.split("-")
+        if len(parts) < 3:
+            continue
+        zc, rn, cn = parts[0], int(parts[1]), int(parts[2])
+        for lv in cell_data.get("levels", []):
+            valid_levels.add((zc, rn, cn, lv.get("index", 0)))
+
+    product_levels = await db.execute_fetchall(
+        "SELECT DISTINCT wz.code, wc.row, wc.col, cl.level_index "
+        "FROM warehouse_zone wz "
+        "JOIN warehouse_cell wc ON wc.zone_id = wz.id "
+        "JOIN cell_level cl ON cl.cell_id = wc.id "
+        "JOIN cell_level_product clp ON clp.level_id = cl.id "
+        "WHERE clp.product_master_id IS NOT NULL"
+    )
+    affected = []
+    for row in product_levels:
+        cell_coord = (row[0], row[1], row[2])
+        level_coord = (row[0], row[1], row[2], row[3])
+        if cell_coord not in valid_coords:
+            key = f"{row[0]}-{row[1]}-{row[2]}"
+            if key not in affected:
+                affected.append(key)
+        elif level_coord not in valid_levels:
+            key = f"{row[0]}-{row[1]}-{row[2]}:L{row[3]}"
+            if key not in affected:
+                affected.append(key)
+    if affected:
+        return {"ok": False, "affected_cells": affected}
+
+    existing_products = await db.execute_fetchall(
+        "SELECT wz.code, wc.row, wc.col, cl.level_index, "
+        "clp.product_master_id, clp.photo, clp.memo, clp.sort_order "
+        "FROM warehouse_zone wz "
+        "JOIN warehouse_cell wc ON wc.zone_id = wz.id "
+        "JOIN cell_level cl ON cl.cell_id = wc.id "
+        "JOIN cell_level_product clp ON clp.level_id = cl.id "
+        "WHERE clp.product_master_id IS NOT NULL "
+        "ORDER BY wz.code, wc.row, wc.col, cl.level_index, clp.sort_order"
+    )
+    existing_by_level: dict[tuple[str, int, int, int], list[tuple[int | None, str, str, int]]] = {}
+    for row in existing_products:
+        key = (row[0], row[1], row[2], row[3])
+        existing_by_level.setdefault(key, []).append((row[4], row[5], row[6], row[7]))
+
     await db.execute("BEGIN IMMEDIATE")
     try:
         await db.execute("DELETE FROM warehouse_zone")
@@ -561,6 +615,23 @@ async def save_layout_from_json(db, layout: dict):
                     continue
                 level_id = level_row[0][0]
 
+                preserved = existing_by_level.get((zone_code, row_num, col_num, level_index), [])
+                if preserved:
+                    for product_master_id, preserved_photo, preserved_memo, sort_order in preserved:
+                        await db.execute(
+                            "INSERT INTO cell_level_product "
+                            "(level_id, product_master_id, photo, memo, sort_order) "
+                            "VALUES (?, ?, ?, ?, ?)",
+                            (
+                                level_id,
+                                product_master_id,
+                                preserved_photo,
+                                preserved_memo,
+                                sort_order,
+                            ),
+                        )
+                    continue
+
                 item_label = lv.get("itemLabel", "")
                 photo = lv.get("photo", "")
 
@@ -574,3 +645,4 @@ async def save_layout_from_json(db, layout: dict):
     except Exception:
         await db.execute("ROLLBACK")
         raise
+    return {"ok": True}

@@ -9,7 +9,6 @@ from PIL import Image
 from app.db.database import get_db, get_read_db
 from app.db.database import write_lock as _map_layout_lock
 from app.services import warehouse_service as ws
-from app.services.map_layout_service import save_layout_only as _save_layout_only
 
 router = APIRouter(prefix="/api")
 
@@ -121,13 +120,16 @@ async def _do_upload_photo_to_table(cell_key: str, level_index: int, file: Uploa
 
 @router.get("/map-layout")
 async def get_map_layout():
-    db = await get_read_db()
-    zones = await db.execute_fetchall("SELECT COUNT(*) FROM warehouse_zone")
-    if zones and zones[0][0] > 0:
-        return await ws.get_layout_as_json(db)
-    from app.services.map_layout_service import get_or_init_layout
-
-    return await get_or_init_layout(db)
+    read_db = await get_read_db()
+    zones = await read_db.execute_fetchall("SELECT COUNT(*) FROM warehouse_zone")
+    if not zones or zones[0][0] == 0:
+        write_db = await get_db()
+        async with _map_layout_lock:
+            recheck = await write_db.execute_fetchall("SELECT COUNT(*) FROM warehouse_zone")
+            if not recheck or recheck[0][0] == 0:
+                await ws.save_layout_from_json(write_db, DEFAULT_LAYOUT)
+        return await ws.get_layout_as_json(write_db)
+    return await ws.get_layout_as_json(read_db)
 
 
 @router.post("/map-layout")
@@ -135,8 +137,12 @@ async def save_map_layout(request: Request):
     body = await request.json()
     db = await get_db()
     async with _map_layout_lock:
-        await ws.save_layout_from_json(db, body)
-        await _save_layout_only(db, body)
+        result = await ws.save_layout_from_json(db, body)
+    if not result["ok"]:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "cells_have_products", "affected_cells": result["affected_cells"]},
+        )
     return {"status": "ok", "message": "저장 완료"}
 
 
@@ -287,35 +293,71 @@ async def update_map_cell(cell_key: str, request: Request):
         if "bg_color" in body:
             update_kwargs["bg_color"] = body["bg_color"]
 
-        if update_kwargs:
-            await ws.update_cell(db, cell_id, **update_kwargs)
-
-        if "levels" in body:
+        if update_kwargs or "levels" in body:
             await db.execute("BEGIN IMMEDIATE")
             try:
-                await db.execute("DELETE FROM cell_level WHERE cell_id = ?", (cell_id,))
-                for lv in body["levels"]:
-                    level_index = lv.get("index", 0)
-                    label = lv.get("label", "")
+                if update_kwargs:
+                    sets = []
+                    params = []
+                    for key, value in update_kwargs.items():
+                        sets.append(f"{key} = ?")
+                        params.append(value)
+                    sets.append("updated_at = datetime('now')")
+                    params.append(cell_id)
                     await db.execute(
-                        "INSERT OR IGNORE INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
-                        (cell_id, level_index, label),
+                        f"UPDATE warehouse_cell SET {', '.join(sets)} WHERE id = ?",
+                        params,
                     )
-                    level_row = await db.execute_fetchall(
-                        "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
-                        (cell_id, level_index),
-                    )
-                    if not level_row:
-                        continue
-                    level_id = level_row[0][0]
 
-                    item_label = lv.get("itemLabel", "")
-                    photo = lv.get("photo", "")
-                    if item_label or photo:
-                        await db.execute(
-                            "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
-                            (level_id, photo, item_label),
+                if "levels" in body:
+                    for lv in body["levels"]:
+                        level_index = lv.get("index", 0)
+                        label = lv.get("label", "")
+
+                        existing_level = await db.execute_fetchall(
+                            "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+                            (cell_id, level_index),
                         )
+                        if existing_level:
+                            level_id = existing_level[0][0]
+                            await db.execute(
+                                "UPDATE cell_level SET label = ? WHERE id = ?",
+                                (label, level_id),
+                            )
+                        else:
+                            await db.execute(
+                                "INSERT INTO cell_level (cell_id, level_index, label) VALUES (?, ?, ?)",
+                                (cell_id, level_index, label),
+                            )
+                            level_row = await db.execute_fetchall(
+                                "SELECT id FROM cell_level WHERE cell_id = ? AND level_index = ?",
+                                (cell_id, level_index),
+                            )
+                            if not level_row:
+                                continue
+                            level_id = level_row[0][0]
+
+                        has_linked = await db.execute_fetchall(
+                            "SELECT id FROM cell_level_product "
+                            "WHERE level_id = ? AND product_master_id IS NOT NULL LIMIT 1",
+                            (level_id,),
+                        )
+                        if has_linked:
+                            continue
+
+                        await db.execute(
+                            "DELETE FROM cell_level_product "
+                            "WHERE level_id = ? AND product_master_id IS NULL",
+                            (level_id,),
+                        )
+
+                        item_label = lv.get("itemLabel", "")
+                        photo = lv.get("photo", "")
+                        if item_label or photo:
+                            await db.execute(
+                                "INSERT INTO cell_level_product (level_id, photo, memo) VALUES (?, ?, ?)",
+                                (level_id, photo, item_label),
+                            )
 
                 await db.commit()
             except Exception:
