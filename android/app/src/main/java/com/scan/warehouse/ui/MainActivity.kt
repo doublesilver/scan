@@ -181,6 +181,15 @@ class MainActivity : BaseActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
+            if (!zone.borderColor.isNullOrEmpty()) {
+                val bw = ((zone.borderWidth ?: 1) * density).toInt()
+                val gd = android.graphics.drawable.GradientDrawable().apply {
+                    setStroke(bw, android.graphics.Color.parseColor(zone.borderColor))
+                    cornerRadius = 4 * density
+                }
+                background = gd
+                setPadding((8 * density).toInt(), (4 * density).toInt(), (8 * density).toInt(), (4 * density).toInt())
+            }
         }
 
         for (row in 1..zone.rows) {
@@ -263,6 +272,16 @@ class MainActivity : BaseActivity() {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
                             text = ""
                         }
+                    }
+                    if (!cellData?.borderColor.isNullOrEmpty()) {
+                        val bw = ((cellData?.borderWidth ?: 1) * density).toInt()
+                        val bg = background
+                        val gd = android.graphics.drawable.GradientDrawable().apply {
+                            if (bg is android.graphics.drawable.ColorDrawable) setColor(bg.color)
+                            setStroke(bw, android.graphics.Color.parseColor(cellData?.borderColor))
+                            cornerRadius = 2 * density
+                        }
+                        background = gd
                     }
                 }
                 rowLayout.addView(cell)

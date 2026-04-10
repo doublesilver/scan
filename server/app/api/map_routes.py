@@ -128,8 +128,41 @@ async def get_map_layout():
             recheck = await write_db.execute_fetchall("SELECT COUNT(*) FROM warehouse_zone")
             if not recheck or recheck[0][0] == 0:
                 await ws.save_layout_from_json(write_db, DEFAULT_LAYOUT)
-        return await ws.get_layout_as_json(write_db)
-    return await ws.get_layout_as_json(read_db)
+        layout = await ws.get_layout_as_json(write_db)
+        return await _merge_editor_meta(write_db, layout)
+    layout = await ws.get_layout_as_json(read_db)
+    return await _merge_editor_meta(read_db, layout)
+
+
+async def _merge_editor_meta(db, layout: dict) -> dict:
+    import json as _json
+
+    row = await db.execute_fetchall("SELECT data FROM map_layout WHERE id = 2")
+    if not row:
+        return layout
+    try:
+        meta = _json.loads(row[0][0])
+    except Exception:
+        return layout
+    zm = meta.get("zoneMeta", {})
+    for z in layout.get("zones", []):
+        m = zm.get(z.get("code", ""))
+        if m:
+            if m.get("borderColor"):
+                z["borderColor"] = m["borderColor"]
+            if m.get("borderWidth"):
+                z["borderWidth"] = m["borderWidth"]
+    cm = meta.get("cellMeta", {})
+    cells = layout.get("cells", {})
+    for k, m in cm.items():
+        if k in cells:
+            if m.get("borderColor"):
+                cells[k]["borderColor"] = m["borderColor"]
+            if m.get("borderWidth"):
+                cells[k]["borderWidth"] = m["borderWidth"]
+            if m.get("annotation"):
+                cells[k]["annotation"] = m["annotation"]
+    return layout
 
 
 @router.get("/map-layout/editor-meta")

@@ -103,7 +103,9 @@ data class MapZone(
     @SerializedName("name") val name: String,
     @SerializedName("rows") val rows: Int,
     @SerializedName("cols") val cols: Int,
-    @SerializedName("id") val id: Int? = null
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("borderColor") val borderColor: String? = null,
+    @SerializedName("borderWidth") val borderWidth: Int? = null
 )
 
 data class MapLevel(
@@ -119,7 +121,9 @@ data class MapCell(
     @SerializedName("label") val label: String? = null,
     @SerializedName("status") val status: String? = null,
     @SerializedName("bgColor") val bgColor: String? = null,
-    @SerializedName("levels") val levels: List<MapLevel>? = null
+    @SerializedName("levels") val levels: List<MapLevel>? = null,
+    @SerializedName("borderColor") val borderColor: String? = null,
+    @SerializedName("borderWidth") val borderWidth: Int? = null
 )
 
 data class MapLayout(

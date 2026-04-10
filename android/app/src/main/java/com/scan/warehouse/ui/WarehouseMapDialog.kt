@@ -109,6 +109,15 @@ object WarehouseMapDialog {
             }
             layout.addView(zoneHeader)
             val grid = createGrid(context, zone, mapLayout, parsed, floor, false, animators, onCellClick) { dialog?.dismiss() }
+            if (!zone.borderColor.isNullOrEmpty()) {
+                val bw = ((zone.borderWidth ?: 1) * density).toInt()
+                val gd = android.graphics.drawable.GradientDrawable().apply {
+                    setStroke(bw, android.graphics.Color.parseColor(zone.borderColor))
+                    cornerRadius = 4 * density
+                }
+                grid.background = gd
+                grid.setPadding((4 * density).toInt(), (4 * density).toInt(), (4 * density).toInt(), (4 * density).toInt())
+            }
             layout.addView(grid)
         }
 
