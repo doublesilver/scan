@@ -1070,6 +1070,10 @@
       .cell.selected { border-color:#1976d2!important; background:rgba(25,118,210,0.12)!important; box-shadow:0 0 0 2px rgba(25,118,210,0.35)!important; }
       body.dark .cell.selected { background:rgba(25,118,210,0.25)!important; }
       #selStatus { color:rgba(255,255,255,0.75); font-size:12px; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.1); }
+      /* 셀 크기 표시 배지 */
+      .zone-size-badge { font-size:10px; color:var(--on-surface-variant); padding:1px 5px; background:var(--surface-low); border:1px solid var(--outline-variant); border-radius:6px; }
+      /* 테두리 두께 select */
+      .fg select.border-w { width:100%; }
     </style>
   </head>
   <body>
@@ -1190,6 +1194,27 @@
           <label>메모</label
           ><textarea id="cellMemo" placeholder="메모"></textarea>
         </div>
+        <div class="fg">
+          <label>표시 텍스트 (셀 내 추가 표시)</label
+          ><input type="text" id="cellAnnotation" placeholder="예: ★ 주의, 재고없음 등" />
+        </div>
+        <div style="display: flex; gap: 10px">
+          <div class="fg" style="flex: 1">
+            <label>테두리 색상</label
+            ><input type="color" id="cellBorderColor" value="#ff0000" />
+          </div>
+          <div class="fg" style="flex: 1">
+            <label>테두리 두께</label>
+            <select id="cellBorderWidth" class="border-w">
+              <option value="">없음</option>
+              <option value="1">1px</option>
+              <option value="2">2px</option>
+              <option value="3">3px</option>
+              <option value="4">4px</option>
+              <option value="5">5px</option>
+            </select>
+          </div>
+        </div>
         <div
           style="
             margin: 14px 0 8px;
@@ -1240,6 +1265,16 @@
           <div class="fg" style="flex: 1">
             <label>열 수</label
             ><input type="number" id="zeCols" min="1" max="20" />
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px">
+          <div class="fg" style="flex: 1">
+            <label>셀 가로(px)</label
+            ><input type="number" id="zeCellW" min="30" max="120" step="2" placeholder="56" />
+          </div>
+          <div class="fg" style="flex: 1">
+            <label>셀 세로(px)</label
+            ><input type="number" id="zeCellH" min="30" max="120" step="2" placeholder="56" />
           </div>
         </div>
         <div class="btn-row">
@@ -1486,11 +1521,14 @@
           renderZones();
           saveLS();
         });
+        const cw = z.cellW || 56;
+        const ch = z.cellH || 56;
         el.innerHTML = `
     <div class="zone-header">
       <span class="collapse-arrow" onclick="toggleZoneCollapse('${z.id}')">${z.collapsed?'▶':'▼'}</span>
       <span class="zone-title" onclick="editZone('${z.id}')">${z.name}</span>
       <span class="zbadge" onclick="editZone('${z.id}')">${z.code}구역</span>
+      <span class="zone-size-badge">${cw}×${ch}</span>
       <div class="za">
         <button class="zab" onclick="zrow('${z.id}',1)">+행</button>
         <button class="zab" onclick="zrow('${z.id}',-1)">-행</button>
@@ -1499,7 +1537,7 @@
         <button class="zab del" onclick="delZone('${z.id}')">삭제</button>
       </div>
     </div>
-    <div class="grid" id="grid-${z.id}" style="grid-template-columns:24px repeat(${z.cols},56px);grid-auto-rows:56px"></div>
+    <div class="grid" id="grid-${z.id}" style="grid-template-columns:24px repeat(${z.cols},${cw}px);grid-auto-rows:${ch}px"></div>
     <button class="add-row-btn" onclick="zrow('${z.id}',1)">+</button>`;
         const grid = el.querySelector(`#grid-${z.id}`);
         // 열 번호 헤더 행 (모서리 빈칸 + 열 번호들)
@@ -1635,12 +1673,26 @@
           el.innerHTML = `<span class="cid">${dkey}</span><span class="cst" style="background:${dc}"></span>${ph ? `<img class="cphoto" src="${ph}"/>` : ""}
     <span class="clabel">${d.label || "빈 선반"}</span>`;
         }
+        // annotation 표시
+        if (d.annotation) {
+          const ann = document.createElement("div");
+          ann.style.cssText = "position:absolute;bottom:2px;left:0;right:0;font-size:9px;color:#c62828;text-align:center;pointer-events:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px;";
+          ann.textContent = d.annotation;
+          el.appendChild(ann);
+        }
+        // 테두리 스타일
+        if (d.borderColor && d.borderWidth) {
+          el.style.border = `${d.borderWidth}px solid ${d.borderColor}`;
+        } else {
+          el.style.border = "";
+        }
         // 셀 메모 툴팁
         const statusLabel = { used: "사용 중", full: "가득 참", aisle: "통로", table: "테이블", pc: "물류PC", empty: "빈 선반" };
         const tipLines = [];
         if (d.label || d.name) tipLines.push(d.label || d.name);
         tipLines.push(statusLabel[d.status] || "빈 선반");
         if (d.memo) tipLines.push("메모: " + d.memo);
+        if (d.annotation) tipLines.push("표시: " + d.annotation);
         if (d.levels && d.levels.length) {
           d.levels.forEach((lv) => {
             const lname = lv.label || "";
@@ -1677,6 +1729,9 @@
         document.getElementById("cellColor").value = d.bgColor || "#1e2635";
         document.getElementById("cellStatus").value = d.status || "empty";
         document.getElementById("cellMemo").value = d.memo || "";
+        document.getElementById("cellAnnotation").value = d.annotation || "";
+        document.getElementById("cellBorderColor").value = d.borderColor || "#ff0000";
+        document.getElementById("cellBorderWidth").value = d.borderWidth || "";
         renderLevels(
           d.levels || [
             { label: "하단 (1층)", photo: "", itemLabel: "", sku: "" },
@@ -1836,6 +1891,9 @@
         d.bgColor = document.getElementById("cellColor").value;
         d.status = document.getElementById("cellStatus").value;
         d.memo = document.getElementById("cellMemo").value;
+        d.annotation = document.getElementById("cellAnnotation").value.trim();
+        d.borderColor = document.getElementById("cellBorderColor").value;
+        d.borderWidth = document.getElementById("cellBorderWidth").value;
         d.levels = getLevels();
         W.cells[selKey] = d;
         refreshCell(selKey);
@@ -1880,6 +1938,8 @@
         document.getElementById("zeCode").value = z.code;
         document.getElementById("zeRows").value = z.rows;
         document.getElementById("zeCols").value = z.cols;
+        document.getElementById("zeCellW").value = z.cellW || 56;
+        document.getElementById("zeCellH").value = z.cellH || 56;
         document.getElementById("zoneModal").classList.add("show");
       }
 
@@ -1911,6 +1971,10 @@
           1,
           parseInt(document.getElementById("zeCols").value) || z.cols,
         );
+        const cw = parseInt(document.getElementById("zeCellW").value);
+        const ch = parseInt(document.getElementById("zeCellH").value);
+        if (cw >= 30 && cw <= 120) z.cellW = cw;
+        if (ch >= 30 && ch <= 120) z.cellH = ch;
         renderZones();
         saveLS();
         closeModal("zoneModal");
@@ -2207,6 +2271,19 @@
       }
 
       async function loadFromServer() {
+        // 로컬 전용 데이터 백업
+        const localMeta = {
+          zoneMeta: {},
+          cellMeta: {},
+        };
+        W.zones.forEach((z) => {
+          localMeta.zoneMeta[z.code] = { cellW: z.cellW, cellH: z.cellH };
+        });
+        Object.entries(W.cells || {}).forEach(([k, c]) => {
+          if (c && (c.borderColor || c.borderWidth || c.annotation)) {
+            localMeta.cellMeta[k] = { borderColor: c.borderColor, borderWidth: c.borderWidth, annotation: c.annotation };
+          }
+        });
         try {
           const r = await fetch(`${API}/api/map-layout`);
           if (r.ok) {
@@ -2226,6 +2303,14 @@
               });
               zid = Math.max(zid || 0, maxNum);
               W = d;
+              // 로컬 메타 복원
+              W.zones.forEach((z) => {
+                const m = localMeta.zoneMeta[z.code];
+                if (m) { z.cellW = m.cellW; z.cellH = m.cellH; }
+              });
+              Object.entries(localMeta.cellMeta).forEach(([k, m]) => {
+                if (W.cells[k]) Object.assign(W.cells[k], m);
+              });
               renderTitle();
               renderZones();
             }
