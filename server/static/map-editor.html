@@ -266,46 +266,63 @@
         background: #ffebee;
         border-color: var(--error);
       }
-      /* 통로: 공간 표시만, 셀 아님 — 투명 배경 + 점선 윤곽 + 작은 회색 글자 */
+      /* 통로: 앱과 동일 — 진한 검정 배경 + 회색 글자 */
       .cell.saisle {
-        background: transparent;
-        border: 1px dashed #555;
+        background: #2a2a2a;
+        border: 1px solid #2a2a2a;
         cursor: default;
-        color: #888;
+        color: #999;
         font-size: 10px;
       }
       .cell.saisle:hover {
-        border-color: #555;
-        background: transparent;
+        border-color: #444;
+        background: #333;
       }
-      .cell.saisle .cid, .cell.saisle .cst { display: none; }
-      .cell.saisle .clabel { color: #888; }
-      /* 테이블: 공간 표시만, 연한 갈색 배경, 테두리 없음 */
+      .cell.saisle .cid,
+      .cell.saisle .cst {
+        display: none;
+      }
+      .cell.saisle .clabel {
+        color: #999;
+      }
+      /* 테이블: 앱과 동일 — 진한 갈색 배경 + 밝은 글자 */
       .cell.stable {
-        background: rgba(139, 94, 60, 0.15);
-        border: 1px solid rgba(139, 94, 60, 0.4);
+        background: #5a3e28;
+        border: 1px solid #5a3e28;
         cursor: default;
-        color: #6b4423;
+        color: #d4a574;
       }
       .cell.stable:hover {
-        border-color: rgba(139, 94, 60, 0.6);
-        background: rgba(139, 94, 60, 0.2);
+        border-color: #7a5e48;
+        background: #6a4e38;
       }
-      .cell.stable .cid, .cell.stable .cst { display: none; }
-      .cell.stable .clabel { color: #6b4423; font-weight: bold; }
-      /* 물류PC: 공간 표시만, 연한 파란 배경 */
+      .cell.stable .cid,
+      .cell.stable .cst {
+        display: none;
+      }
+      .cell.stable .clabel {
+        color: #d4a574;
+        font-weight: bold;
+      }
+      /* 물류PC: 앱과 동일 — 진한 파랑 배경 + 밝은 글자 */
       .cell.spc {
-        background: rgba(46, 74, 107, 0.15);
-        border: 1px solid rgba(46, 74, 107, 0.4);
+        background: #1e3a5f;
+        border: 1px solid #1e3a5f;
         cursor: default;
-        color: #2e4a6b;
+        color: #9fc5e8;
       }
       .cell.spc:hover {
-        border-color: rgba(46, 74, 107, 0.6);
-        background: rgba(46, 74, 107, 0.2);
+        border-color: #2e4a6f;
+        background: #2e4a6f;
       }
-      .cell.spc .cid, .cell.spc .cst { display: none; }
-      .cell.spc .clabel { color: #2e4a6b; font-weight: bold; }
+      .cell.spc .cid,
+      .cell.spc .cst {
+        display: none;
+      }
+      .cell.spc .clabel {
+        color: #9fc5e8;
+        font-weight: bold;
+      }
       /* 빈 슬롯: 완전 투명, 보이지 않음 */
       .cell.sempty {
         background: transparent;
@@ -316,7 +333,25 @@
         background: transparent;
         border-color: rgba(128, 128, 128, 0.25);
       }
-      .cell.sempty .cid, .cell.sempty .cst, .cell.sempty .clabel { display: none; }
+      .cell.sempty .cid,
+      .cell.sempty .cst,
+      .cell.sempty .clabel {
+        display: none;
+      }
+      .cell.affected {
+        border: 2px solid #c62828 !important;
+        background: #ffebee !important;
+        animation: pulse-red 1s ease-in-out 3;
+      }
+      @keyframes pulse-red {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(198, 40, 40, 0);
+        }
+      }
       .cell.dcover {
         border-color: var(--secondary);
         background: #fff3e0;
@@ -1068,6 +1103,9 @@
             <option value="empty">빈 선반</option>
             <option value="used">사용 중</option>
             <option value="full">가득 참</option>
+            <option value="aisle">통로</option>
+            <option value="table">테이블</option>
+            <option value="pc">물류PC</option>
           </select>
         </div>
         <div class="fg">
@@ -1475,9 +1513,12 @@
           parts.length >= 3 && zObj
             ? (parseInt(parts[1]) - 1) * zObj.cols + parseInt(parts[2])
             : key;
-        const dkey = d && (d.label || d.name)
-          ? (d.label || d.name)
-          : zObj ? `${zObj.code}-${seqNum}` : key;
+        const dkey =
+          d && (d.label || d.name)
+            ? d.label || d.name
+            : zObj
+              ? `${zObj.code}-${seqNum}`
+              : key;
         // 통로/테이블/물류PC/빈슬롯은 cid·cst 숨기고 clabel만 표시
         if (sc === "sempty") {
           el.innerHTML = "";
@@ -1995,6 +2036,9 @@
 
       async function saveAll() {
         saveLS();
+        document
+          .querySelectorAll(".cell.affected")
+          .forEach((el) => el.classList.remove("affected"));
         try {
           const r = await fetch(`${API}/api/map-layout`, {
             method: "POST",
@@ -2005,7 +2049,22 @@
             document.getElementById("lastSaved").textContent =
               new Date().toLocaleTimeString("ko-KR");
             showToast("서버에 저장 완료");
-          } else showToast("서버 저장 실패 (로컬에는 저장됨)");
+          } else {
+            const err = await r.json().catch(() => null);
+            if (err && err.detail && err.detail.affected_cells) {
+              const cells = err.detail.affected_cells;
+              cells.forEach((key) => {
+                const clean = key.split(":")[0];
+                const el = document.getElementById(`cell-${clean}`);
+                if (el) el.classList.add("affected");
+              });
+              showToast(
+                `상품이 배치된 셀 ${cells.length}개를 먼저 비워야 합니다`,
+              );
+            } else {
+              showToast("서버 저장 실패 (로컬에는 저장됨)");
+            }
+          }
         } catch {
           showToast("서버 저장 실패 (로컬에는 저장됨)");
         }
