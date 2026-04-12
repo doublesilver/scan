@@ -30,10 +30,13 @@ import com.scan.warehouse.network.RetrofitClient
 import com.scan.warehouse.network.UpdateManager
 import com.scan.warehouse.repository.ProductRepository
 import com.scan.warehouse.scanner.DataWedgeManager
+import com.scan.warehouse.WarehouseApp
 import com.scan.warehouse.viewmodel.ScanViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -447,6 +450,24 @@ class MainActivity : BaseActivity() {
 
         // 그룹 필드는 UI에서 숨김 (서버·DB는 그대로, 나중에 다시 켤 수 있음)
         binding.tvProductMasterName.visibility = View.GONE
+
+        binding.btnQuickPrint.setOnClickListener {
+            val barcode = result.barcodes.firstOrNull() ?: return@setOnClickListener
+            binding.btnQuickPrint.isEnabled = false
+            Toast.makeText(this, "인쇄 요청 중...", Toast.LENGTH_SHORT).show()
+            (application as WarehouseApp).appScope.launch {
+                val (msg, isError) = try {
+                    val r = repository.printLabel(barcode, result.skuId, result.productName, 1)
+                    r.message to false
+                } catch (e: Exception) {
+                    "인쇄 실패: ${e.message?.take(80) ?: "연결 오류"}" to true
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, msg, if (isError) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+                    binding.btnQuickPrint.isEnabled = true
+                }
+            }
+        }
 
         binding.layoutScanResult.setOnClickListener {
             startWithSlide(Intent(this, DetailActivity::class.java).apply {

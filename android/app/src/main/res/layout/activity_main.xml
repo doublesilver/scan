@@ -254,6 +254,24 @@
                             android:textSize="13sp"
                             android:textColor="@color/on_surface_variant" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnQuickPrint"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="인쇄"
+                            android:textSize="12sp"
+                            android:textColor="@color/primary"
+                            android:minWidth="0dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="4dp"
+                            app:icon="@drawable/ic_print"
+                            app:iconSize="16dp"
+                            app:iconGravity="start"
+                            app:iconTint="@color/primary" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
