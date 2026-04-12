@@ -5,43 +5,6 @@ from app.models.schemas import ShelfItem
 logger = logging.getLogger(__name__)
 
 
-async def get_shelves(db, floor: int, zone: str) -> list[ShelfItem]:
-    rows = await db.execute_fetchall(
-        """
-        SELECT s.id, s.floor, s.zone, s.shelf_number, s.label,
-               sp.file_path AS photo_path
-        FROM shelf s
-        LEFT JOIN (
-            SELECT shelf_id, file_path
-            FROM shelf_photo
-            WHERE id IN (
-                SELECT id FROM shelf_photo p2
-                WHERE p2.shelf_id = shelf_photo.shelf_id
-                ORDER BY uploaded_at DESC
-                LIMIT 1
-            )
-        ) sp ON sp.shelf_id = s.id
-        WHERE s.floor = ? AND s.zone = ?
-        ORDER BY s.shelf_number
-        """,
-        (floor, zone),
-    )
-    result = []
-    for row in rows:
-        photo_path = row[5]
-        photo_url = f"/api/image/{photo_path}" if photo_path else None
-        result.append(ShelfItem(
-            id=row[0],
-            floor=row[1],
-            zone=row[2],
-            shelf_number=row[3],
-            label=row[4],
-            photo_path=photo_path,
-            photo_url=photo_url,
-        ))
-    return result
-
-
 async def update_shelf_label(db, shelf_id: int, label: str) -> ShelfItem | None:
     await db.execute(
         "UPDATE shelf SET label = ?, updated_at = datetime('now') WHERE id = ?",

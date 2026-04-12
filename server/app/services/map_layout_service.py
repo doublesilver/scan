@@ -11,7 +11,7 @@ DEFAULT_LAYOUT = {
         {"code": "B", "name": "포장다이", "rows": 3, "cols": 2},
         {"code": "C", "name": "502호", "rows": 3, "cols": 3},
     ],
-    "cells": {}
+    "cells": {},
 }
 
 
@@ -64,10 +64,6 @@ async def save_layout_only(db, layout: dict) -> None:
     await db.execute(
         "INSERT INTO map_layout (id, data, updated_at) VALUES (1, ?, datetime('now')) "
         "ON CONFLICT(id) DO UPDATE SET data = ?, updated_at = datetime('now')",
-        (data_json, data_json)
+        (data_json, data_json),
     )
     await db.commit()
-
-
-async def save_layout(db, layout: dict) -> None:
-    await save_layout_only(db, layout)

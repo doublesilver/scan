@@ -28,8 +28,3 @@ async def get_favorites(db) -> list[FavoriteItem]:
         )
         for r in await cursor.fetchall()
     ]
-
-
-async def is_favorite(db, sku_id: str) -> bool:
-    cursor = await db.execute("SELECT 1 FROM favorite WHERE sku_id = ?", (sku_id,))
-    return await cursor.fetchone() is not None
