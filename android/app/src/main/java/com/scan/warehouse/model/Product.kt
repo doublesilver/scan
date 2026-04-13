@@ -21,6 +21,7 @@ data class ScanResponse(
 
 @Parcelize
 data class ImageItem(
+    @SerializedName("id") val id: Int = 0,
     @SerializedName("file_path") val filePath: String,
     @SerializedName("image_type") val imageType: String,
 ) : Parcelable

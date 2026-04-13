@@ -268,4 +268,17 @@
         android:scaleType="centerInside"
         android:padding="8dp" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddPhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:contentDescription="사진 추가"
+        app:srcCompat="@drawable/ic_camera"
+        app:fabSize="mini"
+        app:backgroundTint="@color/primary"
+        app:tint="@android:color/white" />
+
 </FrameLayout>

@@ -2412,6 +2412,7 @@
             </div>
             <div class="form-actions">
               <button class="btn" onclick="this.closest('.modal-overlay').remove()">닫기</button>
+              <button class="btn" onclick="printLabel('${skuId}','${(barcodes || [])[0] || ""}','${p.product_name.replace(/'/g, "\\'")}')">인쇄</button>
               <button class="btn btn-primary" onclick="saveProduct('${skuId}')">저장</button>
             </div>
           </div>
@@ -2482,10 +2483,71 @@
       async function renderBoxes() {
         const el = $("#content");
         el.innerHTML = `
-          <h1>외박스 QR 관리</h1>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h1>외박스 QR 관리</h1>
+            <button class="btn btn-primary" onclick="showCreateBoxModal()">+ 새 외박스</button>
+          </div>
           <div id="boxes-list"><div class="loading-center"><div class="spinner"></div></div></div>
         `;
         await loadBoxes();
+      }
+
+      async function showCreateBoxModal() {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.onclick = (e) => {
+          if (e.target === overlay) overlay.remove();
+        };
+        overlay.innerHTML = `
+          <div class="modal">
+            <h2>새 외박스 등록</h2>
+            <div class="form-group">
+              <label>QR 코드</label>
+              <input type="text" id="newBoxQr" placeholder="BOX-2026-0001" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius)">
+            </div>
+            <div class="form-group" style="margin-top:12px">
+              <label>상품 마스터명</label>
+              <input type="text" id="newBoxMaster" placeholder="상품명" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius)">
+            </div>
+            <div class="form-group" style="margin-top:12px">
+              <label>위치</label>
+              <input type="text" id="newBoxLocation" placeholder="5층-A-03" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius)">
+            </div>
+            <div class="form-actions" style="margin-top:16px">
+              <button class="btn btn-primary" onclick="createBox()">등록</button>
+              <button class="btn" onclick="this.closest('.modal-overlay').remove()">취소</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      async function createBox() {
+        const qr = document.getElementById("newBoxQr").value.trim();
+        const master = document.getElementById("newBoxMaster").value.trim();
+        const location = document.getElementById("newBoxLocation").value.trim();
+        if (!qr || !master) {
+          toast("QR코드와 상품명은 필수입니다", "error");
+          return;
+        }
+        try {
+          await api("/box", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              qr_code: qr,
+              box_name: `${master} 박스`,
+              product_master_name: master,
+              location: location || null,
+              members: [],
+            }),
+          });
+          toast("외박스 등록 완료");
+          document.querySelector(".modal-overlay")?.remove();
+          loadBoxes();
+        } catch (e) {
+          toast(e.message, "error");
+        }
       }
 
       async function loadBoxes() {
@@ -2647,6 +2709,137 @@
             </div>
           `;
           document.body.appendChild(overlay);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Print Label ──
+      async function printLabel(skuId, barcode, productName) {
+        const qty = prompt("인쇄 수량 (1-100):", "1");
+        if (!qty) return;
+        const n = parseInt(qty);
+        if (isNaN(n) || n < 1 || n > 100) {
+          toast("1~100 사이 숫자를 입력하세요", "error");
+          return;
+        }
+        try {
+          await api("/print", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              barcode: barcode || skuId,
+              sku_id: skuId,
+              product_name: productName,
+              quantity: n,
+            }),
+          });
+          toast(`인쇄 요청 완료 (${n}장)`);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Cell Detail ──
+      async function viewCellDetail(cellKey) {
+        try {
+          const layout = await api("/map-layout");
+          const cell = layout.cells[cellKey];
+          if (!cell) {
+            toast("셀 정보 없음", "error");
+            return;
+          }
+
+          const [zoneCode] = cellKey.split("-");
+          const levels = cell.levels || [];
+
+          const levelRows = levels.length
+            ? levels
+                .map(
+                  (lv, i) => `
+            <div style="border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <strong>${lv.label || i + 1 + "층"}</strong>
+                <button class="btn btn-sm" style="color:var(--red)" onclick="deleteLevel('${cellKey}',${i})">삭제</button>
+              </div>
+              ${lv.photo ? `<img src="${lv.photo}" style="height:60px;border-radius:4px;margin-bottom:4px">` : ""}
+              <div style="font-size:12px;color:var(--fg2)">${lv.itemLabel || "상품 없음"}</div>
+              <div style="font-size:11px;color:var(--fg3)">${lv.sku || ""}</div>
+            </div>
+          `,
+                )
+                .join("")
+            : '<div style="color:var(--fg3)">층 없음</div>';
+
+          const overlay = document.createElement("div");
+          overlay.className = "modal-overlay";
+          overlay.onclick = (e) => {
+            if (e.target === overlay) overlay.remove();
+          };
+          overlay.innerHTML = `
+            <div class="modal">
+              <h2>${zoneCode}구역 ${cell.label || cellKey}</h2>
+              <div style="margin-bottom:12px">${levelRows}</div>
+              <div class="form-actions">
+                <button class="btn btn-primary" onclick="addLevel('${cellKey}')">+ 층 추가</button>
+                <button class="btn" onclick="this.closest('.modal-overlay').remove()">닫기</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function addLevel(cellKey) {
+        try {
+          const [zoneCode] = cellKey.split("-");
+          const zones = await api("/zones");
+          const zone = zones.find((z) => z.code === zoneCode);
+          if (!zone) {
+            toast("구역 없음", "error");
+            return;
+          }
+          const cells = await api(`/zones/${zone.id}/cells`);
+          const cell = cells.find(
+            (c) => `${zoneCode}-${c.row}-${c.col}` === cellKey,
+          );
+          if (!cell) {
+            toast("셀 없음", "error");
+            return;
+          }
+          await api(`/cells/${cell.id}/levels`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label: "" }),
+          });
+          toast("층 추가 완료");
+          document.querySelector(".modal-overlay")?.remove();
+          viewCellDetail(cellKey);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function deleteLevel(cellKey, levelIndex) {
+        if (!confirm("이 층을 삭제하시겠습니까?")) return;
+        try {
+          const [zoneCode] = cellKey.split("-");
+          const zones = await api("/zones");
+          const zone = zones.find((z) => z.code === zoneCode);
+          if (!zone) return;
+          const cells = await api(`/zones/${zone.id}/cells`);
+          const cell = cells.find(
+            (c) => `${zoneCode}-${c.row}-${c.col}` === cellKey,
+          );
+          if (!cell || !cell.levels || !cell.levels[levelIndex]) return;
+          await api(`/levels/${cell.levels[levelIndex].id}`, {
+            method: "DELETE",
+          });
+          toast("층 삭제 완료");
+          document.querySelector(".modal-overlay")?.remove();
+          viewCellDetail(cellKey);
         } catch (e) {
           toast(e.message, "error");
         }

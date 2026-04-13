@@ -1,8 +1,10 @@
 package com.scan.warehouse.ui
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,7 +15,9 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.scan.warehouse.R
@@ -25,6 +29,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,6 +47,20 @@ class DetailActivity : BaseActivity() {
     private var showingThumbnail = true
     private var thumbnailUrl: String? = null
     private var realImageUrl: String? = null
+    private var currentScanResponse: ScanResponse? = null
+    private var cameraUri: android.net.Uri? = null
+
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) launchCamera() else Toast.makeText(this, "카메라 권한이 필요합니다", Toast.LENGTH_SHORT).show()
+    }
+
+    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) cameraUri?.let { uploadImage(it) }
+    }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { uploadImage(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -117,7 +139,6 @@ class DetailActivity : BaseActivity() {
         binding.btnBarPrint.isEnabled = false
         Toast.makeText(this, "인쇄 요청 중...", Toast.LENGTH_SHORT).show()
         val appCtx = applicationContext
-        // Activity 라이프사이클과 분리된 appScope 사용 — 뒤로가기 해도 결과 Toast가 뜸
         (application as WarehouseApp).appScope.launch {
             val (resultMsg, isError) = try {
                 val result = repository.printLabel(barcode, data.skuId, data.productName, quantity)
@@ -146,7 +167,6 @@ class DetailActivity : BaseActivity() {
         }
     }
 
-
     private fun bindData() {
         val data = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra(EXTRA_DATA, ScanResponse::class.java)
@@ -154,6 +174,13 @@ class DetailActivity : BaseActivity() {
             @Suppress("DEPRECATION")
             intent.getParcelableExtra(EXTRA_DATA)
         } ?: return
+
+        currentScanResponse = data
+        renderData(data)
+    }
+
+    private fun renderData(data: ScanResponse) {
+        currentScanResponse = data
 
         binding.tvDetailProductName.text = BarcodeUtils.applyColorKeywords(data.productName)
         binding.tvDetailSkuId.text = data.skuId
@@ -215,9 +242,27 @@ class DetailActivity : BaseActivity() {
             }
         }
 
+        binding.ivDetailImage.setOnLongClickListener {
+            val realImg2 = data.images.firstOrNull { it.filePath.startsWith("real_image/") }
+            if (realImg2 != null && realImg2.id != 0) {
+                AlertDialog.Builder(this)
+                    .setTitle("사진 삭제")
+                    .setMessage("실사진을 삭제하시겠습니까?")
+                    .setPositiveButton("삭제") { _, _ -> deleteProductImage(data.skuId, realImg2.id) }
+                    .setNegativeButton("취소", null)
+                    .show()
+            } else {
+                Toast.makeText(this, "삭제할 실사진이 없습니다", Toast.LENGTH_SHORT).show()
+            }
+            true
+        }
+
         binding.btnBarPrint.setOnClickListener { showQuantityDialog(data) }
 
-        binding.btnBarEdit.visibility = View.GONE
+        binding.btnBarEdit.visibility = View.VISIBLE
+        binding.btnBarEdit.setOnClickListener { showEditDialog() }
+
+        binding.fabAddPhoto.setOnClickListener { showImagePickerDialog() }
 
         if (thumbnailUrl != null && realImageUrl != null) {
             binding.tvImageTypeChip.visibility = View.VISIBLE
@@ -243,6 +288,123 @@ class DetailActivity : BaseActivity() {
             getString(R.string.image_type_real)
         }
         binding.tvImageTypeChip.text = "$typeText | ${getString(R.string.tap_to_switch_image)}"
+    }
+
+    private fun showImagePickerDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("사진 추가")
+            .setItems(arrayOf("카메라", "갤러리")) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            launchCamera()
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                    1 -> galleryLauncher.launch("image/*")
+                }
+            }
+            .show()
+    }
+
+    private fun launchCamera() {
+        val photoFile = File(cacheDir, "photos").apply { mkdirs() }
+            .let { File(it, "product_${System.currentTimeMillis()}.jpg") }
+        cameraUri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
+        takePicture.launch(cameraUri!!)
+    }
+
+    private fun uploadImage(uri: android.net.Uri) {
+        val skuId = currentScanResponse?.skuId ?: return
+        lifecycleScope.launch {
+            try {
+                val bytes = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.readBytes()
+                } ?: return@launch
+
+                val body = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                val filePart = MultipartBody.Part.createFormData("file", "photo.jpg", body)
+
+                val result = repository.uploadProductImage(skuId, filePart)
+                result.onSuccess {
+                    Toast.makeText(this@DetailActivity, "업로드 완료", Toast.LENGTH_SHORT).show()
+                    refreshProduct(skuId)
+                }.onFailure {
+                    Toast.makeText(this@DetailActivity, "업로드 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@DetailActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun deleteProductImage(skuId: String, imageId: Int) {
+        lifecycleScope.launch {
+            val result = repository.deleteProductImage(skuId, imageId)
+            result.onSuccess {
+                Toast.makeText(this@DetailActivity, "삭제 완료", Toast.LENGTH_SHORT).show()
+                refreshProduct(skuId)
+            }.onFailure {
+                Toast.makeText(this@DetailActivity, "삭제 실패", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun refreshProduct(skuId: String) {
+        val barcode = currentScanResponse?.barcodes?.firstOrNull() ?: return
+        lifecycleScope.launch {
+            val (result, _) = repository.scanBarcode(barcode)
+            result.onSuccess { data ->
+                renderData(data)
+            }
+        }
+    }
+
+    private fun showEditDialog() {
+        val scanResponse = currentScanResponse ?: return
+        val density = resources.displayMetrics.density
+        val pad = (16 * density).toInt()
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, pad)
+        }
+        val nameInput = EditText(this).apply {
+            hint = "상품명"
+            setText(scanResponse.productName)
+        }
+        val categoryInput = EditText(this).apply {
+            hint = "카테고리"
+            setText(scanResponse.category ?: "")
+        }
+        layout.addView(nameInput)
+        layout.addView(categoryInput)
+
+        AlertDialog.Builder(this)
+            .setTitle("상품 편집")
+            .setView(layout)
+            .setPositiveButton("저장") { _, _ ->
+                val data = mutableMapOf<String, String>()
+                data["product_name"] = nameInput.text.toString()
+                data["category"] = categoryInput.text.toString()
+                updateProduct(scanResponse.skuId, data)
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    private fun updateProduct(skuId: String, data: Map<String, String>) {
+        lifecycleScope.launch {
+            val result = repository.updateProduct(skuId, data)
+            result.onSuccess {
+                Toast.makeText(this@DetailActivity, "저장 완료", Toast.LENGTH_SHORT).show()
+                refreshProduct(skuId)
+            }.onFailure {
+                Toast.makeText(this@DetailActivity, "저장 실패", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     @Deprecated("Deprecated in Java")

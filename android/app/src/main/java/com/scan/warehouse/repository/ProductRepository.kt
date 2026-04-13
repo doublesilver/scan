@@ -191,4 +191,16 @@ open class ProductRepository(protected val context: Context) {
     open suspend fun uploadLevelProductPhoto(productId: Int, filePart: MultipartBody.Part): Result<Unit> = safeCall { api.uploadLevelProductPhoto(productId, filePart); Unit }
     open suspend fun deleteLevelProductPhoto(productId: Int): Result<Unit> = safeCall { api.deleteLevelProductPhoto(productId); Unit }
 
+    open suspend fun uploadProductImage(skuId: String, file: MultipartBody.Part): Result<Map<String, String>> = safeCall {
+        api.uploadProductImage(skuId, file)
+    }
+
+    open suspend fun deleteProductImage(skuId: String, imageId: Int): Result<Map<String, String>> = safeCall {
+        api.deleteProductImage(skuId, imageId)
+    }
+
+    open suspend fun updateProduct(skuId: String, data: Map<String, String>): Result<Map<String, String>> = safeCall {
+        api.updateProduct(skuId, data)
+    }
+
 }

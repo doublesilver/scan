@@ -151,4 +151,23 @@ interface ApiService {
         @Path("imageId") imageId: Int
     ): Map<String, String>
 
+    @Multipart
+    @POST("api/product/{skuId}/image")
+    suspend fun uploadProductImage(
+        @Path("skuId") skuId: String,
+        @Part file: MultipartBody.Part
+    ): Map<String, String>
+
+    @DELETE("api/product/{skuId}/image/{imageId}")
+    suspend fun deleteProductImage(
+        @Path("skuId") skuId: String,
+        @Path("imageId") imageId: Int
+    ): Map<String, String>
+
+    @PATCH("api/product/{skuId}")
+    suspend fun updateProduct(
+        @Path("skuId") skuId: String,
+        @Body data: Map<String, String>
+    ): Map<String, String>
+
 }
