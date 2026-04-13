@@ -1,0 +1,2707 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCAN Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #f8f9fa;
+        --bg2: #ffffff;
+        --bg3: #edeef0;
+        --bg4: #e7e8e9;
+        --fg: #191c1d;
+        --fg2: #45474c;
+        --fg3: #6b7280;
+        --accent: #fe6a34;
+        --accent2: #ab3500;
+        --accent-glow: rgba(254, 106, 52, 0.1);
+        --green: #2e7d32;
+        --red: #c62828;
+        --orange: #fe6a34;
+        --cyan: #0288d1;
+        --border: #c5c6cc;
+        --radius: 8px;
+        --navy: #040d1b;
+      }
+      html,
+      body {
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        font-size: 14px;
+      }
+      a {
+        color: var(--navy);
+        text-decoration: none;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+
+      /* Layout */
+      #app {
+        display: flex;
+        height: 100vh;
+      }
+      #sidebar {
+        width: 220px;
+        background: var(--navy);
+        border-right: none;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: transform 0.2s;
+      }
+      #sidebar .logo {
+        padding: 20px 16px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #sidebar .logo span {
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 400;
+        font-size: 12px;
+        display: block;
+        margin-top: 2px;
+      }
+      #sidebar .logo-text {
+        flex: 1;
+      }
+      #sidebar nav {
+        flex: 1;
+        padding: 8px 0;
+        overflow-y: auto;
+      }
+      #sidebar nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        color: rgba(255, 255, 255, 0.6);
+        transition: 0.15s;
+      }
+      #sidebar nav a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+      }
+      #sidebar nav a.active {
+        background: rgba(254, 106, 52, 0.15);
+        color: var(--accent);
+        border-right: 3px solid var(--accent);
+      }
+      #sidebar nav a svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      #sidebar .sidebar-footer {
+        padding: 12px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      #sidebar .sidebar-footer .input {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+
+      /* Hamburger */
+      #hamburger {
+        display: none;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 300;
+        background: var(--navy);
+        border: none;
+        border-radius: 6px;
+        padding: 8px;
+        cursor: pointer;
+      }
+      #hamburger svg {
+        width: 20px;
+        height: 20px;
+        stroke: #fff;
+        display: block;
+      }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 200;
+      }
+
+      #content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px 32px;
+      }
+      #content h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+
+      /* Cards */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .card .label {
+        font-size: 12px;
+        color: var(--fg3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .card .value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .card .sub {
+        font-size: 12px;
+        color: var(--fg2);
+        margin-top: 4px;
+      }
+
+      /* Table */
+      .table-wrap {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        padding: 10px 14px;
+        background: var(--bg3);
+        color: var(--fg2);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--bg3);
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg3);
+        color: var(--fg);
+        font-size: 13px;
+        transition: 0.15s;
+      }
+      .btn:hover {
+        background: var(--bg4);
+      }
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--accent2);
+      }
+      .btn-danger {
+        background: var(--red);
+        border-color: var(--red);
+        color: #fff;
+      }
+      .btn-danger:hover {
+        opacity: 0.85;
+      }
+      .btn-sm {
+        padding: 4px 10px;
+        font-size: 12px;
+      }
+
+      /* Input */
+      .input {
+        width: 100%;
+        padding: 8px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--fg);
+        outline: none;
+        transition: 0.15s;
+      }
+      .input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-glow);
+      }
+      .input-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .input-group .input {
+        flex: 1;
+      }
+
+      /* Badge */
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .badge-green {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--green);
+      }
+      .badge-red {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--red);
+      }
+      .badge-orange {
+        background: rgba(245, 158, 11, 0.15);
+        color: var(--orange);
+      }
+      .badge-cyan {
+        background: rgba(6, 182, 212, 0.15);
+        color: var(--cyan);
+      }
+
+      /* Modal */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        min-width: 400px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal h2 {
+        font-size: 18px;
+        margin-bottom: 16px;
+      }
+      .modal .form-row {
+        margin-bottom: 12px;
+      }
+      .modal .form-row label {
+        display: block;
+        font-size: 12px;
+        color: var(--fg2);
+        margin-bottom: 4px;
+      }
+      .modal .form-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      /* Pagination */
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .pagination button {
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pagination .current {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      /* Scan page */
+      .scan-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+        align-items: start;
+      }
+      .scan-input-wrap {
+        max-width: 500px;
+        margin: 0 auto 24px;
+      }
+      .scan-input-wrap input {
+        font-size: 24px;
+        padding: 16px 20px;
+        text-align: center;
+        letter-spacing: 2px;
+      }
+      .scan-result {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .scan-result .product-images {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+      }
+      .scan-result .product-images img {
+        height: 240px;
+        border-radius: var(--radius);
+        object-fit: contain;
+        background: var(--bg3);
+        cursor: pointer;
+      }
+      .scan-result .product-info {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .scan-result .product-info .name {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .scan-result .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .scan-result .info-item .label {
+        font-size: 11px;
+        color: var(--fg3);
+      }
+      .scan-result .info-item .val {
+        font-size: 15px;
+        margin-top: 2px;
+      }
+      .scan-result .links {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      .scan-result .links a {
+        padding: 6px 14px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      .scan-result .links a:hover {
+        background: var(--bg4);
+      }
+      .scan-result .print-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .scan-result .print-bar input {
+        width: 60px;
+        text-align: center;
+      }
+
+      /* Scan history sidebar */
+      .scan-history {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .scan-history .history-header {
+        padding: 12px 16px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--fg2);
+      }
+      .scan-history .history-item {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+      }
+      .scan-history .history-item:last-child {
+        border-bottom: none;
+      }
+      .scan-history .history-item .h-name {
+        font-weight: 600;
+        color: var(--fg);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .scan-history .history-item .h-sub {
+        color: var(--fg3);
+        margin-top: 2px;
+      }
+
+      /* Scan controls */
+      .scan-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .toggle {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        cursor: pointer;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: var(--bg4);
+        border-radius: 22px;
+        transition: 0.2s;
+        border: 1px solid var(--border);
+      }
+      .toggle-slider:before {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        left: 2px;
+        top: 2px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      .toggle input:checked + .toggle-slider {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .toggle input:checked + .toggle-slider:before {
+        transform: translateX(18px);
+      }
+
+      /* Map iframe */
+      .map-frame {
+        width: 100%;
+        height: calc(100vh - 120px);
+        border: none;
+        border-radius: var(--radius);
+        background: var(--bg2);
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px 20px;
+        z-index: 2000;
+        animation: slideIn 0.3s;
+      }
+      .toast.success {
+        border-color: var(--green);
+      }
+      .toast.error {
+        border-color: var(--red);
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Spinner */
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .loading-center {
+        display: flex;
+        justify-content: center;
+        padding: 60px;
+      }
+
+      /* Empty */
+      .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--fg3);
+      }
+      .empty svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+      }
+
+      /* Alert banner */
+      .alert-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(198, 40, 40, 0.06);
+        border: 1px solid rgba(198, 40, 40, 0.3);
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        font-size: 13px;
+        color: var(--red);
+      }
+      .alert-banner svg {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+      }
+
+      /* Activity feed */
+      .activity-feed {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .activity-feed .feed-header {
+        padding: 12px 16px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--fg2);
+      }
+      .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+      }
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+      .activity-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 4px;
+        flex-shrink: 0;
+      }
+      .activity-dot.scan {
+        background: var(--cyan);
+      }
+      .activity-dot.print {
+        background: var(--accent);
+      }
+      .activity-dot.cart {
+        background: var(--green);
+      }
+      .activity-item .a-name {
+        font-weight: 600;
+        color: var(--fg);
+      }
+      .activity-item .a-time {
+        color: var(--fg3);
+        margin-top: 1px;
+      }
+
+      /* Chart containers */
+      .chart-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .chart-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      .chart-card h3 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--fg2);
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .chart-card canvas {
+        max-height: 200px;
+      }
+
+      /* Dashboard grid */
+      .dash-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+        align-items: start;
+      }
+
+      /* Autocomplete */
+      .autocomplete-wrap {
+        position: relative;
+        flex: 1;
+      }
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        z-index: 100;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .autocomplete-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border);
+      }
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+      .autocomplete-item:hover {
+        background: var(--bg3);
+      }
+      .autocomplete-item .ac-sku {
+        color: var(--fg3);
+        font-size: 11px;
+      }
+
+      /* Lightbox */
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        cursor: zoom-out;
+      }
+      .lightbox img {
+        max-width: 90vw;
+        max-height: 90vh;
+        border-radius: 4px;
+        object-fit: contain;
+      }
+      .lightbox .lb-close {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        color: white;
+        font-size: 32px;
+        cursor: pointer;
+        line-height: 1;
+        opacity: 0.8;
+      }
+
+      /* Bulk actions */
+      .bulk-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--accent-glow);
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+
+      /* Dropzone */
+      .dropzone {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        text-align: center;
+        color: var(--fg3);
+        font-size: 13px;
+        transition: 0.15s;
+        cursor: pointer;
+      }
+      .dropzone.hover {
+        border-color: var(--accent);
+        background: var(--accent-glow);
+        color: var(--accent);
+      }
+      .dropzone svg {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 8px;
+        opacity: 0.5;
+      }
+
+      /* Period selector */
+      .period-tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+      }
+      .period-tab {
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg3);
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .period-tab.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      /* Reports page */
+      .reports-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      /* Alerts page */
+      .alert-section {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+      .alert-section-header {
+        padding: 12px 16px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--fg2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* Mobile */
+      @media (max-width: 768px) {
+        #hamburger {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        #sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          z-index: 250;
+          transform: translateX(-100%);
+        }
+        #sidebar.open {
+          transform: translateX(0);
+        }
+        #sidebar-overlay.open {
+          display: block;
+        }
+        #content {
+          padding: 16px;
+          padding-top: 56px;
+        }
+        .scan-layout {
+          grid-template-columns: 1fr;
+        }
+        .dash-grid {
+          grid-template-columns: 1fr;
+        }
+        .chart-row {
+          grid-template-columns: 1fr;
+        }
+        .reports-charts {
+          grid-template-columns: 1fr;
+        }
+        .modal {
+          min-width: unset;
+          width: 95vw;
+        }
+        #content h1 {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button id="hamburger" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div id="app">
+      <div id="sidebar">
+        <div class="logo">
+          <div class="logo-text">SCAN<span>Warehouse Admin</span></div>
+        </div>
+        <nav id="nav"></nav>
+        <div class="sidebar-footer">
+          <div style="margin-bottom: 8px">
+            <input
+              class="input"
+              id="api-key-input"
+              type="password"
+              placeholder="API Key (미설정시 공란)"
+              style="font-size: 12px; padding: 4px 8px"
+            />
+          </div>
+          <div id="server-version"></div>
+        </div>
+      </div>
+      <div id="content"></div>
+    </div>
+
+    <script>
+      const API = "/api";
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => document.querySelectorAll(s);
+
+      function getApiKey() {
+        return localStorage.getItem("scan_api_key") || "";
+      }
+
+      async function api(path, opts = {}) {
+        const url = API + path;
+        const key = getApiKey();
+        const headers = { "Content-Type": "application/json", ...opts.headers };
+        if (key) headers["X-API-Key"] = key;
+        const res = await fetch(url, { headers, ...opts });
+        if (!res.ok) {
+          const err = await res
+            .json()
+            .catch(() => ({ detail: res.statusText }));
+          throw new Error(err.detail || "API Error");
+        }
+        return res.json();
+      }
+
+      function toast(msg, type = "success") {
+        const el = document.createElement("div");
+        el.className = "toast " + type;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      function formatDate(s) {
+        if (!s) return "-";
+        return s.replace("T", " ").slice(0, 19);
+      }
+
+      // ── Mobile sidebar ──
+      function toggleSidebar() {
+        const sb = $("#sidebar");
+        const ov = $("#sidebar-overlay");
+        sb.classList.toggle("open");
+        ov.classList.toggle("open");
+      }
+
+      // ── Web Audio ──
+      const _audioCtx = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
+      function beep(freq = 880, duration = 0.12, type = "sine") {
+        const osc = _audioCtx.createOscillator();
+        const gain = _audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(_audioCtx.destination);
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, _audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          _audioCtx.currentTime + duration,
+        );
+        osc.start(_audioCtx.currentTime);
+        osc.stop(_audioCtx.currentTime + duration);
+      }
+      function beepSuccess() {
+        beep(880, 0.1);
+      }
+      function beepError() {
+        beep(220, 0.15, "square");
+        setTimeout(() => beep(180, 0.15, "square"), 160);
+      }
+
+      // ── Lightbox ──
+      function openLightbox(src) {
+        const lb = document.createElement("div");
+        lb.className = "lightbox";
+        lb.innerHTML = `<span class="lb-close" onclick="this.parentElement.remove()">&times;</span><img src="${src}">`;
+        lb.onclick = (e) => {
+          if (e.target === lb) lb.remove();
+        };
+        document.body.appendChild(lb);
+      }
+
+      // ── Router ──
+      const routes = {
+        "": { title: "대시보드", icon: "dashboard", render: renderDashboard },
+        products: {
+          title: "상품 백과사전",
+          icon: "products",
+          render: renderProducts,
+        },
+        cart: { title: "장바구니", icon: "cart", render: renderCart },
+        scan: { title: "바코드 스캔", icon: "scan", render: renderScan },
+        map: { title: "창고 도면", icon: "map", render: renderMap },
+        data: { title: "데이터 관리", icon: "data", render: renderData },
+        boxes: { title: "외박스 QR", icon: "boxes", render: renderBoxes },
+        reports: { title: "리포트", icon: "reports", render: renderReports },
+        alerts: { title: "알림 센터", icon: "alerts", render: renderAlerts },
+        settings: { title: "설정", icon: "settings", render: renderSettings },
+      };
+
+      const icons = {
+        dashboard:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+        products:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>',
+        cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>',
+        scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="16" x2="17" y2="16"/></svg>',
+        map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
+        data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+        boxes:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+        reports:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+        alerts:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+        settings:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+      };
+
+      function buildNav() {
+        const nav = $("#nav");
+        nav.innerHTML = Object.entries(routes)
+          .map(
+            ([hash, r]) =>
+              `<a href="#/${hash}" data-route="${hash}">${icons[r.icon]}<span>${r.title}</span></a>`,
+          )
+          .join("");
+      }
+
+      function navigate() {
+        const hash = location.hash.replace("#/", "") || "";
+        const route = routes[hash];
+        if (!route) {
+          location.hash = "#/";
+          return;
+        }
+        $$("#nav a").forEach((a) =>
+          a.classList.toggle("active", a.dataset.route === hash),
+        );
+        $("#content").innerHTML =
+          '<div class="loading-center"><div class="spinner"></div></div>';
+        route.render();
+        // 모바일: 네비 후 사이드바 닫기
+        if (window.innerWidth <= 768) {
+          $("#sidebar").classList.remove("open");
+          $("#sidebar-overlay").classList.remove("open");
+        }
+      }
+
+      buildNav();
+      window.addEventListener("hashchange", navigate);
+
+      const _keyInput = document.getElementById("api-key-input");
+      _keyInput.value = localStorage.getItem("scan_api_key") || "";
+      _keyInput.addEventListener("change", () => {
+        const v = _keyInput.value.trim();
+        if (v) localStorage.setItem("scan_api_key", v);
+        else localStorage.removeItem("scan_api_key");
+      });
+
+      // ── 키보드 단축키 ──
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+          e.preventDefault();
+          const searchInput = $("#prod-search") || $("#scan-input");
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          } else {
+            location.hash = "#/products";
+          }
+        }
+        if (e.key === "Escape") {
+          const overlay = $(".modal-overlay") || $(".lightbox");
+          if (overlay) overlay.remove();
+        }
+      });
+
+      navigate();
+
+      // ── Dashboard ──
+      async function renderDashboard() {
+        const el = $("#content");
+        try {
+          const [status, alerts] = await Promise.all([
+            api("/status"),
+            api("/stats/alerts").catch(() => null),
+          ]);
+          const s = status.server || {};
+          const db = status.database || {};
+          const nas = status.nas_sync || {};
+          const disk = status.disk || {};
+
+          $("#server-version").textContent =
+            `v${s.version || "?"} | ${s.uptime || ""}`;
+
+          let alertBanners = "";
+          if (alerts) {
+            if ((alerts.no_image || 0) > 0) {
+              alertBanners += `<div class="alert-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>이미지 없는 상품 <strong>${alerts.no_image}개</strong></div>`;
+            }
+            if ((alerts.no_barcode || 0) > 0) {
+              alertBanners += `<div class="alert-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>바코드 없는 상품 <strong>${alerts.no_barcode}개</strong></div>`;
+            }
+          }
+
+          el.innerHTML = `
+            <h1>대시보드</h1>
+            ${alertBanners}
+            <div class="cards">
+              <div class="card"><div class="label">서버 상태</div><div class="value" style="color:var(--green)">ON</div><div class="sub">업타임: ${s.uptime || "-"}</div></div>
+              <div class="card"><div class="label">등록 상품</div><div class="value">${(db.products || 0).toLocaleString()}</div><div class="sub">바코드 ${(db.barcodes || 0).toLocaleString()}개</div></div>
+              <div class="card"><div class="label">이미지</div><div class="value">${(db.images || 0).toLocaleString()}</div><div class="sub">캐시 ${disk.cache_size_mb || 0}MB / ${disk.cache_limit_mb || 0}MB</div></div>
+              <div class="card"><div class="label">NAS 동기화</div><div class="value">${nas.status === "connected" ? '<span style="color:var(--green)">연결</span>' : '<span style="color:var(--red)">미연결</span>'}</div><div class="sub">${nas.last_check ? formatDate(nas.last_check) : "-"}</div></div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-card"><h3>주간 스캔 추이</h3><canvas id="dash-scan-chart"></canvas></div>
+              <div class="chart-card"><h3>주간 인쇄 추이</h3><canvas id="dash-print-chart"></canvas></div>
+            </div>
+            <div class="dash-grid">
+              <div>
+                <h2 style="font-size:16px;margin-bottom:12px">인기 상품 TOP 10</h2>
+                <div id="dash-top-products" class="table-wrap"></div>
+                <h2 style="font-size:16px;margin-bottom:12px">최근 파싱 이력</h2>
+                <div class="table-wrap" id="dash-parse-table"></div>
+              </div>
+              <div>
+                <div class="activity-feed">
+                  <div class="feed-header">실시간 활동</div>
+                  <div id="dash-activity"></div>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // 차트 + 데이터 병렬 로드
+          const [scanStats, printStats, topProducts, logs, activity] =
+            await Promise.all([
+              api("/stats/scans?days=7").catch(() => null),
+              api("/stats/prints?days=7").catch(() => null),
+              api("/stats/top-products").catch(() => null),
+              api("/parse-logs?limit=10"),
+              api("/stats/activity").catch(() => null),
+            ]);
+
+          // 스캔 차트
+          const scanLabels = (scanStats || []).map((d) => d.date);
+          const scanData = (scanStats || []).map((d) => d.count);
+          if (scanLabels.length && $("#dash-scan-chart")) {
+            new Chart($("#dash-scan-chart"), {
+              type: "line",
+              data: {
+                labels: scanLabels,
+                datasets: [
+                  {
+                    label: "스캔",
+                    data: scanData,
+                    borderColor: "#0288d1",
+                    backgroundColor: "rgba(2,136,209,0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              },
+            });
+          }
+
+          // 인쇄 차트
+          const printLabels = (printStats || []).map((d) => d.date);
+          const printData = (printStats || []).map((d) => d.count);
+          if (printLabels.length && $("#dash-print-chart")) {
+            new Chart($("#dash-print-chart"), {
+              type: "line",
+              data: {
+                labels: printLabels,
+                datasets: [
+                  {
+                    label: "인쇄",
+                    data: printData,
+                    borderColor: "#fe6a34",
+                    backgroundColor: "rgba(254,106,52,0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              },
+            });
+          }
+
+          // TOP 10
+          const topWrap = $("#dash-top-products");
+          if (topProducts && topProducts.length) {
+            topWrap.innerHTML = `<table><thead><tr><th>#</th><th>상품명</th><th>SKU</th><th>스캔수</th></tr></thead><tbody>${topProducts
+              .map(
+                (p, i) =>
+                  `<tr><td>${i + 1}</td><td>${p.product_name || "-"}</td><td>${p.sku_id}</td><td>${p.count}</td></tr>`,
+              )
+              .join("")}</tbody></table>`;
+          } else {
+            topWrap.innerHTML =
+              '<div class="empty" style="padding:20px">데이터 없음</div>';
+          }
+
+          // 파싱 이력
+          const tbody = logs
+            .map(
+              (l) =>
+                `<tr>
+              <td>${l.file_name}</td><td>${l.file_type}</td>
+              <td>${l.added_count} 추가 / ${l.updated_count} 수정</td>
+              <td>${l.error_count > 0 ? `<span class="badge badge-red">${l.error_count} 오류</span>` : '<span class="badge badge-green">정상</span>'}</td>
+              <td>${formatDate(l.parsed_at)}</td>
+            </tr>`,
+            )
+            .join("");
+          $("#dash-parse-table").innerHTML = logs.length
+            ? `<table><thead><tr><th>파일</th><th>유형</th><th>결과</th><th>상태</th><th>시각</th></tr></thead><tbody>${tbody}</tbody></table>`
+            : '<div class="empty">파싱 이력 없음</div>';
+
+          // 활동 피드
+          renderActivityFeed(activity);
+        } catch (e) {
+          el.innerHTML = `<h1>대시보드</h1><div class="empty">서버 연결 실패: ${e.message}</div>`;
+        }
+      }
+
+      function renderActivityFeed(activity) {
+        const wrap = $("#dash-activity");
+        if (!wrap) return;
+        if (!activity || !activity.length) {
+          wrap.innerHTML =
+            '<div style="padding:16px;font-size:12px;color:var(--fg3)">활동 없음</div>';
+          return;
+        }
+        const typeMap = {
+          scan: { label: "스캔", cls: "scan" },
+          print: { label: "인쇄", cls: "print" },
+          cart: { label: "장바구니", cls: "cart" },
+        };
+        wrap.innerHTML = activity
+          .map((a) => {
+            const t = typeMap[a.type] || { label: a.type, cls: "scan" };
+            return `<div class="activity-item">
+            <div class="activity-dot ${t.cls}"></div>
+            <div>
+              <div class="a-name">${t.label}: ${a.sku_id || a.barcode || "-"}</div>
+              <div class="a-time">${formatDate(a.created_at)}</div>
+            </div>
+          </div>`;
+          })
+          .join("");
+      }
+
+      // ── Products ──
+      let productsState = { page: 1, q: "", category: "", brand: "" };
+      let selectedSkus = new Set();
+
+      async function renderProducts() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>상품 백과사전</h1>
+          <div class="input-group">
+            <div class="autocomplete-wrap">
+              <input class="input" id="prod-search" placeholder="SKU, 상품명 검색..." value="${productsState.q}" autocomplete="off">
+              <div class="autocomplete-dropdown" id="ac-dropdown" style="display:none"></div>
+            </div>
+            <button class="btn btn-primary" onclick="searchProducts()">검색</button>
+            <button class="btn" onclick="showAddProduct()">+ 상품 등록</button>
+            <button class="btn" onclick="exportCsv()" title="CSV 내보내기">CSV</button>
+          </div>
+          <div id="bulk-bar" style="display:none" class="bulk-bar">
+            <span id="bulk-count">0개 선택</span>
+            <button class="btn btn-sm btn-primary" onclick="bulkChangeLocation()">위치 일괄 변경</button>
+            <button class="btn btn-sm" onclick="clearSelection()">선택 해제</button>
+          </div>
+          <div id="prod-list"><div class="loading-center"><div class="spinner"></div></div></div>
+        `;
+
+        const searchInput = $("#prod-search");
+        searchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            closeAutocomplete();
+            searchProducts();
+          }
+          if (e.key === "Escape") closeAutocomplete();
+        });
+        searchInput.addEventListener("input", () => {
+          const q = searchInput.value.trim();
+          if (q.length >= 2) fetchAutocomplete(q);
+          else closeAutocomplete();
+        });
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (!e.target.closest(".autocomplete-wrap")) closeAutocomplete();
+          },
+          { once: false },
+        );
+
+        selectedSkus.clear();
+        await loadProducts();
+      }
+
+      function closeAutocomplete() {
+        const dd = $("#ac-dropdown");
+        if (dd) dd.style.display = "none";
+      }
+
+      async function fetchAutocomplete(q) {
+        try {
+          const data = await api(`/search?q=${encodeURIComponent(q)}&limit=5`);
+          const dd = $("#ac-dropdown");
+          if (!dd) return;
+          if (!data.items || !data.items.length) {
+            dd.style.display = "none";
+            return;
+          }
+          dd.innerHTML = data.items
+            .map(
+              (p) =>
+                `<div class="autocomplete-item" onclick="selectAutocomplete('${p.sku_id}','${p.product_name.replace(/'/g, "\\'")}')">
+              <div>${p.product_name}</div>
+              <div class="ac-sku">${p.sku_id}</div>
+            </div>`,
+            )
+            .join("");
+          dd.style.display = "block";
+        } catch {}
+      }
+
+      function selectAutocomplete(skuId, name) {
+        const inp = $("#prod-search");
+        if (inp) inp.value = name;
+        closeAutocomplete();
+        productsState.q = skuId;
+        productsState.page = 1;
+        loadProducts();
+      }
+
+      function searchProducts() {
+        productsState.q = $("#prod-search").value.trim();
+        productsState.page = 1;
+        loadProducts();
+      }
+
+      async function exportCsv() {
+        const key = getApiKey();
+        const headers = {};
+        if (key) headers["X-API-Key"] = key;
+        try {
+          const res = await fetch(API + "/products/export-csv", { headers });
+          if (!res.ok) throw new Error("내보내기 실패");
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "products.csv";
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function loadProducts() {
+        const s = productsState;
+        const wrap = $("#prod-list");
+        try {
+          const data = await api(
+            `/products?page=${s.page}&size=20&q=${encodeURIComponent(s.q)}&category=${encodeURIComponent(s.category)}&brand=${encodeURIComponent(s.brand)}`,
+          );
+          const totalPages = Math.ceil(data.total / data.size) || 1;
+
+          if (!data.items.length) {
+            wrap.innerHTML = '<div class="empty">검색 결과 없음</div>';
+            return;
+          }
+
+          const rows = data.items
+            .map((p) => {
+              const checked = selectedSkus.has(p.sku_id) ? "checked" : "";
+              return `<tr>
+              <td><input type="checkbox" ${checked} onchange="toggleSkuSelect('${p.sku_id}',this.checked)"></td>
+              <td><strong>${p.sku_id}</strong></td>
+              <td>${p.product_name}</td>
+              <td>${p.category || "-"}</td>
+              <td>${p.brand || "-"}</td>
+              <td>${p.location || "-"}</td>
+              <td>
+                ${p.purchase_url ? '<span class="badge badge-cyan" title="쿠팡">C</span>' : ""}
+                ${p.naver_url ? '<span class="badge badge-green" title="네이버">N</span>' : ""}
+                ${p.url_1688 ? '<span class="badge badge-orange" title="1688">A</span>' : ""}
+                ${p.flow_url ? '<span class="badge badge-cyan" title="FLOW">F</span>' : ""}
+              </td>
+              <td><button class="btn btn-sm" onclick="editProduct('${p.sku_id}')">편집</button></td>
+            </tr>`;
+            })
+            .join("");
+
+          wrap.innerHTML = `
+            <div style="margin-bottom:8px;color:var(--fg2);font-size:13px">총 ${data.total.toLocaleString()}건 (${s.page}/${totalPages} 페이지)</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th style="width:32px"><input type="checkbox" onchange="toggleAllSelect(this,${JSON.stringify(data.items.map((p) => p.sku_id))})"></th><th>SKU</th><th>상품명</th><th>카테고리</th><th>브랜드</th><th>위치</th><th>링크</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table></div>
+            <div class="pagination">
+              <button class="btn btn-sm" ${s.page <= 1 ? "disabled" : ""} onclick="goPage(${s.page - 1})">이전</button>
+              <span class="current">${s.page} / ${totalPages}</span>
+              <button class="btn btn-sm" ${s.page >= totalPages ? "disabled" : ""} onclick="goPage(${s.page + 1})">다음</button>
+            </div>
+          `;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty">로드 실패: ${e.message}</div>`;
+        }
+      }
+
+      function toggleSkuSelect(skuId, checked) {
+        if (checked) selectedSkus.add(skuId);
+        else selectedSkus.delete(skuId);
+        updateBulkBar();
+      }
+
+      function toggleAllSelect(cb, skuIds) {
+        if (cb.checked) skuIds.forEach((id) => selectedSkus.add(id));
+        else skuIds.forEach((id) => selectedSkus.delete(id));
+        updateBulkBar();
+        loadProducts();
+      }
+
+      function clearSelection() {
+        selectedSkus.clear();
+        updateBulkBar();
+        loadProducts();
+      }
+
+      function updateBulkBar() {
+        const bar = $("#bulk-bar");
+        const cnt = $("#bulk-count");
+        if (!bar) return;
+        if (selectedSkus.size > 0) {
+          bar.style.display = "flex";
+          cnt.textContent = `${selectedSkus.size}개 선택`;
+        } else {
+          bar.style.display = "none";
+        }
+      }
+
+      function bulkChangeLocation() {
+        if (!selectedSkus.size) return;
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.onclick = (e) => {
+          if (e.target === overlay) overlay.remove();
+        };
+        overlay.innerHTML = `
+          <div class="modal">
+            <h2>위치 일괄 변경 (${selectedSkus.size}개)</h2>
+            <div class="form-row"><label>새 위치</label><input class="input" id="bulk-location-input" placeholder="예: A-1-2"></div>
+            <div class="form-actions">
+              <button class="btn" onclick="this.closest('.modal-overlay').remove()">취소</button>
+              <button class="btn btn-primary" onclick="doBulkChangeLocation()">변경</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      async function doBulkChangeLocation() {
+        const loc = $("#bulk-location-input").value.trim();
+        if (!loc) {
+          toast("위치를 입력하세요", "error");
+          return;
+        }
+        const skuIds = [...selectedSkus];
+        let ok = 0;
+        for (const skuId of skuIds) {
+          try {
+            await api(`/product/${skuId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ location: loc }),
+            });
+            ok++;
+          } catch {}
+        }
+        toast(`${ok}/${skuIds.length}개 위치 변경 완료`);
+        $(".modal-overlay").remove();
+        clearSelection();
+      }
+
+      function goPage(p) {
+        productsState.page = p;
+        loadProducts();
+      }
+
+      async function saveProduct(skuId) {
+        const body = {};
+        [
+          "location",
+          "purchase_url",
+          "naver_url",
+          "url_1688",
+          "flow_url",
+        ].forEach((f) => {
+          const v = $(`#edit-${f}`).value.trim();
+          body[f] = v || null;
+        });
+        try {
+          await api(`/product/${skuId}`, {
+            method: "PATCH",
+            body: JSON.stringify(body),
+          });
+          toast("저장 완료");
+          $(".modal-overlay").remove();
+          loadProducts();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Cart ──
+      async function renderCart() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>장바구니</h1>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-primary" onclick="exportCart()">구글시트 내보내기</button>
+            <button class="btn btn-danger" onclick="clearCart()">전체 삭제</button>
+          </div>
+          <div id="cart-list"><div class="loading-center"><div class="spinner"></div></div></div>
+        `;
+        await loadCart();
+      }
+
+      async function loadCart() {
+        const wrap = $("#cart-list");
+        try {
+          const items = await api("/cart/items");
+          if (!items.length) {
+            wrap.innerHTML = '<div class="empty">장바구니가 비어있습니다</div>';
+            return;
+          }
+          const rows = items
+            .map(
+              (i) =>
+                `<tr>
+              <td>${i.sku_id}</td>
+              <td>${i.product_name}</td>
+              <td>${i.barcode || "-"}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <button class="btn btn-sm" onclick="updateCartQty(${i.id},${i.quantity - 1})">-</button>
+                  <span style="min-width:30px;text-align:center">${i.quantity}</span>
+                  <button class="btn btn-sm" onclick="updateCartQty(${i.id},${i.quantity + 1})">+</button>
+                </div>
+              </td>
+              <td>${i.added_by}</td>
+              <td>${formatDate(i.created_at)}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteCartItem(${i.id})">삭제</button></td>
+            </tr>`,
+            )
+            .join("");
+          wrap.innerHTML = `
+            <div style="margin-bottom:8px;color:var(--fg2);font-size:13px">총 ${items.length}건</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>SKU</th><th>상품명</th><th>바코드</th><th>수량</th><th>추가자</th><th>추가일</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table></div>
+          `;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty">로드 실패: ${e.message}</div>`;
+        }
+      }
+
+      async function updateCartQty(id, qty) {
+        if (qty < 1) {
+          deleteCartItem(id);
+          return;
+        }
+        try {
+          await api(`/cart/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ quantity: qty }),
+          });
+          loadCart();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function deleteCartItem(id) {
+        try {
+          await api(`/cart/${id}`, { method: "DELETE" });
+          toast("삭제 완료");
+          loadCart();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function clearCart() {
+        if (!confirm("장바구니를 전체 삭제하시겠습니까?")) return;
+        try {
+          const r = await api("/cart/all", { method: "DELETE" });
+          toast(`${r.deleted}건 삭제 완료`);
+          loadCart();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function exportCart() {
+        try {
+          const r = await api("/cart/export", { method: "POST" });
+          toast(r.message);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Scan ──
+      let scanTimeout = null;
+      let continuousScan = false;
+
+      async function renderScan() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>바코드 스캔</h1>
+          <div class="scan-controls">
+            <label class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" id="continuous-toggle" ${continuousScan ? "checked" : ""} onchange="continuousScan=this.checked">
+                <span class="toggle-slider"></span>
+              </label>
+              연속 스캔 모드
+            </label>
+          </div>
+          <div class="scan-layout">
+            <div>
+              <div class="scan-input-wrap">
+                <input class="input" id="scan-input" placeholder="바코드를 스캔하세요..." autofocus>
+              </div>
+              <div id="scan-result"></div>
+            </div>
+            <div>
+              <div class="scan-history">
+                <div class="history-header">오늘 스캔 이력</div>
+                <div id="scan-history-list"><div style="padding:16px;font-size:12px;color:var(--fg3)">로딩 중...</div></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const inp = $("#scan-input");
+        inp.addEventListener("input", () => {
+          clearTimeout(scanTimeout);
+          const v = inp.value.trim();
+          if (v.length >= 8) {
+            scanTimeout = setTimeout(() => doScan(v), 200);
+          }
+        });
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            clearTimeout(scanTimeout);
+            const v = inp.value.trim();
+            if (v) doScan(v);
+          }
+        });
+        inp.focus();
+        loadScanHistory();
+      }
+
+      async function loadScanHistory() {
+        const wrap = $("#scan-history-list");
+        if (!wrap) return;
+        try {
+          const data = await api("/recent?limit=20");
+          if (!data.length) {
+            wrap.innerHTML =
+              '<div style="padding:16px;font-size:12px;color:var(--fg3)">스캔 이력 없음</div>';
+            return;
+          }
+          wrap.innerHTML = data
+            .map(
+              (item) =>
+                `<div class="history-item">
+              <div class="h-name">${item.product_name || item.sku_id || "-"}</div>
+              <div class="h-sub">${item.barcode || ""} · ${formatDate(item.created_at)}</div>
+            </div>`,
+            )
+            .join("");
+        } catch {
+          wrap.innerHTML =
+            '<div style="padding:16px;font-size:12px;color:var(--fg3)">이력 로드 실패</div>';
+        }
+      }
+
+      async function doScan(barcode) {
+        const wrap = $("#scan-result");
+        wrap.innerHTML =
+          '<div class="loading-center"><div class="spinner"></div></div>';
+        try {
+          const p = await api(`/scan/${encodeURIComponent(barcode)}`);
+          beepSuccess();
+
+          const images = (p.images || [])
+            .map(
+              (img) =>
+                `<img src="${API}/image/${img.file_path}?width=400" alt="" onerror="this.style.display='none'" onclick="openLightbox('${API}/image/${img.file_path}')" style="cursor:zoom-in">`,
+            )
+            .join("");
+
+          const links = [];
+          if (p.coupang_url)
+            links.push(`<a href="${p.coupang_url}" target="_blank">쿠팡</a>`);
+
+          wrap.innerHTML = `
+            <div class="scan-result">
+              ${images ? `<div class="product-images">${images}</div>` : ""}
+              <div class="product-info">
+                <div class="name">${p.product_name}</div>
+                <div class="info-grid">
+                  <div class="info-item"><div class="label">SKU</div><div class="val">${p.sku_id}</div></div>
+                  <div class="info-item"><div class="label">바코드</div><div class="val">${(p.barcodes || []).join(", ")}</div></div>
+                  <div class="info-item"><div class="label">카테고리</div><div class="val">${p.category || "-"}</div></div>
+                  <div class="info-item"><div class="label">브랜드</div><div class="val">${p.brand || "-"}</div></div>
+                  <div class="info-item"><div class="label">위치</div><div class="val">${p.product_master_location || p.location || "-"}</div></div>
+                  <div class="info-item"><div class="label">재고</div><div class="val">${p.quantity ?? "-"}</div></div>
+                </div>
+                ${links.length ? `<div class="links">${links.join("")}</div>` : ""}
+                <div class="print-bar">
+                  <span style="color:var(--fg2)">인쇄 수량:</span>
+                  <input class="input" id="print-qty" type="number" min="1" max="100" value="1" style="width:60px">
+                  <button class="btn btn-primary" onclick="doPrint('${p.barcode || barcode}','${p.sku_id}','${p.product_name.replace(/'/g, "\\'")}')">라벨 인쇄</button>
+                  <button class="btn" onclick="addToCart('${p.sku_id}','${barcode}','${p.product_name.replace(/'/g, "\\'")}')">장바구니 추가</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // 연속 스캔 모드
+          if (continuousScan) {
+            await doPrint(p.barcode || barcode, p.sku_id, p.product_name, 1);
+            setTimeout(() => {
+              const inp = $("#scan-input");
+              if (inp) {
+                inp.value = "";
+                inp.focus();
+              }
+              loadScanHistory();
+            }, 600);
+          } else {
+            const inp = $("#scan-input");
+            if (inp) {
+              inp.value = "";
+              inp.focus();
+            }
+            loadScanHistory();
+          }
+        } catch (e) {
+          beepError();
+          wrap.innerHTML = `<div class="empty">조회 실패: ${e.message}</div>`;
+          const inp = $("#scan-input");
+          if (inp) inp.select();
+        }
+      }
+
+      async function doPrint(barcode, skuId, name, forceQty) {
+        const qty =
+          forceQty !== undefined
+            ? forceQty
+            : parseInt($("#print-qty").value) || 1;
+        try {
+          await api("/print", {
+            method: "POST",
+            body: JSON.stringify({
+              barcode,
+              sku_id: skuId,
+              product_name: name,
+              quantity: qty,
+            }),
+          });
+          toast(`${qty}매 인쇄 요청 완료`);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function addToCart(skuId, barcode, name) {
+        try {
+          await api("/cart/add", {
+            method: "POST",
+            body: JSON.stringify({
+              sku_id: skuId,
+              barcode,
+              product_name: name,
+              quantity: 1,
+            }),
+          });
+          toast("장바구니 추가 완료");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Map ──
+      function renderMap() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>창고 도면</h1>
+          <iframe class="map-frame" src="/admin/map-editor"></iframe>
+        `;
+      }
+
+      // ── Data ──
+      async function renderData() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>데이터 관리</h1>
+          <h2 style="font-size:16px;margin-bottom:12px">파싱 이력</h2>
+          <div id="data-parse"><div class="loading-center"><div class="spinner"></div></div></div>
+          <h2 style="font-size:16px;margin:24px 0 12px">NAS 동기화</h2>
+          <div id="data-nas"><div class="loading-center"><div class="spinner"></div></div></div>
+        `;
+        try {
+          const [logs, status] = await Promise.all([
+            api("/parse-logs?limit=50"),
+            api("/status"),
+          ]);
+          const rows = logs
+            .map(
+              (l) =>
+                `<tr>
+              <td>${l.file_name}</td><td>${l.file_type}</td>
+              <td>${l.record_count}</td><td>${l.added_count}</td><td>${l.updated_count}</td>
+              <td>${l.skipped_count}</td>
+              <td>${l.error_count > 0 ? `<span class="badge badge-red">${l.error_count}</span>` : '<span class="badge badge-green">0</span>'}</td>
+              <td>${l.duration_ms}ms</td><td>${formatDate(l.parsed_at)}</td>
+            </tr>`,
+            )
+            .join("");
+          $("#data-parse").innerHTML = logs.length
+            ? `<div class="table-wrap"><table><thead><tr><th>파일</th><th>유형</th><th>레코드</th><th>추가</th><th>수정</th><th>스킵</th><th>오류</th><th>소요</th><th>시각</th></tr></thead><tbody>${rows}</tbody></table></div>`
+            : '<div class="empty">파싱 이력 없음</div>';
+
+          const nas = status.nas_sync || {};
+          const disk = status.disk || {};
+          $("#data-nas").innerHTML = `
+            <div class="cards">
+              <div class="card"><div class="label">NAS 상태</div><div class="value">${nas.status === "connected" ? '<span style="color:var(--green)">연결</span>' : '<span style="color:var(--red)">미연결</span>'}</div><div class="sub">마지막 확인: ${nas.last_check ? formatDate(nas.last_check) : "-"}</div></div>
+              <div class="card"><div class="label">이미지 캐시</div><div class="value">${disk.cache_size_mb || 0}MB</div><div class="sub">제한: ${disk.cache_limit_mb || 0}MB</div></div>
+              <div class="card"><div class="label">백업</div><div class="value">${disk.backup_count || 0}개</div></div>
+            </div>
+          `;
+        } catch (e) {
+          $("#data-parse").innerHTML =
+            `<div class="empty">로드 실패: ${e.message}</div>`;
+          $("#data-nas").innerHTML = "";
+        }
+      }
+
+      // ── Reports ──
+      let reportsPeriod = 7;
+
+      async function renderReports() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>리포트</h1>
+          <div class="period-tabs">
+            <button class="period-tab ${reportsPeriod === 7 ? "active" : ""}" onclick="setReportsPeriod(7)">7일</button>
+            <button class="period-tab ${reportsPeriod === 30 ? "active" : ""}" onclick="setReportsPeriod(30)">30일</button>
+            <button class="period-tab ${reportsPeriod === 90 ? "active" : ""}" onclick="setReportsPeriod(90)">90일</button>
+          </div>
+          <div class="reports-charts">
+            <div class="chart-card"><h3>일별 스캔량</h3><canvas id="report-scan-chart"></canvas></div>
+            <div class="chart-card"><h3>일별 인쇄량</h3><canvas id="report-print-chart"></canvas></div>
+          </div>
+          <div id="reports-summary"></div>
+        `;
+        await loadReportsData();
+      }
+
+      async function setReportsPeriod(days) {
+        reportsPeriod = days;
+        renderReports();
+      }
+
+      async function loadReportsData() {
+        try {
+          const [scanStats, printStats] = await Promise.all([
+            api(`/stats/scans?days=${reportsPeriod}`).catch(() => null),
+            api(`/stats/prints?days=${reportsPeriod}`).catch(() => null),
+          ]);
+
+          const rScanLabels = (scanStats || []).map((d) => d.date);
+          const rScanData = (scanStats || []).map((d) => d.count);
+          if (rScanLabels.length && $("#report-scan-chart")) {
+            new Chart($("#report-scan-chart"), {
+              type: "line",
+              data: {
+                labels: rScanLabels,
+                datasets: [
+                  {
+                    label: "스캔",
+                    data: rScanData,
+                    borderColor: "#0288d1",
+                    backgroundColor: "rgba(2,136,209,0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              },
+            });
+          } else if ($("#report-scan-chart")) {
+            const ctx = $("#report-scan-chart");
+            ctx.parentElement.innerHTML =
+              '<h3>일별 스캔량</h3><div class="empty" style="padding:20px">데이터 없음</div>';
+          }
+
+          const rPrintLabels = (printStats || []).map((d) => d.date);
+          const rPrintData = (printStats || []).map((d) => d.count);
+          if (rPrintLabels.length && $("#report-print-chart")) {
+            new Chart($("#report-print-chart"), {
+              type: "line",
+              data: {
+                labels: rPrintLabels,
+                datasets: [
+                  {
+                    label: "인쇄",
+                    data: rPrintData,
+                    borderColor: "#fe6a34",
+                    backgroundColor: "rgba(254,106,52,0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } },
+              },
+            });
+          } else if ($("#report-print-chart")) {
+            const ctx = $("#report-print-chart");
+            ctx.parentElement.innerHTML =
+              '<h3>일별 인쇄량</h3><div class="empty" style="padding:20px">데이터 없음</div>';
+          }
+
+          const scanTotal = rScanData.reduce((a, b) => a + b, 0);
+          const printTotal = rPrintData.reduce((a, b) => a + b, 0);
+          const summaryEl = $("#reports-summary");
+          if (summaryEl) {
+            summaryEl.innerHTML = `
+              <div class="cards">
+                <div class="card"><div class="label">기간 총 스캔</div><div class="value">${scanTotal.toLocaleString()}</div><div class="sub">최근 ${reportsPeriod}일</div></div>
+                <div class="card"><div class="label">기간 총 인쇄</div><div class="value">${printTotal.toLocaleString()}</div><div class="sub">최근 ${reportsPeriod}일</div></div>
+              </div>
+            `;
+          }
+        } catch (e) {
+          toast("리포트 로드 실패: " + e.message, "error");
+        }
+      }
+
+      // ── Alerts ──
+      async function renderAlerts() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>알림 센터</h1>
+          <div id="alerts-summary"><div class="loading-center"><div class="spinner"></div></div></div>
+          <div class="alert-section">
+            <div class="alert-section-header">
+              <span>이미지 없는 상품</span>
+              <span id="no-image-count" style="color:var(--red)"></span>
+            </div>
+            <div id="no-image-list"><div class="loading-center"><div class="spinner"></div></div></div>
+          </div>
+          <div class="alert-section">
+            <div class="alert-section-header">
+              <span>바코드 없는 상품</span>
+              <span id="no-barcode-count" style="color:var(--red)"></span>
+            </div>
+            <div id="no-barcode-list"><div class="loading-center"><div class="spinner"></div></div></div>
+          </div>
+        `;
+
+        try {
+          const [summary, noImage, noBarcode] = await Promise.all([
+            api("/stats/alerts").catch(() => ({})),
+            api("/stats/products/no-image").catch(() => []),
+            api("/stats/products/no-barcode").catch(() => []),
+          ]);
+
+          const summaryEl = $("#alerts-summary");
+          if (summaryEl) {
+            summaryEl.innerHTML = `
+              <div class="cards" style="margin-bottom:24px">
+                <div class="card"><div class="label">이미지 없음</div><div class="value" style="color:var(--red)">${summary.no_image || noImage.length || 0}</div></div>
+                <div class="card"><div class="label">바코드 없음</div><div class="value" style="color:var(--red)">${summary.no_barcode || noBarcode.length || 0}</div></div>
+              </div>
+            `;
+          }
+
+          const niCount = $("#no-image-count");
+          if (niCount) niCount.textContent = `${noImage.length}건`;
+          const niList = $("#no-image-list");
+          if (niList) {
+            niList.innerHTML = noImage.length
+              ? `<div class="table-wrap" style="border:none"><table><thead><tr><th>SKU</th><th>상품명</th><th></th></tr></thead><tbody>${noImage
+                  .map(
+                    (
+                      p,
+                    ) => `<tr><td>${p.sku_id}</td><td>${p.product_name}</td><td>
+                    <button class="btn btn-sm btn-primary" onclick="genSelfQr('${p.sku_id}')">자체 QR</button>
+                    <button class="btn btn-sm" onclick="editProduct('${p.sku_id}')">편집</button>
+                  </td></tr>`,
+                  )
+                  .join("")}</tbody></table></div>`
+              : '<div class="empty" style="padding:20px">해당 상품 없음</div>';
+          }
+
+          const nbCount = $("#no-barcode-count");
+          if (nbCount) nbCount.textContent = `${noBarcode.length}건`;
+          const nbList = $("#no-barcode-list");
+          if (nbList) {
+            nbList.innerHTML = noBarcode.length
+              ? `<div class="table-wrap" style="border:none"><table><thead><tr><th>SKU</th><th>상품명</th><th></th></tr></thead><tbody>${noBarcode
+                  .map(
+                    (
+                      p,
+                    ) => `<tr><td>${p.sku_id}</td><td>${p.product_name}</td><td>
+                    <button class="btn btn-sm btn-primary" onclick="genSelfQr('${p.sku_id}')">자체 QR</button>
+                    <button class="btn btn-sm" onclick="editProduct('${p.sku_id}')">편집</button>
+                  </td></tr>`,
+                  )
+                  .join("")}</tbody></table></div>`
+              : '<div class="empty" style="padding:20px">해당 상품 없음</div>';
+          }
+        } catch (e) {
+          toast("알림 로드 실패: " + e.message, "error");
+        }
+      }
+
+      async function genSelfQr(skuId) {
+        try {
+          const r = await api(`/product/${skuId}/self-qr`, { method: "POST" });
+          toast(r.message || "자체 QR 생성 완료");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Settings ──
+      async function renderSettings() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>설정</h1>
+          <div id="settings-content"><div class="loading-center"><div class="spinner"></div></div></div>
+        `;
+        try {
+          const s = await api("/settings");
+          el.innerHTML = `
+            <h1>설정</h1>
+            <div class="cards">
+              <div class="card">
+                <div class="label">프린터</div>
+                <div class="value" style="font-size:16px">${s.printer.name}</div>
+                <div class="sub">에이전트: ${s.printer.agent_url}</div>
+                <div class="sub">라벨: ${s.printer.label_width_mm}x${s.printer.label_height_mm}mm, gap ${s.printer.label_gap_mm}mm, 밀도 ${s.printer.label_density}</div>
+                <button class="btn btn-sm" style="margin-top:8px" onclick="testPrint()">인쇄 테스트</button>
+              </div>
+              <div class="card">
+                <div class="label">NAS WebDAV</div>
+                <div class="value" style="font-size:16px">${s.nas.connected ? '<span style="color:var(--green)">연결</span>' : '<span style="color:var(--red)">미설정</span>'}</div>
+                <div class="sub">${s.nas.webdav_url}</div>
+                <div class="sub">경로: ${s.nas.path_prefix || "-"}</div>
+                <button class="btn btn-sm" style="margin-top:8px" onclick="testNas()">NAS 테스트</button>
+              </div>
+              <div class="card">
+                <div class="label">구글시트</div>
+                <div class="value" style="font-size:16px">${s.gsheet.configured ? '<span style="color:var(--green)">설정됨</span>' : '<span style="color:var(--red)">미설정</span>'}</div>
+              </div>
+            </div>
+            <h2 style="font-size:16px;margin:24px 0 12px">데이터 일괄 업로드</h2>
+            <div class="cards">
+              <div class="card">
+                <div class="label">상품 + 바코드 xlsx</div>
+                <div class="sub" style="margin-bottom:8px">컬럼: SKU, 상품명, 카테고리, 브랜드, 바코드</div>
+                <div class="dropzone" id="dz-products" onclick="$('#upload-products').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div>파일을 드래그하거나 클릭하여 선택</div>
+                  <div id="dz-products-name" style="margin-top:4px;font-size:11px;color:var(--accent)"></div>
+                </div>
+                <input type="file" id="upload-products" accept=".xlsx,.xls" style="display:none" onchange="onFileSelect(this,'dz-products-name')">
+                <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="uploadProducts()">업로드</button>
+                <div id="upload-products-result" style="margin-top:8px;font-size:12px"></div>
+              </div>
+              <div class="card">
+                <div class="label">구매 링크 xlsx</div>
+                <div class="sub" style="margin-bottom:8px">컬럼: SKU, URL</div>
+                <div class="dropzone" id="dz-urls" onclick="$('#upload-urls').click()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div>파일을 드래그하거나 클릭하여 선택</div>
+                  <div id="dz-urls-name" style="margin-top:4px;font-size:11px;color:var(--accent)"></div>
+                </div>
+                <input type="file" id="upload-urls" accept=".xlsx,.xls" style="display:none" onchange="onFileSelect(this,'dz-urls-name')">
+                <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="uploadUrls()">업로드</button>
+                <div id="upload-urls-result" style="margin-top:8px;font-size:12px"></div>
+              </div>
+            </div>
+          `;
+
+          setupDropzone("dz-products", "upload-products", "dz-products-name");
+          setupDropzone("dz-urls", "upload-urls", "dz-urls-name");
+        } catch (e) {
+          el.innerHTML = `<h1>설정</h1><div class="empty">로드 실패: ${e.message}</div>`;
+        }
+      }
+
+      function onFileSelect(input, nameElId) {
+        const nameEl = document.getElementById(nameElId);
+        if (nameEl && input.files[0]) nameEl.textContent = input.files[0].name;
+      }
+
+      function setupDropzone(dzId, inputId, nameElId) {
+        const dz = document.getElementById(dzId);
+        if (!dz) return;
+        dz.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dz.classList.add("hover");
+        });
+        dz.addEventListener("dragleave", () => dz.classList.remove("hover"));
+        dz.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dz.classList.remove("hover");
+          const file = e.dataTransfer.files[0];
+          if (!file) return;
+          const input = document.getElementById(inputId);
+          if (input) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+          }
+          const nameEl = document.getElementById(nameElId);
+          if (nameEl) nameEl.textContent = file.name;
+        });
+      }
+
+      async function testPrint() {
+        try {
+          const r = await api("/print/test", { method: "POST" });
+          toast(r.message, r.status === "ok" ? "success" : "error");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function testNas() {
+        try {
+          const r = await api("/nas/test", { method: "POST" });
+          toast(r.message, r.status === "ok" ? "success" : "error");
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function uploadProducts() {
+        const file = $("#upload-products").files[0];
+        if (!file) {
+          toast("파일을 선택하세요", "error");
+          return;
+        }
+        const form = new FormData();
+        form.append("file", file);
+        const key = getApiKey();
+        const headers = {};
+        if (key) headers["X-API-Key"] = key;
+        try {
+          const res = await fetch(API + "/import/products", {
+            method: "POST",
+            body: form,
+            headers,
+          });
+          const r = await res.json();
+          if (!res.ok) throw new Error(r.detail);
+          $("#upload-products-result").innerHTML =
+            `<span style="color:var(--green)">${r.message}</span>`;
+          toast(r.message);
+        } catch (e) {
+          $("#upload-products-result").innerHTML =
+            `<span style="color:var(--red)">${e.message}</span>`;
+        }
+      }
+
+      async function uploadUrls() {
+        const file = $("#upload-urls").files[0];
+        if (!file) {
+          toast("파일을 선택하세요", "error");
+          return;
+        }
+        const form = new FormData();
+        form.append("file", file);
+        const key = getApiKey();
+        const headers = {};
+        if (key) headers["X-API-Key"] = key;
+        try {
+          const res = await fetch(API + "/import/urls-upload", {
+            method: "POST",
+            body: form,
+            headers,
+          });
+          const r = await res.json();
+          if (!res.ok) throw new Error(r.detail);
+          $("#upload-urls-result").innerHTML =
+            `<span style="color:var(--green)">${r.message}</span>`;
+          toast(r.message);
+        } catch (e) {
+          $("#upload-urls-result").innerHTML =
+            `<span style="color:var(--red)">${e.message}</span>`;
+        }
+      }
+
+      // ── Product Add ──
+      function showAddProduct() {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.onclick = (e) => {
+          if (e.target === overlay) overlay.remove();
+        };
+        overlay.innerHTML = `
+          <div class="modal">
+            <h2>상품 등록</h2>
+            <div class="form-row"><label>SKU ID</label><input class="input" id="new-sku" placeholder="SKU-001"></div>
+            <div class="form-row"><label>상품명</label><input class="input" id="new-name" placeholder="상품명"></div>
+            <div class="form-row"><label>카테고리</label><input class="input" id="new-category" placeholder="카테고리 (선택)"></div>
+            <div class="form-row"><label>브랜드</label><input class="input" id="new-brand" placeholder="브랜드 (선택)"></div>
+            <div class="form-actions">
+              <button class="btn" onclick="this.closest('.modal-overlay').remove()">취소</button>
+              <button class="btn btn-primary" onclick="createProduct()">등록</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      async function createProduct() {
+        const sku = $("#new-sku").value.trim();
+        const name = $("#new-name").value.trim();
+        if (!sku || !name) {
+          toast("SKU와 상품명은 필수입니다", "error");
+          return;
+        }
+        try {
+          await api("/product", {
+            method: "POST",
+            body: JSON.stringify({
+              sku_id: sku,
+              product_name: name,
+              category: $("#new-category").value.trim(),
+              brand: $("#new-brand").value.trim(),
+            }),
+          });
+          toast("상품 등록 완료");
+          $(".modal-overlay").remove();
+          loadProducts();
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Product Edit ──
+      async function editProduct(skuId) {
+        const data = await api(
+          `/products?page=1&size=1&q=${encodeURIComponent(skuId)}`,
+        );
+        const p = data.items.find((i) => i.sku_id === skuId);
+        if (!p) {
+          toast("상품 없음", "error");
+          return;
+        }
+
+        let barcodes = [];
+        let images = [];
+        try {
+          const scanData = await api(
+            `/scan/${encodeURIComponent(skuId)}`,
+          ).catch(() => null);
+          if (scanData) {
+            barcodes = scanData.barcodes || [];
+            images = scanData.images || [];
+          }
+        } catch {}
+
+        const barcodeRows =
+          barcodes
+            .map(
+              (b) =>
+                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="font-family:monospace">${b}</span>
+            <button class="btn btn-sm btn-danger" onclick="removeBarcode('${skuId}','${b}')">삭제</button>
+          </div>`,
+            )
+            .join("") || '<span style="color:var(--fg3)">바코드 없음</span>';
+
+        const imageRows =
+          images
+            .map(
+              (img) =>
+                `<div style="display:inline-block;position:relative;margin:4px">
+            <img src="${API}/image/${img.file_path}?width=120" style="height:80px;border-radius:4px;object-fit:contain;background:var(--bg3);cursor:zoom-in" onclick="openLightbox('${API}/image/${img.file_path}')">
+          </div>`,
+            )
+            .join("") || '<span style="color:var(--fg3)">이미지 없음</span>';
+
+        const coupangBtn = p.purchase_url
+          ? `<button class="btn btn-sm" style="margin-top:8px" onclick="fetchCoupangImage('${skuId}')">쿠팡 이미지 수집</button>`
+          : "";
+
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.onclick = (e) => {
+          if (e.target === overlay) overlay.remove();
+        };
+        overlay.innerHTML = `
+          <div class="modal" style="min-width:500px">
+            <h2>${p.product_name}</h2>
+            <div class="form-row"><label>SKU</label><input class="input" value="${p.sku_id}" disabled></div>
+            <div class="form-row"><label>위치</label><input class="input" id="edit-location" value="${p.location || ""}"></div>
+            <div class="form-row"><label>쿠팡 URL</label><input class="input" id="edit-purchase_url" value="${p.purchase_url || ""}"></div>
+            <div class="form-row"><label>네이버 URL</label><input class="input" id="edit-naver_url" value="${p.naver_url || ""}"></div>
+            <div class="form-row"><label>1688 URL</label><input class="input" id="edit-url_1688" value="${p.url_1688 || ""}"></div>
+            <div class="form-row"><label>FLOW URL</label><input class="input" id="edit-flow_url" value="${p.flow_url || ""}"></div>
+            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+              <label style="font-size:12px;color:var(--fg2)">바코드</label>
+              <div style="margin:6px 0">${barcodeRows}</div>
+              <div style="display:flex;gap:6px">
+                <input class="input" id="new-barcode-input" placeholder="새 바코드" style="flex:1">
+                <button class="btn btn-sm btn-primary" onclick="addBarcode('${skuId}')">추가</button>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+              <label style="font-size:12px;color:var(--fg2)">이미지</label>
+              <div style="margin:6px 0">${imageRows}</div>
+              ${coupangBtn}
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input type="file" id="new-image-input" accept="image/*" style="font-size:12px;flex:1">
+                <button class="btn btn-sm btn-primary" onclick="uploadImage('${skuId}')">업로드</button>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" onclick="this.closest('.modal-overlay').remove()">닫기</button>
+              <button class="btn btn-primary" onclick="saveProduct('${skuId}')">저장</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      async function addBarcode(skuId) {
+        const input = $("#new-barcode-input");
+        const barcode = input.value.trim();
+        if (!barcode) return;
+        try {
+          await api(`/product/${skuId}/barcode`, {
+            method: "POST",
+            body: JSON.stringify({ barcode }),
+          });
+          toast("바코드 추가 완료");
+          $(".modal-overlay").remove();
+          editProduct(skuId);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function removeBarcode(skuId, barcode) {
+        try {
+          await api(`/product/${skuId}/barcode/${barcode}`, {
+            method: "DELETE",
+          });
+          toast("바코드 삭제 완료");
+          $(".modal-overlay").remove();
+          editProduct(skuId);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function uploadImage(skuId) {
+        const file = $("#new-image-input").files[0];
+        if (!file) {
+          toast("파일을 선택하세요", "error");
+          return;
+        }
+        const form = new FormData();
+        form.append("file", file);
+        const key = getApiKey();
+        const headers = {};
+        if (key) headers["X-API-Key"] = key;
+        try {
+          const res = await fetch(API + `/product/${skuId}/image`, {
+            method: "POST",
+            body: form,
+            headers,
+          });
+          const r = await res.json();
+          if (!res.ok) throw new Error(r.detail);
+          toast("이미지 업로드 완료");
+          $(".modal-overlay").remove();
+          editProduct(skuId);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Boxes ──
+      let boxesState = { page: 1 };
+
+      async function renderBoxes() {
+        const el = $("#content");
+        el.innerHTML = `
+          <h1>외박스 QR 관리</h1>
+          <div id="boxes-list"><div class="loading-center"><div class="spinner"></div></div></div>
+        `;
+        await loadBoxes();
+      }
+
+      async function loadBoxes() {
+        const wrap = $("#boxes-list");
+        try {
+          const data = await api(`/boxes?page=${boxesState.page}&size=20`);
+          const totalPages = Math.ceil(data.total / data.size) || 1;
+
+          if (!data.items.length) {
+            wrap.innerHTML = '<div class="empty">외박스 없음</div>';
+            return;
+          }
+
+          const rows = data.items
+            .map(
+              (b) =>
+                `<tr>
+              <td><strong>${b.qr_code}</strong></td>
+              <td>${b.box_name}</td>
+              <td>${b.product_master_name || "-"}</td>
+              <td>${formatDate(b.created_at)}</td>
+              <td>
+                <button class="btn btn-sm" onclick="viewBox('${b.qr_code}')">상세</button>
+                <a class="btn btn-sm" href="${API}/qr/image?data=${encodeURIComponent(b.qr_code)}&size=8" download="${b.qr_code}.png">QR</a>
+              </td>
+            </tr>`,
+            )
+            .join("");
+
+          wrap.innerHTML = `
+            <div style="margin-bottom:8px;color:var(--fg2);font-size:13px">총 ${data.total}건</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>QR코드</th><th>박스명</th><th>마스터</th><th>생성일</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table></div>
+            <div class="pagination">
+              <button class="btn btn-sm" ${boxesState.page <= 1 ? "disabled" : ""} onclick="boxesState.page--;loadBoxes()">이전</button>
+              <span class="current">${boxesState.page} / ${totalPages}</span>
+              <button class="btn btn-sm" ${boxesState.page >= totalPages ? "disabled" : ""} onclick="boxesState.page++;loadBoxes()">다음</button>
+            </div>
+          `;
+        } catch (e) {
+          wrap.innerHTML = `<div class="empty">로드 실패: ${e.message}</div>`;
+        }
+      }
+
+      function renderMasterImages(images, label, masterId, qrCode) {
+        if (!images || !images.length)
+          return `<div style="color:var(--fg3);font-size:12px;padding:8px 0">${label}: 없음</div>`;
+        return `<div style="margin-bottom:8px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">${label}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${images
+          .map(
+            (img) =>
+              `<div style="position:relative;display:inline-block"><img src="${API}${img.file_path}" style="height:80px;border-radius:4px;cursor:pointer" onclick="window.open('${API}${img.file_path}')"><button style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:18px" onclick="deleteBoxImage(${masterId},${img.id},'${qrCode}')">×</button></div>`,
+          )
+          .join("")}</div></div>`;
+      }
+
+      async function uploadBoxImage(masterId, imageType, qrCode) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = async () => {
+          const file = input.files[0];
+          if (!file) return;
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("image_type", imageType);
+          try {
+            await fetch(`${API}/product-master/${masterId}/image`, {
+              method: "POST",
+              body: fd,
+            });
+            toast("업로드 완료");
+            document.querySelector(".modal-overlay")?.remove();
+            viewBox(qrCode);
+          } catch (e) {
+            toast(e.message, "error");
+          }
+        };
+        input.click();
+      }
+
+      async function deleteBoxImage(masterId, imageId, qrCode) {
+        if (!confirm("이미지를 삭제하시겠습니까?")) return;
+        try {
+          await api(`/product-master/${masterId}/image/${imageId}`, {
+            method: "DELETE",
+          });
+          toast("삭제 완료");
+          document.querySelector(".modal-overlay")?.remove();
+          viewBox(qrCode);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      async function viewBox(qrCode) {
+        try {
+          const box = await api(`/box/${encodeURIComponent(qrCode)}`);
+          const members =
+            (box.members || [])
+              .map(
+                (m) =>
+                  `<tr><td>${m.sku_id}</td><td>${m.sku_name}</td><td>${m.barcode || "-"}</td><td>${m.location || "-"}</td></tr>`,
+              )
+              .join("") ||
+            '<tr><td colspan="4" style="color:var(--fg3)">멤버 없음</td></tr>';
+
+          const masterId = box.product_master_id;
+          const optionHtml = renderMasterImages(
+            box.option_images,
+            "옵션 이미지",
+            masterId,
+            qrCode,
+          );
+          const sourcingHtml = renderMasterImages(
+            box.sourcing_images,
+            "발주 이미지",
+            masterId,
+            qrCode,
+          );
+          const uploadBtns = masterId
+            ? `
+            <button class="btn btn-sm" onclick="uploadBoxImage(${masterId},'option','${qrCode}')">+ 옵션 이미지</button>
+            <button class="btn btn-sm" onclick="uploadBoxImage(${masterId},'sourcing','${qrCode}')">+ 발주 이미지</button>
+          `
+            : "";
+
+          const overlay = document.createElement("div");
+          overlay.className = "modal-overlay";
+          overlay.onclick = (e) => {
+            if (e.target === overlay) overlay.remove();
+          };
+          overlay.innerHTML = `
+            <div class="modal">
+              <h2>${box.box_name || box.qr_code}</h2>
+              <div style="text-align:center;margin-bottom:16px">
+                <img src="${API}/qr/image?data=${encodeURIComponent(qrCode)}&size=6" style="border-radius:4px">
+              </div>
+              <div class="info-grid" style="margin-bottom:12px">
+                <div class="info-item"><div class="label">QR코드</div><div class="val">${qrCode}</div></div>
+                <div class="info-item"><div class="label">마스터</div><div class="val">${box.product_master_name || "-"}</div></div>
+              </div>
+              ${optionHtml}
+              ${sourcingHtml}
+              <div style="margin-bottom:12px">${uploadBtns}</div>
+              <div class="table-wrap"><table>
+                <thead><tr><th>SKU</th><th>이름</th><th>바코드</th><th>위치</th></tr></thead>
+                <tbody>${members}</tbody>
+              </table></div>
+              <div class="form-actions">
+                <a class="btn btn-primary" href="${API}/qr/image?data=${encodeURIComponent(qrCode)}&size=12" download="${qrCode}.png">QR 다운로드</a>
+                <button class="btn" onclick="this.closest('.modal-overlay').remove()">닫기</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── Coupang image fetch ──
+      async function fetchCoupangImage(skuId) {
+        try {
+          toast("쿠팡 이미지 수집 중...");
+          const r = await api(`/coupang/fetch-images/${skuId}`, {
+            method: "POST",
+          });
+          if (r.status === "ok") {
+            toast("쿠팡 이미지 수집 완료");
+            $(".modal-overlay").remove();
+            editProduct(skuId);
+          } else {
+            toast(r.message, "error");
+          }
+        } catch (e) {
+          toast(e.message, "error");
+        }
+      }
+
+      // ── WebSocket 실시간 알림 ──
+      function connectWebSocket() {
+        const proto = location.protocol === "https:" ? "wss:" : "ws:";
+        const ws = new WebSocket(`${proto}//${location.host}/ws/events`);
+
+        ws.onmessage = (e) => {
+          try {
+            const event = JSON.parse(e.data);
+            const messages = {
+              print_complete: "인쇄 완료",
+              scan_event: "스캔 이벤트",
+              cart_update: "장바구니 변경",
+              image_fetched: "이미지 수집 완료",
+              sync_complete: "동기화 완료",
+            };
+            const msg = messages[event.type] || event.type;
+            const detail = event.data?.sku_id ? ` (${event.data.sku_id})` : "";
+            toast(`${msg}${detail}`);
+
+            // 대시보드 활동 피드 실시간 갱신
+            if (location.hash === "#/" || location.hash === "") {
+              api("/stats/activity")
+                .then(renderActivityFeed)
+                .catch(() => {});
+            }
+          } catch {}
+        };
+
+        ws.onclose = () => {
+          setTimeout(connectWebSocket, 5000);
+        };
+        ws.onerror = () => ws.close();
+      }
+
+      connectWebSocket();
+    </script>
+  </body>
+</html>
