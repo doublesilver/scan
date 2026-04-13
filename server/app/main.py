@@ -9,16 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import router
+from app.api.coupang_routes import router as coupang_router
 from app.api.map_routes import router as map_router
+from app.api.qr_routes import router as qr_router
+from app.api.routes import router
 from app.api.shelf_routes import router as shelf_router
+from app.api.stats_routes import router as stats_router
 from app.api.warehouse_routes import router as warehouse_router
+from app.api.ws_routes import router as ws_router
 from app.config import settings
-from app.middleware.auth import ApiKeyMiddleware
 from app.db.database import close_db, get_db
 from app.db.migrate_map import migrate_json_to_tables
+from app.middleware.auth import ApiKeyMiddleware
 from app.services.file_watcher import start_watcher, stop_watcher
 from app.services.nas_sync import NasSyncService
+from app.services.scheduler import start_scheduler, stop_scheduler
 from app.services.status_service import record_start_time
 
 logging.basicConfig(
@@ -40,7 +45,9 @@ async def lifespan(app: FastAPI):
     nas_sync = NasSyncService(app.state.http_client)
     app.state.nas_sync = nas_sync
     await nas_sync.start()
+    await start_scheduler(app)
     yield
+    await stop_scheduler()
     await nas_sync.stop()
     stop_watcher()
     await app.state.http_client.aclose()
@@ -68,6 +75,10 @@ app.include_router(router)
 app.include_router(map_router)
 app.include_router(shelf_router)
 app.include_router(warehouse_router)
+app.include_router(qr_router)
+app.include_router(coupang_router)
+app.include_router(stats_router)
+app.include_router(ws_router)
 
 _apk_dir = os.path.join(os.path.dirname(__file__), "..", "apk")
 os.makedirs(_apk_dir, exist_ok=True)
@@ -79,9 +90,25 @@ if os.path.exists(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 
+_admin_dir = os.path.join(_static_dir, "admin")
+if os.path.exists(os.path.join(_admin_dir, "assets")):
+    app.mount("/admin/assets", StaticFiles(directory=os.path.join(_admin_dir, "assets")), name="admin-assets")
+
+
 @app.get("/admin/map-editor", include_in_schema=False)
 async def map_editor():
     return FileResponse(os.path.join(_static_dir, "map-editor.html"))
+
+
+@app.get("/admin/favicon.svg", include_in_schema=False)
+async def admin_favicon():
+    return FileResponse(os.path.join(_admin_dir, "favicon.svg"))
+
+
+@app.get("/admin", include_in_schema=False)
+@app.get("/admin/{rest:path}", include_in_schema=False)
+async def admin_spa(rest: str = ""):
+    return FileResponse(os.path.join(_admin_dir, "index.html"))
 
 
 @app.get("/health")
