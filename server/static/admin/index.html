@@ -2538,7 +2538,7 @@
         return `<div style="margin-bottom:8px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">${label}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${images
           .map(
             (img) =>
-              `<div style="position:relative;display:inline-block"><img src="${API}${img.file_path}" style="height:80px;border-radius:4px;cursor:pointer" onclick="window.open('${API}${img.file_path}')"><button style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:18px" onclick="deleteBoxImage(${masterId},${img.id},'${qrCode}')">×</button></div>`,
+              `<div style="position:relative;display:inline-block"><img src="${img.file_path}" style="height:80px;border-radius:4px;cursor:pointer" onclick="window.open('${img.file_path}')"><button style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:18px" onclick="deleteBoxImage(${masterId},${img.id},'${qrCode}')">×</button></div>`,
           )
           .join("")}</div></div>`;
       }
@@ -2554,9 +2554,13 @@
           fd.append("file", file);
           fd.append("image_type", imageType);
           try {
+            const key = localStorage.getItem("scan_api_key") || "";
+            const headers = {};
+            if (key) headers["X-API-Key"] = key;
             await fetch(`${API}/product-master/${masterId}/image`, {
               method: "POST",
               body: fd,
+              headers,
             });
             toast("업로드 완료");
             document.querySelector(".modal-overlay")?.remove();
