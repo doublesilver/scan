@@ -100,14 +100,14 @@ async def map_editor():
     return FileResponse(os.path.join(_static_dir, "map-editor.html"))
 
 
-@app.get("/admin/favicon.svg", include_in_schema=False)
-async def admin_favicon():
-    return FileResponse(os.path.join(_admin_dir, "favicon.svg"))
-
-
 @app.get("/admin", include_in_schema=False)
 @app.get("/admin/{rest:path}", include_in_schema=False)
 async def admin_spa(rest: str = ""):
+    # 정적 파일 요청은 직접 서빙
+    if rest:
+        file_path = os.path.join(_admin_dir, rest)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
     return FileResponse(os.path.join(_admin_dir, "index.html"))
 
 
