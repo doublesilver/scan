@@ -41,9 +41,11 @@ WORK_STATUS.md
 
 # 개인 문서 (이력서, 제안서)
 *.html
+!server/static/**/*.html
 *_files/
 
 # 카카오톡 스크린샷
 docs/KakaoTalk_*.png
 docs/app-demo.zip
 .context/
+web/node_modules/

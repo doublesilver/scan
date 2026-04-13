@@ -1,0 +1,355 @@
+:root {
+  --bg: #f8f9fa;
+  --bg2: #ffffff;
+  --fg: #191c1d;
+  --fg2: #45474c;
+  --fg3: #6b7280;
+  --accent: #fe6a34;
+  --accent-hover: #e55a28;
+  --navy: #040d1b;
+  --navy-light: #0a1929;
+  --border: #c5c6cc;
+  --border-light: #e5e7eb;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR",
+    sans-serif;
+  --mono: "SF Mono", "Fira Code", "Fira Mono", Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout */
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 24px;
+}
+
+/* TopBar */
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  background: var(--navy);
+  padding: 0 20px;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-logo {
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  letter-spacing: -0.3px;
+  margin-right: 24px;
+  white-space: nowrap;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.topbar-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.topbar-tab:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topbar-tab.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Catalog Layout */
+.catalog-layout {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 48px);
+  margin: -24px;
+}
+
+.catalog-main {
+  flex: 1;
+  padding: 24px;
+  min-width: 0;
+}
+
+/* Filter Sidebar */
+.filter-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--navy);
+  padding: 20px 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 48px);
+  position: sticky;
+  top: 48px;
+}
+
+.filter-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 10px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-chip {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-chip:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-chip.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Catalog Toolbar */
+.catalog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.catalog-search {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.catalog-search input {
+  flex: 1;
+  padding: 8px 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.15s ease;
+  background: var(--bg2);
+}
+
+.catalog-search input:focus {
+  border-color: var(--accent);
+}
+
+.catalog-search button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.catalog-search button:hover {
+  background: var(--accent-hover);
+}
+
+.catalog-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.catalog-count {
+  font-size: 13px;
+  color: var(--fg3);
+  white-space: nowrap;
+}
+
+.catalog-meta select {
+  padding: 6px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--bg2);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Catalog Grid */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.catalog-loading,
+.catalog-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--fg3);
+  font-size: 15px;
+}
+
+/* Product Card */
+.product-card {
+  background: var(--bg2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.product-card-image {
+  aspect-ratio: 1;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card-placeholder {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--border);
+  user-select: none;
+}
+
+.product-card-body {
+  padding: 12px;
+}
+
+.product-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.product-card-sku {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fg3);
+  margin-bottom: 2px;
+}
+
+.product-card-category {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Pagination */
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px 0;
+}
+
+.catalog-pagination button {
+  padding: 8px 20px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--bg2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--fg);
+}
+
+.catalog-pagination button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.catalog-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.catalog-pagination span {
+  font-size: 13px;
+  color: var(--fg3);
+  min-width: 60px;
+  text-align: center;
+}

@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -291,5 +291,17 @@ MIGRATIONS = {
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )""",
         "CREATE INDEX IF NOT EXISTS idx_pmi_master ON product_master_image(product_master_id)",
+    ],
+    14: [
+        """CREATE TABLE IF NOT EXISTS product_attribute (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku_id TEXT NOT NULL REFERENCES product(sku_id),
+            attr_key TEXT NOT NULL,
+            attr_value TEXT NOT NULL,
+            UNIQUE(sku_id, attr_key, attr_value)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_pa_sku ON product_attribute(sku_id)",
+        "CREATE INDEX IF NOT EXISTS idx_pa_key ON product_attribute(attr_key)",
+        "CREATE INDEX IF NOT EXISTS idx_pa_key_value ON product_attribute(attr_key, attr_value)",
     ],
 }
