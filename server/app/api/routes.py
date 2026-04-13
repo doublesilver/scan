@@ -1030,7 +1030,7 @@ async def upload_product_master_image(
     filepath = os.path.join(_MASTER_PHOTO_DIR, filename)
     img.save(filepath, "JPEG", quality=85)
 
-    rel_path = f"static/photos/{filename}"
+    rel_path = f"/static/photos/{filename}"
     async with _write_lock:
         cursor = await db.execute(
             "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM product_master_image "
@@ -1065,7 +1065,7 @@ async def delete_product_master_image(master_id: int, image_id: int):
         await db.execute("DELETE FROM product_master_image WHERE id = ?", (image_id,))
         await db.commit()
 
-    file_path = os.path.join(os.path.dirname(__file__), "..", "..", rel_path)
+    file_path = os.path.join(os.path.dirname(__file__), "..", "..", rel_path.lstrip("/"))
     await asyncio.to_thread(lambda: os.path.exists(file_path) and os.remove(file_path))
 
     return {"status": "deleted"}
