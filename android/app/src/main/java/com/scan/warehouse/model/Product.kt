@@ -60,13 +60,24 @@ data class FamilyMember(
 ) : Parcelable
 
 @Parcelize
+data class ProductMasterImage(
+    @SerializedName("id") val id: Int,
+    @SerializedName("file_path") val filePath: String,
+    @SerializedName("image_type") val imageType: String,
+    @SerializedName("sort_order") val sortOrder: Int = 0
+) : Parcelable
+
+@Parcelize
 data class BoxResponse(
     @SerializedName("qr_code") val qrCode: String,
     @SerializedName("box_name") val boxName: String,
+    @SerializedName("product_master_id") val productMasterId: Int? = null,
     @SerializedName("product_master_name") val productMasterName: String,
     @SerializedName("product_master_image") val productMasterImage: String? = null,
     @SerializedName("location") val location: String? = null,
     @SerializedName("members") val members: List<FamilyMember>,
+    @SerializedName("option_images") val optionImages: List<ProductMasterImage> = emptyList(),
+    @SerializedName("sourcing_images") val sourcingImages: List<ProductMasterImage> = emptyList(),
     @SerializedName("coupang_url") val coupangUrl: String? = null,
     @SerializedName("naver_url") val naverUrl: String? = null,
     @SerializedName("url_1688") val url1688: String? = null,

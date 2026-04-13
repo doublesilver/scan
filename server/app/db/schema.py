@@ -1,4 +1,4 @@
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 13
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS db_version (
@@ -251,5 +251,45 @@ MIGRATIONS = {
         "CREATE INDEX IF NOT EXISTS idx_print_log_created ON print_log(created_at)",
         "CREATE INDEX IF NOT EXISTS idx_print_log_status ON print_log(status)",
         "CREATE INDEX IF NOT EXISTS idx_print_log_barcode ON print_log(barcode)",
+    ],
+    11: [
+        "ALTER TABLE product ADD COLUMN naver_url TEXT DEFAULT NULL",
+        "ALTER TABLE product ADD COLUMN url_1688 TEXT DEFAULT NULL",
+        "ALTER TABLE product ADD COLUMN flow_url TEXT DEFAULT NULL",
+        """CREATE TABLE IF NOT EXISTS cart (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku_id TEXT NOT NULL,
+            barcode TEXT NOT NULL DEFAULT '',
+            product_name TEXT NOT NULL DEFAULT '',
+            quantity INTEGER NOT NULL DEFAULT 1,
+            added_by TEXT NOT NULL DEFAULT 'web',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_cart_sku ON cart(sku_id)",
+        "CREATE INDEX IF NOT EXISTS idx_cart_date ON cart(created_at)",
+    ],
+    12: [
+        """CREATE TABLE IF NOT EXISTS coupang_fetch_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku_id TEXT NOT NULL,
+            url TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL,
+            saved_path TEXT,
+            fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_coupang_log_sku ON coupang_fetch_log(sku_id)",
+        "CREATE INDEX IF NOT EXISTS idx_coupang_log_date ON coupang_fetch_log(fetched_at)",
+    ],
+    13: [
+        """CREATE TABLE IF NOT EXISTS product_master_image (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_master_id INTEGER NOT NULL REFERENCES product_master(id),
+            file_path TEXT NOT NULL,
+            image_type TEXT NOT NULL CHECK(image_type IN ('option', 'sourcing')),
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_pmi_master ON product_master_image(product_master_id)",
     ],
 }

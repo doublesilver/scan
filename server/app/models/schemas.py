@@ -78,13 +78,23 @@ class FamilyMember(BaseModel):
     location: str | None = None
 
 
+class ProductMasterImage(BaseModel):
+    id: int
+    file_path: str
+    image_type: str
+    sort_order: int = 0
+
+
 class BoxResponse(BaseModel):
     qr_code: str
     box_name: str
+    product_master_id: int | None = None
     product_master_name: str
     product_master_image: str | None = None
     location: str | None = None
     members: list[FamilyMember]
+    option_images: list[ProductMasterImage] = []
+    sourcing_images: list[ProductMasterImage] = []
     coupang_url: str | None = None
     naver_url: str | None = None
     url_1688: str | None = None

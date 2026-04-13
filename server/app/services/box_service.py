@@ -1,4 +1,22 @@
-from app.models.schemas import BoxResponse, FamilyMember
+from app.models.schemas import BoxResponse, FamilyMember, ProductMasterImage
+
+
+async def _get_master_images(db, master_id: int) -> tuple[list[ProductMasterImage], list[ProductMasterImage]]:
+    cursor = await db.execute(
+        "SELECT id, file_path, image_type, sort_order FROM product_master_image "
+        "WHERE product_master_id = ? ORDER BY sort_order, id",
+        (master_id,),
+    )
+    rows = await cursor.fetchall()
+    option_images = []
+    sourcing_images = []
+    for r in rows:
+        img = ProductMasterImage(**dict(r))
+        if r["image_type"] == "option":
+            option_images.append(img)
+        else:
+            sourcing_images.append(img)
+    return option_images, sourcing_images
 
 
 async def get_box(db, qr_code: str) -> BoxResponse | None:
@@ -24,13 +42,17 @@ async def get_box(db, qr_code: str) -> BoxResponse | None:
         )
         rows = await cursor.fetchall()
         members = [FamilyMember(**dict(r)) for r in rows]
+        option_images, sourcing_images = await _get_master_images(db, master["id"])
         return BoxResponse(
             qr_code=qr_code,
             box_name=box["box_name"],
+            product_master_id=master["id"],
             product_master_name=master["name"],
             product_master_image=master["image_url"],
             location=members[0].location if members else None,
             members=members,
+            option_images=option_images,
+            sourcing_images=sourcing_images,
         )
 
     return BoxResponse(

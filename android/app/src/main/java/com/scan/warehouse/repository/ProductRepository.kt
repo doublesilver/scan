@@ -128,6 +128,18 @@ open class ProductRepository(protected val context: Context) {
 
     open suspend fun scanBox(qrCode: String): Result<BoxResponse> = safeCall { api.getBox(qrCode) }
 
+    open suspend fun uploadProductMasterImage(
+        masterId: Int,
+        file: MultipartBody.Part,
+        imageType: okhttp3.RequestBody
+    ): Result<Map<String, Any>> = safeCall {
+        api.uploadProductMasterImage(masterId, file, imageType)
+    }
+
+    open suspend fun deleteProductMasterImage(masterId: Int, imageId: Int): Result<Map<String, String>> = safeCall {
+        api.deleteProductMasterImage(masterId, imageId)
+    }
+
     open suspend fun getShelves(floor: Int, zone: String): Result<ShelfListResponse> = safeCall { api.getShelves(floor, zone) }
 
     open suspend fun updateMapCell(cellKey: String, data: Map<String, Any>): Result<Unit> = safeCall { api.updateMapCell(cellKey, data) }

@@ -1,10 +1,12 @@
 package com.scan.warehouse.ui
 
+import android.Manifest
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -21,7 +23,10 @@ import android.widget.LinearLayout.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.scan.warehouse.R
@@ -31,7 +36,13 @@ import com.scan.warehouse.model.MapLayout
 import com.scan.warehouse.model.ParsedLocation
 import com.scan.warehouse.repository.ProductRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -53,6 +64,21 @@ class BoxDetailActivity : BaseActivity() {
     private var currentLocation: String? = null
     private val animators = mutableListOf<ObjectAnimator>()
     private var currentZoomDialog: Dialog? = null
+    private var pendingImageType: String? = null
+    private var cameraUri: Uri? = null
+    private var currentBox: BoxResponse? = null
+
+    private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) launchCamera() else Toast.makeText(this, "카메라 권한이 필요합니다", Toast.LENGTH_SHORT).show()
+    }
+
+    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) cameraUri?.let { uploadImage(it) }
+    }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { uploadImage(it) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +96,8 @@ class BoxDetailActivity : BaseActivity() {
             return
         }
 
+        currentBox = box
+
         binding.btnBack.setOnClickListener { finishWithSlide() }
 
         binding.tvProductMasterName.text = box.productMasterName
@@ -80,7 +108,7 @@ class BoxDetailActivity : BaseActivity() {
         setupImageZoom()
 
         setupOptionImages(box)
-        binding.layoutSourcingImages.visibility = View.GONE
+        setupSourcingImages(box)
 
         loadMapAndPhotos(box)
     }
@@ -274,30 +302,44 @@ class BoxDetailActivity : BaseActivity() {
 
     private fun setupOptionImages(box: BoxResponse) {
         binding.layoutOptionImages.removeAllViews()
-        val url = box.productMasterImage ?: return
         val density = resources.displayMetrics.density
 
-        val iv = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                bottomMargin = (3 * density).toInt()
-            }
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.FIT_CENTER
+        box.productMasterImage?.let { url ->
+            addImageView(binding.layoutOptionImages, url, density)
         }
-        iv.load(if (url.startsWith("http")) url else repository.getImageUrl(url)) {
-            crossfade(true)
-            placeholder(R.drawable.ic_placeholder)
-            error(R.drawable.ic_placeholder)
+
+        for (img in box.optionImages) {
+            addImageView(binding.layoutOptionImages, img.filePath, density, img.id, box.productMasterId)
         }
-        iv.setOnClickListener { showZoomDialog(iv) }
-        binding.layoutOptionImages.addView(iv)
+
+        if (box.productMasterId != null) {
+            addPlaceholder(binding.layoutOptionImages, "옵션 이미지 추가", "option")
+        }
     }
 
     private fun setupSourcingImages(box: BoxResponse) {
         binding.layoutSourcingImages.removeAllViews()
-        val url = box.productMasterImage ?: return
         val density = resources.displayMetrics.density
 
+        if (box.sourcingImages.isEmpty() && box.productMasterId == null) {
+            binding.tvSourcingPlaceholder.visibility = View.VISIBLE
+            return
+        }
+        binding.tvSourcingPlaceholder.visibility = View.GONE
+
+        for (img in box.sourcingImages) {
+            addImageView(binding.layoutSourcingImages, img.filePath, density, img.id, box.productMasterId)
+        }
+
+        if (box.productMasterId != null) {
+            addPlaceholder(binding.layoutSourcingImages, "발주 이미지 추가", "sourcing")
+        }
+    }
+
+    private fun addImageView(
+        container: LinearLayout, url: String, density: Float,
+        imageId: Int? = null, masterId: Int? = null
+    ) {
         val iv = ImageView(this).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
                 bottomMargin = (3 * density).toInt()
@@ -311,7 +353,114 @@ class BoxDetailActivity : BaseActivity() {
             error(R.drawable.ic_placeholder)
         }
         iv.setOnClickListener { showZoomDialog(iv) }
-        binding.layoutSourcingImages.addView(iv)
+        if (imageId != null && masterId != null) {
+            iv.setOnLongClickListener {
+                AlertDialog.Builder(this)
+                    .setTitle("이미지 삭제")
+                    .setMessage("이 이미지를 삭제하시겠습니까?")
+                    .setPositiveButton("삭제") { _, _ -> deleteImage(masterId, imageId) }
+                    .setNegativeButton("취소", null)
+                    .show()
+                true
+            }
+        }
+        container.addView(iv)
+    }
+
+    private fun addPlaceholder(container: LinearLayout, text: String, imageType: String) {
+        val density = resources.displayMetrics.density
+        val tv = TextView(this).apply {
+            this.text = "+ $text"
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setTextColor(ContextCompat.getColor(this@BoxDetailActivity, R.color.primary))
+            gravity = Gravity.CENTER
+            setPadding(0, (12 * density).toInt(), 0, (12 * density).toInt())
+            background = ContextCompat.getDrawable(this@BoxDetailActivity, R.drawable.bg_block_border)
+            isClickable = true
+            isFocusable = true
+        }
+        tv.setOnClickListener { showImagePickerDialog(imageType) }
+        container.addView(tv)
+    }
+
+    private fun showImagePickerDialog(imageType: String) {
+        pendingImageType = imageType
+        AlertDialog.Builder(this)
+            .setTitle("이미지 추가")
+            .setItems(arrayOf("카메라", "갤러리")) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            launchCamera()
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                    1 -> galleryLauncher.launch("image/*")
+                }
+            }
+            .show()
+    }
+
+    private fun launchCamera() {
+        val photoFile = File(cacheDir, "photos").apply { mkdirs() }
+            .let { File(it, "master_${System.currentTimeMillis()}.jpg") }
+        cameraUri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
+        takePicture.launch(cameraUri!!)
+    }
+
+    private fun uploadImage(uri: Uri) {
+        val masterId = currentBox?.productMasterId ?: return
+        val imageType = pendingImageType ?: return
+
+        lifecycleScope.launch {
+            try {
+                val bytes = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.readBytes()
+                } ?: return@launch
+
+                val body = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                val filePart = MultipartBody.Part.createFormData("file", "photo.jpg", body)
+                val typePart = imageType.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                val result = repository.uploadProductMasterImage(masterId, filePart, typePart)
+                result.onSuccess {
+                    Toast.makeText(this@BoxDetailActivity, "업로드 완료", Toast.LENGTH_SHORT).show()
+                    refreshBox()
+                }.onFailure {
+                    Toast.makeText(this@BoxDetailActivity, "업로드 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@BoxDetailActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun deleteImage(masterId: Int, imageId: Int) {
+        lifecycleScope.launch {
+            try {
+                val result = repository.deleteProductMasterImage(masterId, imageId)
+                result.onSuccess {
+                    Toast.makeText(this@BoxDetailActivity, "삭제 완료", Toast.LENGTH_SHORT).show()
+                    refreshBox()
+                }.onFailure {
+                    Toast.makeText(this@BoxDetailActivity, "삭제 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@BoxDetailActivity, "삭제 실패", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun refreshBox() {
+        val qrCode = currentBox?.qrCode ?: return
+        lifecycleScope.launch {
+            repository.scanBox(qrCode).onSuccess { box ->
+                currentBox = box
+                setupOptionImages(box)
+                setupSourcingImages(box)
+            }
+        }
     }
 
     private fun setupLinkButtons(box: BoxResponse) {

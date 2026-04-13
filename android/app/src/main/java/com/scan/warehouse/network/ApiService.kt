@@ -137,4 +137,18 @@ interface ApiService {
     @DELETE("api/level-products/{productId}/photo")
     suspend fun deleteLevelProductPhoto(@Path("productId") productId: Int): Map<String, String>
 
+    @Multipart
+    @POST("api/product-master/{masterId}/image")
+    suspend fun uploadProductMasterImage(
+        @Path("masterId") masterId: Int,
+        @Part file: MultipartBody.Part,
+        @Part("image_type") imageType: okhttp3.RequestBody
+    ): Map<String, @JvmSuppressWildcards Any>
+
+    @DELETE("api/product-master/{masterId}/image/{imageId}")
+    suspend fun deleteProductMasterImage(
+        @Path("masterId") masterId: Int,
+        @Path("imageId") imageId: Int
+    ): Map<String, String>
+
 }
