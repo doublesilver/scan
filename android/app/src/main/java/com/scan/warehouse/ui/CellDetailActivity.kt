@@ -100,10 +100,9 @@ class CellDetailActivity : BaseActivity() {
 
         binding.btnBarEdit.setOnClickListener {
             AlertDialog.Builder(this)
-                .setTitle("편집")
-                .setItems(arrayOf("사진 변경", "라벨 수정")) { _, which ->
-                    if (which == 0) launchCamera() else showEditLabelDialog()
-                }
+                .setTitle("사진 변경")
+                .setMessage("새 사진을 업로드하시겠습니까?")
+                .setPositiveButton("확인") { _, _ -> showImagePickerDialog() }
                 .setNegativeButton("취소", null)
                 .show()
         }
@@ -172,6 +171,15 @@ class CellDetailActivity : BaseActivity() {
                 binding.layoutNoPhoto.visibility = View.VISIBLE
             }
         }
+    }
+
+    private fun showImagePickerDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("사진 업로드")
+            .setItems(arrayOf("카메라", "갤러리")) { _, which ->
+                if (which == 0) launchCamera() else galleryLauncher.launch("image/*")
+            }
+            .show()
     }
 
     private fun launchCamera() {
