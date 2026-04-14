@@ -6,6 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -59,6 +62,9 @@ class CellDetailActivity : BaseActivity() {
     private var mapLayout: MapLayout? = null
     private var cameraUri: Uri? = null
 
+    private var scaleFactor = 1.0f
+    private lateinit var scaleDetector: ScaleGestureDetector
+
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) doLaunchCamera() else Toast.makeText(this, "카메라 권한이 필요합니다", Toast.LENGTH_SHORT).show()
     }
@@ -92,10 +98,39 @@ class CellDetailActivity : BaseActivity() {
 
         binding.btnBarCamera.setOnClickListener { launchCamera() }
 
-        binding.btnBarEdit.setOnClickListener { showEditLabelDialog() }
+        binding.btnBarEdit.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("편집")
+                .setItems(arrayOf("사진 변경", "라벨 수정")) { _, which ->
+                    if (which == 0) launchCamera() else showEditLabelDialog()
+                }
+                .setNegativeButton("취소", null)
+                .show()
+        }
 
-        binding.ivCellPhoto.setOnClickListener {
-            if (binding.layoutNoPhoto.visibility == View.VISIBLE) launchCamera()
+        scaleDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                scaleFactor *= detector.scaleFactor
+                scaleFactor = scaleFactor.coerceIn(0.5f, 5.0f)
+                binding.ivCellPhoto.scaleX = scaleFactor
+                binding.ivCellPhoto.scaleY = scaleFactor
+                return true
+            }
+        })
+
+        val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                scaleFactor = 1.0f
+                binding.ivCellPhoto.scaleX = 1.0f
+                binding.ivCellPhoto.scaleY = 1.0f
+                return true
+            }
+        })
+
+        binding.ivCellPhoto.setOnTouchListener { _, event ->
+            scaleDetector.onTouchEvent(event)
+            gestureDetector.onTouchEvent(event)
+            true
         }
 
         binding.layoutNoPhoto.setOnClickListener { launchCamera() }

@@ -159,8 +159,14 @@ object WarehouseMapDialog {
         onDismiss: () -> Unit
     ): LinearLayout {
         val density = context.resources.displayMetrics.density
-        val cellSize = (48 * density).toInt()
+        val dialogPad = (32 * density).toInt()
         val margin = (3 * density).toInt()
+        val cols = if (landscape) zone.rows else zone.cols
+        val screenWidth = context.resources.displayMetrics.widthPixels
+        val minCellSize = (36 * density).toInt()
+        val maxCellSize = (48 * density).toInt()
+        val availableWidth = screenWidth - dialogPad - (margin * 2 * cols)
+        val cellSize = (availableWidth / cols).coerceIn(minCellSize, maxCellSize)
 
         val grid = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL

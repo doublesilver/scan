@@ -52,7 +52,7 @@ class ProductPlacementActivity : BaseActivity() {
 
     private data class PlacementTarget(
         val floor: Int, val zone: String, val seqNum: Int,
-        val cellKey: String, val levels: List<MapLevel>, val levelIndex: Int
+        val cellKey: String, val levels: List<MapLevel>
     )
     private var pendingTarget: PlacementTarget? = null
 
@@ -285,35 +285,17 @@ class ProductPlacementActivity : BaseActivity() {
                 val zoneColCount = layout.zones.find { it.code == zone }?.cols ?: 4
                 val seqNum = (row - 1) * zoneColCount + col
                 val levels = cell?.levels?.takeIf { it.isNotEmpty() } ?: CellDetailViewModel.DEFAULT_LEVELS
-                showLevelPickerDialog(floor, zone, seqNum, cellKey, levels)
+                pendingTarget = PlacementTarget(floor, zone, seqNum, cellKey, levels)
+                showConfirmationPanel()
             }
         )
     }
 
-    private fun showLevelPickerDialog(floor: Int, zone: String, seqNum: Int, cellKey: String, levels: List<MapLevel>) {
-        val displayLevels = levels.reversed()
-        val labels = displayLevels.map { level ->
-            val current = if (!level.itemLabel.isNullOrEmpty()) "  (현재: ${level.itemLabel})" else "  비어있음"
-            "${level.label}$current"
-        }.toTypedArray()
-
-        AlertDialog.Builder(this)
-            .setTitle("${zone}구역 ${zone}-$seqNum — 층 선택")
-            .setItems(labels) { _, which ->
-                val selectedLevel = displayLevels[which]
-                pendingTarget = PlacementTarget(floor, zone, seqNum, cellKey, levels, selectedLevel.index)
-                showConfirmationPanel()
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-
     private fun showConfirmationPanel() {
         val target = pendingTarget ?: return
-        val levelLabel = target.levels.getOrNull(target.levelIndex)?.label ?: ""
         val name = if (scanType == ScanType.BARCODE) scannedProduct?.productName ?: "" else scannedBox?.boxName ?: ""
 
-        binding.tvDestinationInfo.text = "배치 위치: ${target.zone}구역 ${target.zone}-${target.seqNum} / $levelLabel\n$name"
+        binding.tvDestinationInfo.text = "배치 위치: ${target.zone}구역 ${target.zone}-${target.seqNum}\n$name"
         binding.layoutBoxPhotoSection.visibility = if (scanType == ScanType.QR) View.VISIBLE else View.GONE
 
         binding.ivCellPhotoPreview.visibility = View.GONE
@@ -337,8 +319,8 @@ class ProductPlacementActivity : BaseActivity() {
         }
 
         val levels = target.levels.toMutableList()
-        if (target.levelIndex < levels.size) {
-            levels[target.levelIndex] = levels[target.levelIndex].copy(itemLabel = itemLabel, sku = sku)
+        if (levels.isNotEmpty()) {
+            levels[0] = levels[0].copy(itemLabel = itemLabel, sku = sku)
         }
         val payload = levels.map { lv ->
             mapOf("index" to lv.index, "label" to lv.label,
@@ -354,9 +336,9 @@ class ProductPlacementActivity : BaseActivity() {
                                 .onFailure { e -> Log.w("ProductPlacement", "위치 동기화 실패", e) }
                         }
                     }
-                    pendingCellPhotoUri?.let { uploadPhoto(it, target.cellKey, target.levelIndex) }
+                    pendingCellPhotoUri?.let { uploadPhoto(it, target.cellKey, 0) }
                     if (scanType == ScanType.QR) {
-                        pendingBoxPhotoUri?.let { uploadPhoto(it, target.cellKey, target.levelIndex) }
+                        pendingBoxPhotoUri?.let { uploadPhoto(it, target.cellKey, 0) }
                     }
                     binding.progressBar.visibility = View.GONE
                     binding.btnConfirmPlacement.isEnabled = true
