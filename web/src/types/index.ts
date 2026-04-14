@@ -5,6 +5,7 @@ export interface Product {
   brand: string;
   barcode?: string;
   thumbnail?: string;
+  location?: string;
 }
 
 export interface ProductsResponse {

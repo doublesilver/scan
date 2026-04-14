@@ -3,11 +3,16 @@ import type { Product } from "../types";
 
 interface ProductCardProps {
   product: Product;
+  onClick?: (product: Product) => void;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, onClick }: ProductCardProps) {
   return (
-    <div className="product-card">
+    <div
+      className="product-card"
+      onClick={() => onClick?.(product)}
+      style={{ cursor: "pointer" }}
+    >
       <div className="product-card-image">
         {product.thumbnail ? (
           <img

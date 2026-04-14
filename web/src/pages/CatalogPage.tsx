@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { api } from "../api/client";
+import { api, imageUrl } from "../api/client";
 import FilterSidebar from "../components/FilterSidebar";
 import ProductCard from "../components/ProductCard";
 import type { Product, ProductsResponse } from "../types";
@@ -13,6 +13,9 @@ export default function CatalogPage() {
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [imageFilter, setImageFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
 
   const totalPages = Math.ceil(total / size);
 
@@ -57,12 +60,24 @@ export default function CatalogPage() {
     setPage(1);
   };
 
+  const filteredProducts = products.filter((p) => {
+    if (imageFilter === "has" && !p.thumbnail) return false;
+    if (imageFilter === "none" && p.thumbnail) return false;
+    if (locationFilter === "has" && !p.location) return false;
+    if (locationFilter === "none" && p.location) return false;
+    return true;
+  });
+
   return (
     <div className="catalog-layout">
       <FilterSidebar
         categories={categories}
-        selected={category}
-        onSelect={handleCategorySelect}
+        selectedCategory={category}
+        onSelectCategory={handleCategorySelect}
+        imageFilter={imageFilter}
+        onImageFilter={setImageFilter}
+        locationFilter={locationFilter}
+        onLocationFilter={setLocationFilter}
       />
       <div className="catalog-main">
         <div className="catalog-toolbar">
@@ -96,12 +111,16 @@ export default function CatalogPage() {
 
         {loading ? (
           <div className="catalog-loading">불러오는 중...</div>
-        ) : products.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="catalog-empty">상품이 없습니다</div>
         ) : (
           <div className="catalog-grid">
-            {products.map((p) => (
-              <ProductCard key={p.sku_id} product={p} />
+            {filteredProducts.map((p) => (
+              <ProductCard
+                key={p.sku_id}
+                product={p}
+                onClick={setSelectedProduct}
+              />
             ))}
           </div>
         )}
@@ -123,6 +142,74 @@ export default function CatalogPage() {
           </div>
         )}
       </div>
+
+      {selectedProduct && (
+        <div
+          className="modal-overlay"
+          onClick={(e) =>
+            e.target === e.currentTarget && setSelectedProduct(null)
+          }
+        >
+          <div className="modal" style={{ maxWidth: 480 }}>
+            {selectedProduct.thumbnail && (
+              <img
+                src={imageUrl(selectedProduct.thumbnail)}
+                alt=""
+                style={{
+                  width: "100%",
+                  borderRadius: "8px 8px 0 0",
+                  maxHeight: 300,
+                  objectFit: "cover",
+                }}
+              />
+            )}
+            <div style={{ padding: "16px 20px" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>
+                {selectedProduct.product_name}
+              </h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 8,
+                  fontSize: 13,
+                  color: "#6b7280",
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <strong>SKU:</strong> {selectedProduct.sku_id}
+                </div>
+                <div>
+                  <strong>카테고리:</strong> {selectedProduct.category || "-"}
+                </div>
+                <div>
+                  <strong>브랜드:</strong> {selectedProduct.brand || "-"}
+                </div>
+                <div>
+                  <strong>위치:</strong> {selectedProduct.location || "-"}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    /* TODO: edit */
+                  }}
+                >
+                  편집
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setSelectedProduct(null)}
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
