@@ -473,6 +473,7 @@ async def list_products(
         await db.execute(
             f"SELECT p.sku_id, p.product_name, p.category, p.brand, "
             f"p.purchase_url, p.naver_url, p.url_1688, p.flow_url, p.location, "
+            f"(SELECT b2.barcode FROM barcode b2 WHERE b2.sku_id = p.sku_id LIMIT 1) AS barcode, "
             f"(SELECT i.file_path FROM barcode b JOIN image i ON b.barcode = i.barcode "
             f"WHERE b.sku_id = p.sku_id ORDER BY i.sort_order LIMIT 1) AS thumbnail "
             f"FROM product p{where} ORDER BY p.sku_id LIMIT ? OFFSET ?",
@@ -491,7 +492,8 @@ async def list_products(
             "url_1688": r[6],
             "flow_url": r[7],
             "location": r[8],
-            "thumbnail": r[9],
+            "barcode": r[9],
+            "thumbnail": r[10],
         }
         for r in rows
     ]
