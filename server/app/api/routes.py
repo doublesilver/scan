@@ -59,8 +59,8 @@ from app.services.url_import_service import import_purchase_urls as _import_purc
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 
-APP_VERSION_CODE = 88
-APP_VERSION_NAME = "5.4.1"
+APP_VERSION_CODE = 89
+APP_VERSION_NAME = "5.4.2"
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)

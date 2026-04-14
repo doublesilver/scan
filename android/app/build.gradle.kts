@@ -14,8 +14,8 @@ android {
         applicationId = "com.scan.warehouse"
         minSdk = 24
         targetSdk = 34
-        versionCode = 88
-        versionName = "5.4.1"
+        versionCode = 89
+        versionName = "5.4.2"
     }
 
     signingConfigs {
