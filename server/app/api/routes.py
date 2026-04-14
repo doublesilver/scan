@@ -59,8 +59,8 @@ from app.services.url_import_service import import_purchase_urls as _import_purc
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 
-APP_VERSION_CODE = 86
-APP_VERSION_NAME = "5.3.12"
+APP_VERSION_CODE = 87
+APP_VERSION_NAME = "5.4.0"
 
 
 @router.get("/scan/{barcode}", response_model=ScanResponse)
@@ -368,7 +368,7 @@ async def app_version():
         "versionCode": APP_VERSION_CODE,
         "versionName": APP_VERSION_NAME,
         "downloadUrl": "/apk/app-live-debug.apk",
-        "releaseNotes": "스캔 결과 카드의 그룹명 표시 숨김",
+        "releaseNotes": "셀 상세 단순화, 상품마스터 이미지 업로드, 상품 편집/실사진 촬영",
         "forceUpdate": False,
     }
 
