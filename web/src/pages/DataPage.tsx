@@ -106,7 +106,7 @@ export default function DataPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api<ParseLog[]>("/parse-log?limit=20")
+    api<ParseLog[]>("/parse-logs?limit=20")
       .then(setLogs)
       .catch(() => {})
       .finally(() => setLoading(false));
