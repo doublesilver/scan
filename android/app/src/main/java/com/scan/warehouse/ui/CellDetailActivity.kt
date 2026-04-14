@@ -96,7 +96,7 @@ class CellDetailActivity : BaseActivity() {
             }
         }
 
-        binding.btnBarCamera.setOnClickListener { launchCamera() }
+        binding.btnBarCamera.isClickable = false
 
         binding.btnBarEdit.setOnClickListener {
             AlertDialog.Builder(this)
@@ -150,7 +150,7 @@ class CellDetailActivity : BaseActivity() {
                 val cell = layout.cells[cellKey]
                 val serverLabel = cell?.label.orEmpty()
                 val displayLabel = if (serverLabel.isNotEmpty()) "${zone}구역 $serverLabel" else "${zone}구역 $cellKey"
-                binding.tvCellLabel.text = displayLabel
+                binding.btnBarCamera.text = displayLabel
 
                 val photoPath = cell?.levels?.firstOrNull { !it.photo.isNullOrEmpty() }?.photo
                 if (!photoPath.isNullOrEmpty()) {
@@ -167,7 +167,7 @@ class CellDetailActivity : BaseActivity() {
                     binding.layoutNoPhoto.visibility = View.VISIBLE
                 }
             }.onFailure {
-                binding.tvCellLabel.text = "${zone}구역 $cellKey"
+                binding.btnBarCamera.text = "${zone}구역 $cellKey"
                 binding.layoutNoPhoto.visibility = View.VISIBLE
             }
         }

@@ -5,15 +5,14 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- Cell photo full screen -->
     <ImageView
         android:id="@+id/ivCellPhoto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitCenter"
+        android:layout_marginBottom="56dp"
+        android:scaleType="centerCrop"
         android:src="@drawable/ic_placeholder" />
 
-    <!-- No photo placeholder -->
     <LinearLayout
         android:id="@+id/layoutNoPhoto"
         android:layout_width="wrap_content"
@@ -47,21 +46,6 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Cell label at top -->
-    <TextView
-        android:id="@+id/tvCellLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_marginTop="48dp"
-        android:background="#80000000"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
-        android:textColor="#ffffff"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <!-- Back button -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="48dp"
@@ -75,7 +59,6 @@
         android:scaleType="centerInside"
         android:padding="10dp" />
 
-    <!-- Bottom navigation bar -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
@@ -108,14 +91,13 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="match_parent"
-            android:text="사진촬영"
+            android:text=""
             android:textColor="@android:color/white"
             android:textSize="12sp"
+            android:textStyle="bold"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            app:icon="@drawable/ic_camera"
-            app:iconGravity="top"
-            app:iconTint="@android:color/white" />
+            app:iconGravity="top" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBarEdit"
