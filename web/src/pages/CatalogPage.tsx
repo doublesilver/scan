@@ -4,6 +4,87 @@ import FilterSidebar from "../components/FilterSidebar";
 import ProductCard from "../components/ProductCard";
 import type { Product, ProductsResponse } from "../types";
 
+function EditModal({
+  product,
+  onClose,
+  onSaved,
+}: {
+  product: Product;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(product.product_name);
+  const [cat, setCat] = useState(product.category || "");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api(`/product/${product.sku_id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ product_name: name, category: cat }),
+      });
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      alert("저장 실패: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="modal" style={{ maxWidth: 400 }}>
+        <div style={{ padding: "20px" }}>
+          <h3 style={{ margin: "0 0 16px" }}>상품 편집</h3>
+          <label style={{ fontSize: 12, color: "#6b7280" }}>상품명</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #c5c6cc",
+              borderRadius: 6,
+              marginBottom: 12,
+            }}
+          />
+          <label style={{ fontSize: 12, color: "#6b7280" }}>카테고리</label>
+          <input
+            type="text"
+            value={cat}
+            onChange={(e) => setCat(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #c5c6cc",
+              borderRadius: 6,
+              marginBottom: 16,
+            }}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn-primary"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "저장 중..." : "저장"}
+            </button>
+            <button className="btn-secondary" onClick={onClose}>
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CatalogPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -14,6 +95,7 @@ export default function CatalogPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [imageFilter, setImageFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
@@ -193,11 +275,34 @@ export default function CatalogPage() {
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   className="btn-primary"
-                  onClick={() => {
-                    /* TODO: edit */
-                  }}
+                  onClick={() => setEditingProduct(selectedProduct)}
                 >
                   편집
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    const qty = prompt("인쇄 수량 (1-100):", "1");
+                    if (!qty) return;
+                    const n = parseInt(qty);
+                    if (isNaN(n) || n < 1 || n > 100) {
+                      alert("1~100 사이 숫자를 입력하세요");
+                      return;
+                    }
+                    api("/print", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        barcode: selectedProduct.sku_id,
+                        sku_id: selectedProduct.sku_id,
+                        product_name: selectedProduct.product_name,
+                        quantity: n,
+                      }),
+                    })
+                      .then(() => alert(`인쇄 요청 완료 (${n}장)`))
+                      .catch((e: any) => alert("인쇄 실패: " + e.message));
+                  }}
+                >
+                  인쇄
                 </button>
                 <button
                   className="btn-secondary"
@@ -209,6 +314,17 @@ export default function CatalogPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {editingProduct && (
+        <EditModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSaved={() => {
+            setSelectedProduct(null);
+            fetchProducts();
+          }}
+        />
       )}
     </div>
   );
