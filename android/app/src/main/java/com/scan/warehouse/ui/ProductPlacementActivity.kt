@@ -11,6 +11,7 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -109,6 +110,19 @@ class ProductPlacementActivity : BaseActivity() {
                 DataWedgeManager.scanFlow.collect { barcode -> handleScan(barcode) }
             }
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.layoutConfirm.visibility == View.VISIBLE) {
+                    pendingTarget = null
+                    pendingCellPhotoUri = null
+                    pendingBoxPhotoUri = null
+                    showContentArea()
+                } else {
+                    finishWithSlide()
+                }
+            }
+        })
     }
 
     private fun setupSearch() {
@@ -423,7 +437,7 @@ class ProductPlacementActivity : BaseActivity() {
             val char = event.unicodeChar.toChar()
             if (char.isLetterOrDigit() || char == '-') {
                 val now = System.currentTimeMillis()
-                if (now - lastKeystrokeTime > 300) keystrokeBuffer.clear()
+                if (now - lastKeystrokeTime > DataWedgeManager.KEYSTROKE_TIMEOUT_MS) keystrokeBuffer.clear()
                 lastKeystrokeTime = now
                 keystrokeBuffer.append(char)
                 return true
@@ -442,16 +456,4 @@ class ProductPlacementActivity : BaseActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (binding.layoutConfirm.visibility == View.VISIBLE) {
-            pendingTarget = null
-            pendingCellPhotoUri = null
-            pendingBoxPhotoUri = null
-            showContentArea()
-            return
-        }
-        super.onBackPressed()
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-    }
 }

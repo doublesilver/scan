@@ -55,6 +55,16 @@ class MapEditorActivity : BaseActivity() {
             }
         }
 
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.webView.canGoBack()) {
+                    binding.webView.goBack()
+                } else {
+                    finishWithSlide()
+                }
+            }
+        })
+
         setupWebView()
         loadEditor()
     }
@@ -103,14 +113,4 @@ class MapEditorActivity : BaseActivity() {
         binding.webView.loadUrl(url)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (binding.webView.canGoBack()) {
-            binding.webView.goBack()
-        } else {
-            @Suppress("DEPRECATION")
-            super.onBackPressed()
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
-    }
 }

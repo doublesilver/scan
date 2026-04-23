@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -68,7 +69,14 @@ class MainActivity : BaseActivity() {
         observeViewModel()
         checkServerOnce()
 
+        binding.etSearch.showSoftInputOnFocus = false
         binding.etSearch.requestFocus()
+
+        binding.etSearch.setOnClickListener {
+            binding.etSearch.showSoftInputOnFocus = true
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.etSearch, InputMethodManager.SHOW_IMPLICIT)
+        }
 
         if (savedInstanceState == null) {
             lifecycleScope.launch {
@@ -97,6 +105,17 @@ class MainActivity : BaseActivity() {
             performSearch(barcode)
             intent.removeExtra("BARCODE")
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.layoutScanResult.visibility == View.VISIBLE || binding.rvProducts.visibility == View.VISIBLE) {
+                    binding.etSearch.setText("")
+                    resetToMap()
+                } else {
+                    finishWithSlide()
+                }
+            }
+        })
     }
 
     private fun setupHeader() {
@@ -226,19 +245,10 @@ class MainActivity : BaseActivity() {
 
                     applyMargins(margin, margin, margin, margin)
 
+                    CellStyleUtil.applyStyle(this, cellStatus, this@MainActivity)
+
                     when (cellStatus) {
-                        "used" -> {
-                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_light))
-                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_used_dark))
-                            isClickable = true
-                            isFocusable = true
-                            setOnClickListener {
-                                startWithSlide(CellDetailActivity.createIntent(this@MainActivity, floor, zone.code, cellKey))
-                            }
-                        }
-                        "full" -> {
-                            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_light))
-                            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.cell_full_dark))
+                        "used", "full" -> {
                             isClickable = true
                             isFocusable = true
                             setOnClickListener {
@@ -246,34 +256,19 @@ class MainActivity : BaseActivity() {
                             }
                         }
                         "aisle" -> {
-                            // 통로: 세로로 연결된 실제 공간처럼 하나의 막대로 보이게
                             val connectedAbove = aboveStatus == "aisle"
                             val connectedBelow = belowStatus == "aisle"
                             applyMargins(margin, if (connectedAbove) 0 else margin, margin, if (connectedBelow) 0 else margin)
-                            setBackgroundColor(android.graphics.Color.parseColor("#2a2a2a"))
-                            setTextColor(android.graphics.Color.parseColor("#999999"))
                             textSize = 8f
-                            // 연결된 막대의 맨 위 셀에만 "통로" 텍스트
                             text = if (connectedAbove) "" else "통로"
                         }
                         "table" -> {
-                            setBackgroundColor(android.graphics.Color.parseColor("#3d2e1e"))
-                            setTextColor(android.graphics.Color.parseColor("#d4a574"))
-                            typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
                             text = "테이블"
                         }
                         "pc" -> {
-                            setBackgroundColor(android.graphics.Color.parseColor("#1e3a5f"))
-                            setTextColor(android.graphics.Color.parseColor("#9fc5e8"))
-                            typeface = Typeface.DEFAULT_BOLD
                             textSize = 8f
                             text = "물류PC"
-                        }
-                        else -> {
-                            // 빈 슬롯: 투명, 텍스트 없음, 비클릭
-                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                            text = ""
                         }
                     }
                     if (!cellData?.borderColor.isNullOrEmpty()) {
@@ -535,7 +530,7 @@ class MainActivity : BaseActivity() {
             val char = event.unicodeChar.toChar()
             if (char.isLetterOrDigit() || char == '-') {
                 val now = System.currentTimeMillis()
-                if (now - lastKeystrokeTime > 2000) {
+                if (now - lastKeystrokeTime > DataWedgeManager.KEYSTROKE_TIMEOUT_MS) {
                     keystrokeBuffer.clear()
                 }
                 lastKeystrokeTime = now
@@ -549,6 +544,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun hideKeyboard() {
+        binding.etSearch.showSoftInputOnFocus = false
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
     }
@@ -558,18 +554,8 @@ class MainActivity : BaseActivity() {
         intent.getStringExtra("BARCODE")?.let { barcode ->
             binding.etSearch.setText(barcode)
             binding.etSearch.setSelection(barcode.length)
+            hideKeyboard()
             performSearch(barcode)
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (binding.layoutScanResult.visibility == View.VISIBLE || binding.rvProducts.visibility == View.VISIBLE) {
-            binding.etSearch.setText("")
-            resetToMap()
-        } else {
-            @Suppress("DEPRECATION")
-            super.onBackPressed()
         }
     }
 
