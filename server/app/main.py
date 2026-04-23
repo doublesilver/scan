@@ -23,7 +23,8 @@ from app.db.migrate_map import migrate_json_to_tables
 from app.middleware.auth import ApiKeyMiddleware
 from app.services.file_watcher import start_watcher, stop_watcher
 from app.services.nas_sync import NasSyncService
-from app.services.scheduler import start_scheduler, stop_scheduler
+
+# from app.services.scheduler import start_scheduler, stop_scheduler  # 납품 시연용 비활성화 (추후 승인 후 복구)
 from app.services.status_service import record_start_time
 
 logging.basicConfig(
@@ -45,9 +46,9 @@ async def lifespan(app: FastAPI):
     nas_sync = NasSyncService(app.state.http_client)
     app.state.nas_sync = nas_sync
     await nas_sync.start()
-    await start_scheduler(app)
+    # await start_scheduler(app)  # 납품 시연용 비활성화
     yield
-    await stop_scheduler()
+    # await stop_scheduler()  # 납품 시연용 비활성화
     await nas_sync.stop()
     stop_watcher()
     await app.state.http_client.aclose()
@@ -92,7 +93,11 @@ if os.path.exists(_static_dir):
 
 _admin_dir = os.path.join(_static_dir, "admin")
 if os.path.exists(os.path.join(_admin_dir, "assets")):
-    app.mount("/admin/assets", StaticFiles(directory=os.path.join(_admin_dir, "assets")), name="admin-assets")
+    app.mount(
+        "/admin/assets",
+        StaticFiles(directory=os.path.join(_admin_dir, "assets")),
+        name="admin-assets",
+    )
 
 
 @app.get("/admin/map-editor", include_in_schema=False)
