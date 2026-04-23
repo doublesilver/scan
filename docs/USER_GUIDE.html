@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0"
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <title>물류창고 PDA 사용가이드 v5.4.7</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 70px;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Pretendard", "Malgun Gothic", sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 17px;
+        line-height: 1.7;
+        padding-bottom: 100px;
+        word-break: keep-all;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #1e293b;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #f1f5f9;
+      }
+      header .ver {
+        font-size: 12px;
+        background: #22c55e;
+        color: #052e16;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+      }
+      main {
+        padding: 20px 16px;
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      details {
+        background: #1e293b;
+        border-radius: 14px;
+        margin: 14px 0;
+        overflow: hidden;
+        border: 1px solid #334155;
+      }
+      details[open] {
+        border-color: #475569;
+      }
+      summary {
+        padding: 18px 20px;
+        font-weight: 700;
+        font-size: 17px;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #f1f5f9;
+        user-select: none;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      summary::after {
+        content: "▸";
+        transition: transform 0.2s;
+        color: #64748b;
+        font-size: 14px;
+      }
+      details[open] summary::after {
+        transform: rotate(90deg);
+      }
+      summary:hover {
+        background: #273449;
+      }
+      .body {
+        padding: 4px 20px 20px;
+      }
+      h3 {
+        margin: 22px 0 10px;
+        font-size: 16px;
+        color: #f8fafc;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #334155;
+      }
+      h3.warn {
+        color: #fbbf24;
+        border-color: #78350f;
+      }
+      h3.help {
+        color: #34d399;
+        border-color: #064e3b;
+      }
+      p {
+        margin: 10px 0;
+      }
+      ul,
+      ol {
+        padding-left: 22px;
+        margin: 10px 0;
+      }
+      li {
+        margin: 8px 0;
+      }
+      strong {
+        color: #fde68a;
+        font-weight: 700;
+      }
+      em {
+        color: #93c5fd;
+        font-style: normal;
+        font-weight: 600;
+      }
+      code {
+        background: #0b1120;
+        border: 1px solid #1e293b;
+        padding: 2px 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        color: #fbbf24;
+        word-break: break-all;
+      }
+      .tip {
+        background: #0c4a6e;
+        border-left: 4px solid #38bdf8;
+        padding: 12px 16px;
+        margin: 14px 0;
+        border-radius: 6px;
+        font-size: 15px;
+      }
+      .warn-box {
+        background: #78350f;
+        border-left: 4px solid #fbbf24;
+        padding: 12px 16px;
+        margin: 14px 0;
+        border-radius: 6px;
+      }
+      .danger-box {
+        background: #450a0a;
+        border-left: 4px solid #ef4444;
+        padding: 12px 16px;
+        margin: 14px 0;
+        border-radius: 6px;
+      }
+      .qa {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 12px 0;
+      }
+      .qa .q {
+        color: #fbbf24;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .qa .a {
+        font-size: 15px;
+      }
+      nav {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid #475569;
+        border-radius: 999px;
+        padding: 8px;
+        display: flex;
+        gap: 4px;
+        z-index: 100;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        overflow-x: auto;
+        max-width: calc(100vw - 32px);
+      }
+      nav a {
+        color: #cbd5e1;
+        text-decoration: none;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      nav a:active {
+        background: #334155;
+      }
+      .step {
+        counter-reset: step;
+      }
+      .step li {
+        list-style: none;
+        counter-increment: step;
+        position: relative;
+        padding-left: 36px;
+        margin-bottom: 14px;
+      }
+      .step li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 26px;
+        height: 26px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>📱 PDA 사용가이드</h1>
+      <span class="ver">v5.4.7</span>
+    </header>
+
+    <main>
+      <details open>
+        <summary>1. 시작하기</summary>
+        <div class="body">
+          <h3>앱 실행</h3>
+          <ul>
+            <li>홈 화면에서 <strong>물류창고 스캐너</strong> 아이콘 탭</li>
+            <li>자동으로 서버 연결 확인 (3초) → 검색 화면 진입</li>
+          </ul>
+          <h3>서버 주소 변경 (담당자 안내 시에만)</h3>
+          <ol class="step">
+            <li>검색 화면 우측 상단 <strong>톱니바퀴</strong> 탭</li>
+            <li>서버 URL 입력 → <strong>저장</strong></li>
+            <li><strong>연결 테스트</strong> 눌러 "연결 성공" 확인</li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>2. 바코드 스캔</summary>
+        <div class="body">
+          <ol class="step">
+            <li>바코드를 PDA 정면을 향하게</li>
+            <li>옆면 <strong>노란색 트리거 버튼</strong> 누름</li>
+            <li>"삑" 소리 → 0.5초 내 상품 정보 표시</li>
+          </ol>
+          <div class="tip">
+            💡 <strong>스캔 안 될 때</strong>: 바코드 구겨짐/빛 반사 확인 →
+            카메라 렌즈 닦기 → 검색창 직접 입력
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>3. 텍스트 검색</summary>
+        <div class="body">
+          <p>검색창에 입력 가능한 것:</p>
+          <ul>
+            <li><strong>상품명</strong> 일부 (예: "케이스")</li>
+            <li><strong>바코드 번호</strong> (8~13자리)</li>
+            <li><strong>SKU 번호</strong></li>
+          </ul>
+          <p>결과 카드 탭 → 상세 페이지로 이동</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>4. 상품 상세 페이지</summary>
+        <div class="body">
+          <h3>화면 구성</h3>
+          <ul>
+            <li><strong>상단</strong>: 상품명 / SKU / 카테고리 / 바코드</li>
+            <li>
+              <strong>중앙</strong>: 상품 이미지 (탭하면 썸네일 ↔ 실사 전환)
+            </li>
+            <li><strong>하단</strong>: 도면 / 발주 / 라벨 (3버튼)</li>
+          </ul>
+          <div class="tip">
+            💡 바코드를 <strong>길게 누르면</strong> 클립보드에 복사돼요
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>5. 발주 (구글시트 자동 등록)</summary>
+        <div class="body">
+          <h3>발주 보내기</h3>
+          <ol class="step">
+            <li>상품 상세에서 <strong>발주</strong> 탭</li>
+            <li>
+              수량 선택: <em>1 / 10 / 50 / 100</em> 또는 직접 입력 (1~999)
+            </li>
+            <li><strong>발주</strong> 탭 → "✅ 발주 추가 완료" 토스트</li>
+          </ol>
+          <div class="tip">
+            💡 발주는 <strong>구글시트에 자동 한 줄 추가</strong>됩니다.<br />
+            시트는 PC 브라우저로 직접 열어서 확인.<br />
+            (PDA 앱에서 발주 내역 조회는 지원하지 않음)
+          </div>
+          <h3 class="warn">발주 실패 시</h3>
+          <ul>
+            <li>"시트 연동 실패" → 담당자 호출</li>
+            <li>네트워크/서버 다운 가능성</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>6. 라벨 인쇄</summary>
+        <div class="body">
+          <ol class="step">
+            <li>상품 상세에서 <strong>라벨</strong> 탭</li>
+            <li>수량 선택 (1 / 5 / 10 / 100 또는 직접 입력 1~100)</li>
+            <li><strong>인쇄</strong> 탭</li>
+          </ol>
+          <h3 class="warn">인쇄 실패 메시지별 대응</h3>
+          <ul>
+            <li>
+              <code>물류PC 응답 없음</code> → 인쇄 에이전트 죽었을 가능성,
+              담당자에게 "프린트 에이전트 죽었어요" 전달
+            </li>
+            <li><code>프린터 오프라인</code> → 프린터 전원/USB 케이블 확인</li>
+            <li><code>라벨 템플릿 없음</code> → 신규 상품, 담당자 호출</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>7. 도면 / 셀 상세</summary>
+        <div class="body">
+          <h3>도면 보기</h3>
+          <ul>
+            <li><strong>방법 1</strong>: 상품 상세 → 도면 버튼</li>
+            <li><strong>방법 2</strong>: 메인 화면에 도면 항상 표시됨</li>
+          </ul>
+
+          <h3>색상</h3>
+          <ul>
+            <li>
+              <span style="color: #fbbf24">●</span> <strong>노란색</strong>:
+              현재 검색 중인 상품 위치
+            </li>
+            <li>
+              <span style="color: #34d399">●</span> 녹색/회색: 일반 셀 (상품
+              있음/없음)
+            </li>
+            <li>테이블/통로/물류PC: 별도 표시</li>
+          </ul>
+
+          <div class="tip">
+            💡 두 손가락 벌리면 <strong>확대(핀치줌)</strong> 가능
+          </div>
+
+          <h3>셀 상세</h3>
+          <p>
+            셀을 탭하면 셀 사진이 풀스크린으로 표시되고, 하단에 셀 라벨 (예:
+            "A구역 1-1")이 보임.
+          </p>
+          <p>하단 네비바: <strong>도면 / (라벨) / 편집</strong></p>
+        </div>
+      </details>
+
+      <details>
+        <summary>8. 셀 사진 변경</summary>
+        <div class="body">
+          <ol class="step">
+            <li>셀 상세에서 <strong>편집</strong> 탭</li>
+            <li>"새 사진을 업로드하시겠습니까?" → <strong>확인</strong></li>
+            <li>카메라 / 갤러리 선택</li>
+            <li>촬영 또는 사진 선택 → 자동 업로드</li>
+            <li>"업로드 완료" 토스트 → 즉시 갱신</li>
+          </ol>
+          <h3 class="warn">업로드 실패 시</h3>
+          <ul>
+            <li>WiFi 신호 확인</li>
+            <li>편집 → 사진 변경 다시 시도</li>
+            <li>계속 실패하면 담당자 호출</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>9. 박스(QR) 스캔</summary>
+        <div class="body">
+          <ul>
+            <li>메인 검색 화면에서 박스 QR 코드 스캔</li>
+            <li>또는 검색창에 <code>BOX-XXXX</code> 입력</li>
+          </ul>
+          <h3>박스 상세</h3>
+          <ul>
+            <li>박스에 담긴 상품명·위치 표시</li>
+            <li>도면에서 박스 보관 위치 노란색 강조</li>
+            <li>
+              외부 링크 버튼: <strong>네이버 / 쿠팡 / 1688 / FLOW</strong> (해당
+              링크 있을 때만 활성)
+            </li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>10. 앱 업데이트</summary>
+        <div class="body">
+          <h3>자동 업데이트</h3>
+          <ol class="step">
+            <li>앱 실행 시 새 버전 있으면 다이얼로그 자동 표시</li>
+            <li><strong>업데이트</strong> 탭 → 자동 다운로드</li>
+            <li><strong>설치</strong> 탭 → 완료</li>
+            <li>앱 재시작</li>
+          </ol>
+          <h3>알림이 안 뜰 때</h3>
+          <ul>
+            <li>앱 강제종료 (최근 앱 → 위로 스와이프) → 재실행</li>
+            <li>설정 화면에서 현재 앱 버전 확인</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>11. 자주 묻는 질문 (FAQ)</summary>
+        <div class="body">
+          <div class="qa">
+            <div class="q">Q1. 바코드 스캔이 안 돼요</div>
+            <div class="a">
+              트리거 버튼 정확히 눌렀는지 → 바코드 손상/구김 확인 → 카메라 렌즈
+              닦기 → 검색창 직접 입력 → 그래도 안 되면 PDA 재부팅
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q2. "서버 연결 실패" 떠요</div>
+            <div class="a">
+              WiFi 연결 확인 → 톱니바퀴 → 서버 URL 확인 → "연결 테스트" 실패하면
+              담당자 호출
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q3. 상품을 찾을 수 없다고 떠요</div>
+            <div class="a">
+              다른 검색어(상품명/SKU)로 시도 → 신규 상품이면 담당자에게 등록
+              요청
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q4. 라벨이 안 찍혀요 ("물류PC 응답 없음")</div>
+            <div class="a">
+              프린터 전원/USB 확인 → 다시 시도 → 안 되면 담당자에게 "프린트
+              에이전트 죽음" 전달
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q5. 발주 버튼 눌렀는데 시트에 안 들어가요</div>
+            <div class="a">
+              "발주 실패" 메시지 확인 → 안 떴으면 시트 새로고침 후 재확인 (1~2초
+              지연 가능) → "시트 연동 실패" 떴으면 담당자 호출
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q6. 셀 사진이 옛날 사진으로 보여요</div>
+            <div class="a">
+              다른 PDA에서 변경된 경우 최대 1분 지연 → 뒤로가기 후 다시 셀
+              진입하면 즉시 갱신
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q7. 사진이 90도 돌아서 업로드돼요</div>
+            <div class="a">
+              알려진 이슈, 다음 업데이트에서 수정 예정. 임시 해결: 갤러리에서
+              회전시켜 저장 후 갤러리로 업로드
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q8. 앱이 멈추거나 느려요</div>
+            <div class="a">
+              최근 앱 → 위로 스와이프해서 종료 → 재실행 → PDA 재부팅 → 새
+              업데이트 확인
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q9. PDA 화면이 자동으로 꺼져서 불편해요</div>
+            <div class="a">
+              PDA 시스템 설정 → 디스플레이 → 화면 자동 꺼짐 시간 늘리기
+              (앱에서는 제어 안 함)
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">Q10. 다른 사람도 같은 PDA로 쓸 수 있나요?</div>
+            <div class="a">
+              네, 누구나 사용 가능. 단 발주/사진 변경한 사람은 기록 안 됨
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>12. ⚡ 응급 복구 — 모든 게 멈췄을 때</summary>
+        <div class="body">
+          <div class="danger-box">순서대로 시도하세요. 한 단계씩.</div>
+          <ol class="step">
+            <li><strong>앱 강제종료 → 재실행</strong></li>
+            <li><strong>WiFi 끄기 → 5초 → 다시 켜기</strong></li>
+            <li><strong>PDA 재부팅</strong> (전원 길게 → 재시작)</li>
+            <li>
+              <strong>다른 PDA로 같은 작업 시도</strong> → 한 대만 문제면 그 PDA
+              이슈
+            </li>
+            <li>
+              <strong>모든 PDA 안 되면</strong> → 서버 다운 가능성 → 담당자 즉시
+              호출
+            </li>
+          </ol>
+        </div>
+      </details>
+
+      <details>
+        <summary>📞 연락처</summary>
+        <div class="body">
+          <ul>
+            <li><strong>개발/유지보수</strong>: 이은석</li>
+            <li><strong>연락 방식</strong>: 카톡 또는 이메일</li>
+            <li>
+              <strong>응급 상황</strong>: 카톡으로 "PDA 안 됨" +
+              <strong>화면 스크린샷</strong> 전송
+            </li>
+          </ul>
+        </div>
+      </details>
+    </main>
+
+    <nav>
+      <a href="javascript:void(0)" onclick="jump(0)">시작</a>
+      <a href="javascript:void(0)" onclick="jump(1)">스캔</a>
+      <a href="javascript:void(0)" onclick="jump(2)">검색</a>
+      <a href="javascript:void(0)" onclick="jump(3)">상세</a>
+      <a href="javascript:void(0)" onclick="jump(4)">발주</a>
+      <a href="javascript:void(0)" onclick="jump(5)">라벨</a>
+      <a href="javascript:void(0)" onclick="jump(6)">도면</a>
+      <a href="javascript:void(0)" onclick="jump(7)">사진</a>
+      <a href="javascript:void(0)" onclick="jump(8)">박스</a>
+      <a href="javascript:void(0)" onclick="jump(9)">업데이트</a>
+      <a href="javascript:void(0)" onclick="jump(10)">FAQ</a>
+      <a href="javascript:void(0)" onclick="jump(11)">⚡응급</a>
+    </nav>
+
+    <script>
+      const details = document.querySelectorAll("details");
+      function jump(i) {
+        details[i].open = true;
+        details[i].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    </script>
+  </body>
+</html>

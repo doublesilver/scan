@@ -42,6 +42,7 @@ WORK_STATUS.md
 # 개인 문서 (이력서, 제안서)
 *.html
 !server/static/**/*.html
+!docs/**/*.html
 *_files/
 
 # 카카오톡 스크린샷
