@@ -182,18 +182,37 @@
         background: #22c55e;
         color: #052e16;
       }
-      .ascii {
-        background: #0b1120;
-        border: 1px solid #1e293b;
-        padding: 14px;
+      .mockup {
+        border: 2px solid #475569;
         border-radius: 10px;
-        font-family: "SF Mono", Menlo, Consolas, monospace;
-        font-size: 12px;
+        background: #0b1120;
+        margin: 14px 0;
+        overflow: hidden;
+        font-size: 14px;
+        color: #cbd5e1;
+      }
+      .mockup .row {
+        padding: 12px 14px;
+        border-bottom: 1px solid #1e293b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .mockup .row:last-child {
+        border-bottom: none;
+      }
+      .mockup .center {
+        min-height: 70px;
+        justify-content: center;
         color: #94a3b8;
-        white-space: pre;
-        overflow-x: auto;
-        margin: 12px 0;
-        line-height: 1.4;
+        font-style: italic;
+      }
+      .mockup .note {
+        font-size: 12px;
+        color: #64748b;
+        font-style: italic;
       }
       table {
         width: 100%;
@@ -329,12 +348,19 @@
           <p>
             PDA 전원을 켜면 앱이 자동 실행됩니다. 화면 구성을 먼저 익혀두세요.
           </p>
-          <div class="ascii">
-            ┌────────────────────────────────────┐ │ [검색창] [🔍] [⚙] │ ← 우측
-            위 ⚙ = 설정 ├────────────────────────────────────┤ │ │ │ 📐 창고
-            도면 (격자) │ ← 중앙: 도면 │ 색상별 셀 표시 │ │ │
-            ├────────────────────────────────────┤ │ [🔄 배치] [🗂 박스] │ ←
-            하단 네비 └────────────────────────────────────┘
+          <div class="mockup">
+            <div class="row">
+              <span><strong>[검색창]</strong></span>
+              <span
+                >🔍 <strong>⚙</strong> <span class="note">← 설정</span></span
+              >
+            </div>
+            <div class="row center">📐 창고 도면 (격자·색상별 셀 표시)</div>
+            <div class="row">
+              <span><strong>🔄 배치</strong></span>
+              <span><strong>🗂 박스</strong></span>
+              <span class="note">← 하단 네비</span>
+            </div>
           </div>
           <ul>
             <li><strong>검색창</strong>: 바코드/상품명 입력</li>
@@ -482,13 +508,20 @@
       <details>
         <summary>5. 상품 상세 페이지</summary>
         <div class="body">
-          <div class="ascii">
-            ┌────────────────────────────────────┐ │ [←] 상품명 │ ← 좌측 위 ← =
-            뒤로 │ SKU / 카테고리 / 바코드 │
-            ├────────────────────────────────────┤ │ │ │ 상품 이미지 │ ← 탭 =
-            썸네일↔실사 │ │ ├────────────────────────────────────┤ │ [📐 도면]
-            [🛒 발주] [🏷 라벨] │ ← 하단 네비
-            └────────────────────────────────────┘
+          <div class="mockup">
+            <div class="row">
+              <span><strong>← 상품명</strong></span>
+              <span class="note">← = 뒤로</span>
+            </div>
+            <div class="row">
+              <span>SKU / 카테고리 / 바코드</span>
+            </div>
+            <div class="row center">상품 이미지 (탭 = 썸네일 ↔ 실사)</div>
+            <div class="row">
+              <span><strong>📐 도면</strong></span>
+              <span><strong>🛒 발주</strong></span>
+              <span><strong>🏷 라벨</strong></span>
+            </div>
           </div>
 
           <table>
@@ -701,11 +734,20 @@
         <summary>9. 셀 상세 / 사진 변경</summary>
         <div class="body">
           <h3>9.1 셀 상세 화면</h3>
-          <div class="ascii">
-            ┌────────────────────────────────────┐ │ [←] │ │ │ │ 📷 셀 사진
-            (풀스크린) │ ← 핀치줌 │ │ │ [A구역 1-1] │ ← 셀 위치 라벨
-            ├────────────────────────────────────┤ │ [📐 도면] [라벨] [✏️ 편집]
-            │ └────────────────────────────────────┘
+          <div class="mockup">
+            <div class="row">
+              <span><strong>←</strong></span>
+            </div>
+            <div class="row center">📷 셀 사진 (풀스크린, 핀치줌 가능)</div>
+            <div class="row">
+              <span><strong>[A구역 1-1]</strong></span>
+              <span class="note">← 셀 위치 라벨</span>
+            </div>
+            <div class="row">
+              <span><strong>📐 도면</strong></span>
+              <span><strong>라벨</strong></span>
+              <span><strong>✏️ 편집</strong></span>
+            </div>
           </div>
           <ul>
             <li>한 셀에 <strong>사진 한 장</strong>만 등록됨</li>
